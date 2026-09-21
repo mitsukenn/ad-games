@@ -188,7 +188,7 @@
     color:rgba(224,168,60,.8); font-weight:600; margin-bottom:4px;
   }
   .stat .v{
-    font-family:var(--disp); font-size:clamp(16px,5.4vw,26px); line-height:1;
+    font-family:var(--disp); font-size:clamp(16px,5.4vw,26px); line-height:1; white-space:nowrap; overflow:hidden;
     color:var(--stone-l); font-variant-numeric:tabular-nums;
   }
   .stat.hi .v{color:var(--gold)}
@@ -385,11 +385,16 @@
          padding:9px 16px; font-weight:700; font-size:14px; pointer-events:none; opacity:0; transition:opacity .25s;
          width:max-content; max-width:calc(100% - 32px); z-index:5}
   .toast.on{opacity:1}
+  .chip .v{white-space:nowrap}
+  .chip.army{flex:none}                /* 兵力の欄は数字の幅ぶん確保する（隣の欄に食い込まない） */
+  @media (max-width:380px){ .hud{gap:8px} .chip{padding-left:8px; padding-right:8px} .chip .v{font-size:16px} .chip.weap .v{font-size:13px} .chip.weap{padding-right:8px} .chip.weap .wicon{display:none} }
+  @media (max-width:340px){ .hud{gap:5px} .chip{padding-left:6px; padding-right:6px} .chip.weap{padding-right:6px} .chip.weap .v{font-size:11px; letter-spacing:-.02em} }
 
   /* ---------- 遊び方・指のお手本・初見のひとこと ---------- */
   .howto-link{display:inline-block; margin-top:14px; background:none; border:0; padding:4px 8px; cursor:pointer;
               font:600 13px var(--ui); letter-spacing:.06em; color:rgba(228,219,198,.6); text-decoration:underline; text-underline-offset:3px}
   .howto-link:hover{color:var(--stone-l)}
+  a.btn{display:inline-block; text-decoration:none}
   .howto-link:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
   .tag-line{font-size:17px; font-weight:700; color:#fff3da; margin:0 auto 22px; line-height:1.5}
   .finger{position:absolute; left:50%; bottom:calc(max(18px, env(safe-area-inset-bottom)) + 12%); transform:translateX(-50%);
@@ -453,7 +458,7 @@
         <button class="btn ghost" id="btnContinue" hidden>続きから</button>
         <button class="btn ghost" id="btnRankTitle" hidden>🏆 ランキング</button>
       </div>
-      <button class="howto-link" id="btnHowto">遊び方</button>
+      <div><button class="howto-link" id="btnHowto">遊び方</button><a class="howto-link" href="select.html">ゲームを選ぶ</a></div>
     </div>
   </div>
 
@@ -508,6 +513,7 @@
       <div class="btns">
         <button class="btn" id="btnResume">再開する</button>
         <button class="btn ghost" id="btnQuit">タイトルへ</button>
+        <a class="btn ghost" href="select.html">ゲームを選ぶ</a>
       </div>
       <p class="hint">P または Esc キーでも一時停止・再開できます</p>
     </div>
@@ -738,43 +744,93 @@ const Snd = (() => {
   }
   const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
-  /* --- 行進曲 --------------------------------------------------
-     4小節ループ、16分音符刻み。スネアは「タッタ・タン」の付点リズム、
-     ベースは「ブン・チャッ」の二拍子、メロディは明るいハ長調。 */
-  const C4 = 60;
-  const BASS = [[48, 55], [41, 48], [43, 50], [48, 43]];          // 小節ごとの 根音・5度
-  const CHORD = [[64, 67], [65, 69], [62, 67], [64, 67]];         // 裏拍の「チャッ」
-  const MEL = [                                                   // [小節, 16分位置, 音, 長さ]
-    [0, 0, 76, 3], [0, 3, 76, 1], [0, 4, 79, 4], [0, 8, 76, 3], [0, 11, 74, 1], [0, 12, 72, 4],
-    [1, 0, 77, 3], [1, 3, 77, 1], [1, 4, 81, 4], [1, 8, 79, 3], [1, 11, 77, 1], [1, 12, 76, 4],
-    [2, 0, 74, 3], [2, 3, 76, 1], [2, 4, 77, 4], [2, 8, 79, 3], [2, 11, 81, 1], [2, 12, 83, 4],
-    [3, 0, 84, 6], [3, 8, 79, 3], [3, 11, 76, 1], [3, 12, 72, 4],
-  ];
+  /* --- BGM：景色ごとに曲が変わる --------------------------------
+     どの曲も4小節ループ・16分音符刻み。bass＝小節ごとの[根音, 5度]、chord＝裏拍の和音、
+     mel＝[小節, 16分位置, 音(MIDI), 長さ]。drum で太鼓の叩き方を変える。 */
+  const SONGS = {
+    // 翠緑の遺跡：明るいハ長調の行進曲（もともとの曲）
+    valley: { bpm: 132, drum: "march", wave: "square", top: "triangle",
+      bass: [[48, 55], [41, 48], [43, 50], [48, 43]],
+      chord: [[64, 67], [65, 69], [62, 67], [64, 67]],
+      mel: [[0, 0, 76, 3], [0, 3, 76, 1], [0, 4, 79, 4], [0, 8, 76, 3], [0, 11, 74, 1], [0, 12, 72, 4],
+            [1, 0, 77, 3], [1, 3, 77, 1], [1, 4, 81, 4], [1, 8, 79, 3], [1, 11, 77, 1], [1, 12, 76, 4],
+            [2, 0, 74, 3], [2, 3, 76, 1], [2, 4, 77, 4], [2, 8, 79, 3], [2, 11, 81, 1], [2, 12, 83, 4],
+            [3, 0, 84, 6], [3, 8, 79, 3], [3, 11, 76, 1], [3, 12, 72, 4]] },
+    // 黄金の砂漠：エキゾチックな音階（ホ調のフリジアン・ドミナント）
+    desert: { bpm: 120, drum: "desert", wave: "sawtooth", top: "triangle",
+      bass: [[40, 47], [41, 48], [40, 47], [38, 45]],
+      chord: [[64, 68], [65, 69], [64, 68], [62, 65]],
+      mel: [[0, 0, 76, 2], [0, 2, 77, 2], [0, 4, 80, 4], [0, 8, 77, 2], [0, 10, 76, 2], [0, 12, 74, 4],
+            [1, 0, 77, 3], [1, 3, 76, 1], [1, 4, 74, 2], [1, 6, 72, 2], [1, 8, 71, 4], [1, 12, 72, 2], [1, 14, 74, 2],
+            [2, 0, 76, 2], [2, 2, 80, 2], [2, 4, 81, 4], [2, 8, 80, 2], [2, 10, 77, 2], [2, 12, 76, 4],
+            [3, 0, 74, 2], [3, 2, 72, 2], [3, 4, 71, 2], [3, 6, 72, 2], [3, 8, 76, 8]] },
+    // 氷雪の神殿：イ短調、鈴のような静かな曲
+    snow: { bpm: 112, drum: "light", wave: "triangle", top: "sine",
+      bass: [[45, 52], [41, 48], [43, 50], [40, 47]],
+      chord: [[60, 64], [60, 65], [62, 67], [64, 68]],
+      mel: [[0, 0, 76, 4], [0, 4, 72, 2], [0, 6, 74, 2], [0, 8, 76, 6], [0, 14, 79, 2],
+            [1, 0, 77, 4], [1, 4, 76, 2], [1, 6, 74, 2], [1, 8, 72, 8],
+            [2, 0, 74, 4], [2, 4, 76, 2], [2, 6, 77, 2], [2, 8, 79, 4], [2, 12, 77, 4],
+            [3, 0, 76, 6], [3, 6, 74, 2], [3, 8, 71, 8]] },
+    // 灼熱の要塞：ニ短調、速くて重い
+    volcano: { bpm: 150, drum: "heavy", wave: "square", top: "sawtooth",
+      bass: [[38, 45], [34, 41], [36, 43], [33, 40]],
+      chord: [[62, 65], [58, 62], [60, 64], [61, 64]],
+      mel: [[0, 0, 74, 2], [0, 2, 74, 1], [0, 3, 74, 1], [0, 4, 77, 2], [0, 6, 74, 2], [0, 8, 81, 4], [0, 12, 79, 2], [0, 14, 77, 2],
+            [1, 0, 77, 2], [1, 2, 76, 2], [1, 4, 74, 4], [1, 8, 70, 4], [1, 12, 72, 4],
+            [2, 0, 72, 2], [2, 2, 72, 1], [2, 3, 72, 1], [2, 4, 76, 2], [2, 6, 72, 2], [2, 8, 79, 4], [2, 12, 77, 2], [2, 14, 76, 2],
+            [3, 0, 76, 2], [3, 2, 74, 2], [3, 4, 73, 4], [3, 8, 69, 8]] },
+    // 天空の聖域：ヘ長調、勇ましく高らかに
+    sky: { bpm: 138, drum: "march", wave: "square", top: "triangle",
+      bass: [[41, 48], [46, 41], [43, 50], [48, 43]],
+      chord: [[69, 72], [70, 74], [67, 70], [67, 72]],
+      mel: [[0, 0, 77, 4], [0, 4, 81, 4], [0, 8, 84, 6], [0, 14, 82, 2],
+            [1, 0, 82, 4], [1, 4, 81, 2], [1, 6, 79, 2], [1, 8, 77, 8],
+            [2, 0, 79, 3], [2, 3, 81, 1], [2, 4, 82, 4], [2, 8, 79, 4], [2, 12, 74, 4],
+            [3, 0, 76, 4], [3, 4, 79, 4], [3, 8, 84, 8]] },
+    // ボーナス：ト長調、弾む速い曲
+    bonus: { bpm: 160, drum: "bounce", wave: "square", top: "triangle",
+      bass: [[43, 50], [48, 55], [45, 52], [50, 57]],
+      chord: [[71, 74], [72, 76], [72, 76], [66, 69]],
+      mel: [[0, 0, 79, 2], [0, 2, 83, 2], [0, 4, 86, 2], [0, 6, 83, 2], [0, 8, 86, 4], [0, 12, 88, 4],
+            [1, 0, 84, 2], [1, 2, 83, 2], [1, 4, 81, 2], [1, 6, 79, 2], [1, 8, 76, 4], [1, 12, 79, 4],
+            [2, 0, 81, 2], [2, 2, 84, 2], [2, 4, 88, 2], [2, 6, 84, 2], [2, 8, 81, 4], [2, 12, 84, 4],
+            [3, 0, 86, 2], [3, 2, 85, 2], [3, 4, 86, 2], [3, 6, 88, 2], [3, 8, 91, 6]] },
+  };
+  const THEME_SONGS = ["valley", "desert", "snow", "volcano", "sky"];   // 景色の順番（2ステージごと）
+  let song = SONGS.valley;
   let playing = false, bpm = 132, nextT = 0, step = 0, timer = null, hot = false;
 
   function playStep(i, t) {
-    const bar = (i >> 4) & 3, s16 = i & 15;
+    const S = song, bar = (i >> 4) & 3, s16 = i & 15;
     const d16 = 60 / bpm / 4;
-    // 大太鼓：1・3拍
-    if (s16 === 0 || s16 === 8) { tone(120, 0.16, "sine", 0.34, 45, t, mus); }
-    // 小太鼓「タッタ・タン」＋最終小節の締めロール
-    const snare = [0, 3, 4, 8, 11, 12];
-    if (snare.includes(s16) || (bar === 3 && s16 >= 12) || (hot && s16 % 2 === 1)) {
-      const acc = (s16 === 4 || s16 === 12) ? 0.20 : 0.11;
-      noise(0.09, acc, 3200, t, mus, "highpass");
+    const kickAt = S.drum === "heavy" || S.drum === "bounce" ? s16 % 4 === 0 : S.drum === "light" ? s16 === 0 : (s16 === 0 || s16 === 8);
+    if (kickAt) tone(S.drum === "heavy" ? 100 : 120, 0.16, "sine", S.drum === "light" ? 0.22 : 0.34, 45, t, mus);
+    // 小太鼓
+    const snareAt =
+      S.drum === "march" ? [0, 3, 4, 8, 11, 12].includes(s16) || (bar === 3 && s16 >= 12)
+      : S.drum === "heavy" ? s16 === 4 || s16 === 12 || (bar === 3 && s16 >= 12 && s16 % 2 === 0)
+      : S.drum === "bounce" ? s16 === 4 || s16 === 12
+      : S.drum === "desert" ? [3, 6, 10, 12, 14].includes(s16)
+      : s16 === 8;
+    if (snareAt || (hot && s16 % 2 === 1)) {
+      const acc = (s16 === 4 || s16 === 12) ? 0.20 : S.drum === "light" ? 0.06 : 0.11;
+      noise(0.09, acc, S.drum === "desert" ? 1800 : 3200, t, mus, S.drum === "desert" ? "bandpass" : "highpass");
       tone(220, 0.05, "triangle", acc * 0.5, 160, t, mus);
     }
-    // シンバル的な刻み
-    if (s16 % 4 === 2) noise(0.04, 0.04, 7000, t, mus, "highpass");
-    // ベース「ブン」とコード「チャッ」
-    const bs = BASS[bar];
-    if (s16 === 0 || s16 === 8) tone(hz(bs[s16 === 0 ? 0 : 1]), d16 * 3, "triangle", 0.22, 0, t, mus);
-    if (s16 === 4 || s16 === 12) for (const m of CHORD[bar]) tone(hz(m), d16 * 1.6, "square", 0.028, 0, t, mus);
+    // 刻み（雪は鈴のように高く）
+    if (S.drum === "light") { if (s16 % 4 === 2) tone(hz(96 + (s16 === 6 || s16 === 14 ? 3 : 0)), 0.12, "sine", 0.02, 0, t, mus); }
+    else if (s16 % (S.drum === "bounce" ? 2 : 4) === 2) noise(0.04, 0.04, 7000, t, mus, "highpass");
+    // ベース（重い曲は8分で刻む）と裏拍の和音
+    const bs = S.bass[bar];
+    if (S.drum === "heavy") { if (s16 % 2 === 0) tone(hz(bs[(s16 >> 1) % 2]), d16 * 1.7, "sawtooth", 0.1, 0, t, mus); }
+    else if (s16 === 0 || s16 === 8) tone(hz(bs[s16 === 0 ? 0 : 1]), d16 * 3, "triangle", 0.22, 0, t, mus);
+    if (s16 === 4 || s16 === 12) for (const m of S.chord[bar]) tone(hz(m), d16 * 1.6, S.drum === "light" ? "triangle" : "square", 0.028, 0, t, mus);
     // メロディ
-    for (const [b, p, m, l] of MEL) {
+    for (const [b, p, m, l] of S.mel) {
       if (b === bar && p === s16) {
-        tone(hz(m), d16 * l * 0.92, "square", 0.05, 0, t, mus);
-        tone(hz(m + 12), d16 * l * 0.6, "triangle", 0.025, 0, t, mus);   // 1オクターブ上で明るく
+        tone(hz(m), d16 * l * 0.92, S.wave, S.wave === "sawtooth" ? 0.035 : 0.05, 0, t, mus);
+        tone(hz(m + 12), d16 * l * 0.6, S.top, 0.025, 0, t, mus);   // 1オクターブ上で明るく
       }
     }
   }
@@ -818,7 +874,13 @@ const Snd = (() => {
         clearInterval(timer); timer = setInterval(scheduler, 25);
       } else { playing = false; clearInterval(timer); }
     },
-    intense(v) { hot = !!v; bpm = v ? 150 : 132; },   // 戦闘中はテンポを上げて太鼓を細かく
+    intense(v) { hot = !!v; bpm = song.bpm + (hot ? 18 : 0); },   // 戦闘中はテンポを上げて太鼓を細かく
+    // 曲を選ぶ。数字なら景色の番号（0〜4）、文字なら曲名（"bonus" など）。変わったときは頭から
+    song(key) {
+      const s = typeof key === "number" ? SONGS[THEME_SONGS[((key % 5) + 5) % 5]] : (SONGS[key] || SONGS.valley);
+      if (s === song) return;
+      song = s; bpm = s.bpm + (hot ? 18 : 0); step = 0;
+    },
     // 武器ごとの発射音。呼ぶ側で鳴らす回数を間引く
     shot(t) {
       if (t <= 1) noise(0.06, 0.05, 1400, 0, undefined, "bandpass");                          // 石・スリング：ヒュッ
@@ -856,7 +918,15 @@ const Snd = (() => {
 /* 兵力に上限はない。MAX_UNITS は画面に描く兵の数の上限。 */
 const MAX_UNITS = 90;     // 描く兵の上限（隊列が画面の下まで伸びすぎないように）
 const SQUAD_DRAW = 150;
-const fmt = (n) => Math.round(n).toLocaleString("ja-JP");
+/* 数字の表示。100万を超えたら「123万」「1.23億」のように縮めて、画面の枠からはみ出さないようにする */
+const fmt = (n) => {
+  n = Math.round(n);
+  const a = Math.abs(n);
+  if (a < 1e6) return n.toLocaleString("ja-JP");
+  if (a < 1e8) return Math.floor(n / 1e4).toLocaleString("ja-JP") + "万";
+  if (a < 1e12) return (n / 1e8).toFixed(a < 1e10 ? 2 : 1).replace(/\.?0+$/, "") + "億";
+  return (n / 1e12).toFixed(2).replace(/\.?0+$/, "") + "兆";
+};
 
 /* 見た目の武器。火力の値で持ち替える */
 const WEAPONS = [
@@ -1034,6 +1104,19 @@ function syncSquad(sq) {
    ============================================================ */
 let colSeq = 0;
 
+/* 兵力の目安：1面の始まり12人 → 10面の終わりで約100万人（1面ごとに約3倍）。エクストラは1面ごとに2倍。
+   増える門・×2・宝箱の大きさは「いまの兵力 ÷ 目安」で加減し、目安へ寄せる（ゴムひも式）。
+   敵の大きさは今までどおり、その時点の兵力で決める */
+const ARMY_START = 12, ARMY_AT10 = 1e6;
+function armyTarget(st, fr) {
+  const x = st - 1 + Math.max(0, Math.min(1, fr));
+  return x <= 10 ? ARMY_START * Math.pow(ARMY_AT10 / ARMY_START, x / 10) : ARMY_AT10 * Math.pow(2, x - 10);
+}
+/** 目安との比。1より大きいと増えすぎ */
+function armyLead(it) { return Math.max(1, crowd.count) / armyTarget(stage, (it.z0 || 0) / Math.max(1, totalZ)); }
+/** 増える量の倍率：目安を超えていれば渋く、下回っていれば少し甘く */
+function gainScale(lead) { return Math.max(0.15, Math.min(1.8, Math.pow(lead, -1.1))); }
+
 /** 宝の列：手前に木の門、その奥に板が並ぶ */
 function makeColumn(lane, z, st, n, p, kind) {
   const exGain = 1 - 0.06 * exRamp(st);          // エクストラは増える量が渋い
@@ -1118,7 +1201,9 @@ function finalize(it) {
     // 金の箱・ハート・武器は少し硬い。しっかり狙えば開く
     it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * (it.kind === "army" ? rnd(1.5, 2.1) : rnd(2.3, 2.9))));
   } else if (it.type === "tile") {
-    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage))));
+    const lead = armyLead(it);
+    if (it.kind === "mul" && lead > 1.15) it.kind = "add";
+    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage)) * gainScale(lead)));
   } else if (it.type === "squad") {
     const { sq } = makeSquad(it.lane, it.z, stage, n, p, it.boss);
     it.count = it.max = sq.count; it.pw = sq.pw;
@@ -1204,6 +1289,7 @@ function buildStage(st) {
   const goalZ = endZ + 14;
   items.push({ type: "goal", lane: 1, x: 0, z: goalZ, gate: "gate_" + (st >= FINAL_STAGE ? 6 : Math.floor((st - 1) / 2) + 1), dead: false, passed: false });
   totalZ = goalZ + 2;
+  for (const it of items) it.z0 = it.z;
   items.sort((a, b) => a.z - b.z);
 }
 
@@ -1234,6 +1320,7 @@ function buildBonus() {
   const goalZ = z + 10;
   items.push({ type: "goal", lane: 1, x: 0, z: goalZ, gate: "gate_" + stageLv(), dead: false, passed: false });
   totalZ = goalZ + 2;
+  for (const it of items) it.z0 = totalZ;                 // 宝物庫はステージの終わり扱い
   items.sort((a, b) => a.z - b.z);
 }
 
@@ -1251,7 +1338,8 @@ function openChest(c) {
     popText(WEAPONS[nt].n + "！", C.gold, c.x, c.z, true);
   } else {
     const before = crowd.count;
-    setCount(before * (k === "big" ? 1.2 : 1.06));
+    const g = gainScale(armyLead(c));
+    setCount(before * (1 + (k === "big" ? 0.2 : 0.06) * Math.min(1.5, g)));
     popText("+" + fmt(crowd.count - before), k === "big" ? "#b8f5c2" : "#9cc0ff", c.x, c.z, true);
   }
   spawnFx("chest_open", c.x, 0.9, c.z, 2.0, 0.9, { grow: 0.15, rise: 1.2 });
@@ -1710,7 +1798,7 @@ function update(dt) {
   let remaining = 0;
 
   for (const it of items) {
-    if (!it.ready && it.z < READY_Z) finalize(it);
+    if (!it.ready && it.z < (it.type === "tile" ? DRAW_Z + 2 : READY_Z)) finalize(it);
     if (it.type === "tile") {
       if (it.gone) continue;
       it.z -= step;
@@ -2981,7 +3069,7 @@ function beginBonus(army, power) {
   hStage.textContent = "BONUS"; hStage.style.fontSize = "0.7em";   // 枠からはみ出さないよう小さめに
   hBar.style.width = "0%";
   ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = true;
-  Snd.intense(false); Snd.music(true);
+  Snd.song("bonus"); Snd.intense(false); Snd.music(true);
   saveProgress(stage + 1, army, power);       // 途中でやめても、続きは次のステージから
   camKick = 0;
   flash(elAnn, ["BONUS", "宝物庫", "宝箱を撃ち開けろ！　取り逃しに注意"]);
@@ -3005,6 +3093,7 @@ function beginStage(st, army, power) {
   hStage.textContent = stageChip(st); hStage.style.fontSize = "";
   hBar.style.width = "0%";
   ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = true;
+  Snd.song(stageLv() - 1);                      // 景色（エクストラは5つの景色を巡る）に合わせた曲
   Snd.intense(false); Snd.music(true);
   saveProgress(st, army, power);
   camKick = 0;
@@ -3081,6 +3170,8 @@ function stageClear() {
     const icon = document.getElementById("clearIcon");
     requestAnimationFrame(() => SK.paintIcon(icon, "chest_open"));
     ovClear.hidden = false;
+    btnShareClear.hidden = true;                    // 宝物庫の終わりはシェアを出さない
+    fitNums(ovClear);
     return;
   }
   if (stage === FINAL_STAGE) {
@@ -3411,6 +3502,14 @@ document.getElementById("btnRankTitle").addEventListener("click", () => openRank
 document.getElementById("btnRankRec").addEventListener("click", () => openRanking("today"));
 if (RANKING_API) document.getElementById("btnRankTitle").hidden = false;
 
+/* 結果画面の数字は折り返さず、枠に入るまで文字を小さくする */
+function fitNums(root) {
+  requestAnimationFrame(() => root.querySelectorAll(".stat .v").forEach((v) => {
+    v.style.fontSize = "";
+    let fs = parseFloat(getComputedStyle(v).fontSize);
+    while (v.scrollWidth > v.clientWidth + 1 && fs > 10) { fs -= 1; v.style.fontSize = fs + "px"; }
+  }));
+}
 /* --- 結果画面への差し込み --- */
 let lastResult = null, registered = false;
 function resultData(extra) {
@@ -3419,6 +3518,8 @@ function resultData(extra) {
 }
 const Result = {
   prepareClear(rank) {
+    btnShareClear.hidden = false;
+    fitNums(ovClear);
     clearShare.prepare(resultData({ kind: "clear", stage, rank, army: crowd.count }));
   },
   show(host, info) {
@@ -3430,6 +3531,7 @@ const Result = {
     else { tab.appendChild(recBox); }
     recBox.classList.toggle("after", !info.final);
     recBox.hidden = false;
+    fitNums(host);
     const on = !!RANKING_API;
     document.getElementById("recReg").hidden = !on;
     document.getElementById("btnRankRec").hidden = !on;
