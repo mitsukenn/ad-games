@@ -180,7 +180,7 @@
   .rule strong{color:var(--gold); font-weight:700}
 
   .stats{
-    display:grid; grid-template-columns:repeat(3,1fr);
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
     gap:1px; background:rgba(224,168,60,.22);
     border:1px solid rgba(224,168,60,.22);
     margin:0 0 22px;
@@ -191,11 +191,11 @@
     color:rgba(224,168,60,.8); font-weight:600; margin-bottom:4px;
   }
   .stat .v{
-    font-family:var(--disp); font-size:26px; line-height:1;
+    font-family:var(--disp); font-size:clamp(16px,5.4vw,26px); line-height:1; white-space:nowrap; overflow:hidden;
     color:var(--stone-l); font-variant-numeric:tabular-nums;
   }
   .stat.hi .v{color:var(--gold)}
-  .stat.w .v{font-family:var(--ui); font-weight:700; font-size:21px; line-height:1.2}
+  .stat.w .v{font-family:var(--ui); font-weight:700; font-size:clamp(14px,4.4vw,21px); line-height:1.2; white-space:nowrap}
 
   .btn{
     font-family:var(--disp); font-size:19px;
@@ -357,6 +357,10 @@
          padding:9px 16px; font-weight:700; font-size:14px; pointer-events:none; opacity:0; transition:opacity .25s;
          width:max-content; max-width:calc(100% - 32px); z-index:5}
   .toast.on{opacity:1}
+  .chip .v{white-space:nowrap}
+  .chip.army{flex:none}                /* 兵力の欄は数字の幅ぶん確保する（隣の欄に食い込まない） */
+  @media (max-width:380px){ .hud{gap:8px} .chip{padding-left:8px; padding-right:8px} .chip .v{font-size:16px} .chip.weap .v{font-size:13px} .chip.weap{padding-right:8px} .chip.weap #hWeapIcon{display:none} }
+  @media (max-width:340px){ .hud{gap:5px} .chip{padding-left:6px; padding-right:6px} .chip.weap{padding-right:6px} .chip.weap .v{font-size:11px; letter-spacing:-.02em} }
   /* ---------- 遊び方・指のお手本・初見のひとこと ---------- */
   .howto-link{display:inline-block; margin-top:14px; background:none; border:0; padding:4px 8px; cursor:pointer;
               font:600 13px var(--ui); letter-spacing:.06em; color:rgba(228,219,198,.6); text-decoration:underline; text-underline-offset:3px}
@@ -1473,7 +1477,15 @@ const Snd = (() => {
 /* 兵力そのものに上限はない。MAX_UNITS は「画面に描く兵の数」の上限で、
    それを超えた分は数字の上でだけ増えていく。 */
 const MAX_UNITS = 420;
-const fmt = (n) => Math.round(n).toLocaleString("ja-JP");
+/* 数字の表示。100万を超えたら「123万」「1.23億」のように縮めて、画面の枠からはみ出さないようにする */
+const fmt = (n) => {
+  n = Math.round(n);
+  const a = Math.abs(n);
+  if (a < 1e6) return n.toLocaleString("ja-JP");
+  if (a < 1e8) return Math.floor(n / 1e4).toLocaleString("ja-JP") + "万";
+  if (a < 1e12) return (n / 1e8).toFixed(a < 1e10 ? 2 : 1).replace(/\.?0+$/, "") + "億";
+  return (n / 1e12).toFixed(2).replace(/\.?0+$/, "") + "兆";
+};
 
 /* --- 武器 -------------------------------------------------
    戦闘力 = 兵力 × 武器倍率。数と質のどちらを取るかがこのゲームの芯。 */
@@ -1645,13 +1657,19 @@ function opLabel(op) {
 }
 
 /** ステージ難度に応じてゲート対を作る */
-function makeGate(z, st, expect, ew) {
+/* 兵力の伸びの目安。ステージ1の開始20人 → ステージ10の終わりで約100万人（1ステージ約3倍）。
+   ステージを作るとき、上手い人がこの目安あたりで終われるようにゲートの強さ（str）を合わせる */
+const growTarget = (st, frac) => 20 * Math.pow(50000, (st - 1 + frac) / 10);
+
+function makeGate(z, st, expect, ew, str, bonus) {
   // expect = そのゲートに到達する見込み兵力（バランス調整用）
   const e = Math.max(6, expect);
-  // 加算の幅を「×2 前後」に寄せてあるので、+N と ×2 はいつも僅差になる
-  const mkGood = () => Math.random() < 0.5
-    ? { k: "add", v: Math.max(4, Math.round(rnd(e * 0.5, e * 1.2) / 2) * 2) }
-    : { k: "mul", v: pick([2, 2, 2, 3]) };
+  const k = str || 1;
+  const mulP = bonus ? 0 : Math.min(0.5, 0.18 * k);
+  const lo = bonus ? 0.10 : 0.12 * k, hi = bonus ? 0.22 : 0.36 * k;
+  const mkGood = () => Math.random() < mulP
+    ? { k: "mul", v: k > 2.2 ? 3 : 2 }
+    : { k: "add", v: Math.max(2, Math.round(rnd(e * lo, e * hi) / 2) * 2) };
   // ステージ1・2は練習。減るゲートは出さず「武器か、兵を増やすか」の二択だけにする
   const gentle = st <= 2;
   const mkBad = () => gentle ? mkGood() : Math.random() < 0.55
@@ -1696,7 +1714,7 @@ function makeSquad(z, st, expect, ew, boss) {
   const grow = Math.min(st, 10) * 0.012;
   const base = par * (boss ? rnd(0.58, 0.70 + grow * 0.5) : rnd(0.36, 0.50 + grow));
   const n = Math.max(5, Math.round(base * ease(st)));
-  const sq = { type: "squad", z, count: n, max: n, weapon: sw, boss: !!boss, units: [], x: 0 };
+  const sq = { type: "squad", z, count: n, max: n, weapon: sw, boss: !!boss, units: [], x: 0, expect, ew };
   syncUnits(sq, C.foe);
   return sq;
 }
@@ -1731,6 +1749,7 @@ function makeGiant(z, st, expect, ew, king) {
     period: king ? 0.78 : 0.92,          // 振り下ろしの間隔
     phase: 0, t: rnd(0, 6), flash: 0,
     dead: false, fall: 0,
+    expect: n, ew, st,
   };
 }
 
@@ -1744,16 +1763,17 @@ function survivors(n, w, en, ew2) {
   return v <= 0 ? 0 : Math.sqrt(v);
 }
 
-function buildStage(st) {
+function buildStageOnce(st, str) {
   items = [];
   let z = 30;
   let expect = crowd.count;             // 見込み兵力と武器を追いながら難度を組む
   let ew = crowd.weapon;
+  let bestE = crowd.count, bestW = crowd.weapon;   // 上手い人の見込み（伸びの調整に使う）
   const gates = 7 + Math.min(st, 7);
   const gap = Math.max(15, 22 - st * 0.8);   // 進むほどゲート間隔が詰まり、考える時間が減る
 
   for (let i = 0; i < gates; i++) {
-    const g = makeGate(z, st, expect, ew);
+    const g = makeGate(z, st, expect, ew, str);
     items.push(g);
     // 見込みの更新。5以降は「上手い人が得なほうを選ぶ」前提、
     // 1〜4は「毎回損なほうを選んでも勝てる」ように損なほうを前提にする
@@ -1762,6 +1782,9 @@ function buildStage(st) {
     const b = (st <= 4 ? !better : better) ? r0 : r1;
     expect = b.n;
     ew = b.w;
+    const q0 = evalOp(g.ops[0], bestE, bestW), q1 = evalOp(g.ops[1], bestE, bestW);
+    const qb = (q0.n * wpow(q0.w) >= q1.n * wpow(q1.w)) ? q0 : q1;
+    bestE = qb.n; bestW = qb.w;
     z += rnd(gap, gap + 6);
 
     // 道の途中に巨人。中盤で1体、ステージ6以降は終盤にもう1体
@@ -1770,6 +1793,7 @@ function buildStage(st) {
       z += 6;
       const gi = makeGiant(z, st, expect, ew, false);
       items.push(gi);
+      bestE = Math.max(FLOOR, bestE - expect * gi.frac);
       expect = Math.max(FLOOR, expect * (1 - gi.frac));
       z += rnd(22, 26);
       continue;
@@ -1779,19 +1803,20 @@ function buildStage(st) {
       const sq = makeSquad(z, st, expect, ew);
       items.push(sq);
       expect = Math.max(FLOOR, survivors(expect, ew, sq.count, sq.weapon));
+      bestE = Math.max(FLOOR, survivors(bestE, bestW, sq.count, sq.weapon));
       z += rnd(14, 18);
     }
     // 刃（障害物）はステージ4から。3ゲートに1枚まで。増やしすぎると損耗が複利で効いて詰む
     if (st >= 4 && i > 0 && i % 3 === 0) {
       items.push(makeBlade(z, st));
-      expect = Math.max(FLOOR, expect * 0.88);
+      expect = Math.max(FLOOR, expect * 0.88); bestE *= 0.9;
       z += rnd(12, 16);
       // 終盤は逆回りの二枚刃。抜けられる隙間が左右に動き続ける
       if (st >= 6 && Math.random() < 0.40) {
         const b2 = makeBlade(z, st);
         b2.dir *= -1;
         items.push(b2);
-        expect = Math.max(FLOOR, expect * 0.90);
+        expect = Math.max(FLOOR, expect * 0.90); bestE *= 0.92;
         z += rnd(11, 15);
       }
     }
@@ -1801,22 +1826,50 @@ function buildStage(st) {
   const guard = makeSquad(bz, st, expect, ew, true);
   items.push(guard);
   let endZ = bz;
+  bestE = Math.max(FLOOR, survivors(bestE, bestW, guard.count, guard.weapon));
   // 5・8・10 ステージは、守護軍の奥に巨人王が控える
   if (st === 5 || st === 8 || st === FINAL_STAGE || (st > FINAL_STAGE && st % 2 === 0)) {
     expect = Math.max(FLOOR, survivors(expect, ew, guard.count, guard.weapon));
     endZ = bz + 24;
-    items.push(makeGiant(endZ, st, expect, ew, true));
+    const king = makeGiant(endZ, st, expect, ew, true);
+    items.push(king);
+    bestE = Math.max(FLOOR, bestE - expect * king.frac);
   }
   finishZ = endZ + 26;
   items.sort((a, b) => a.z - b.z);
+  return bestE;
+}
+
+/* 同じ乱数でステージを組み直せるよう、生成のあいだだけ Math.random を差し替える */
+function seeded(seed, fn) {
+  const orig = Math.random;
+  let a = seed >>> 0;
+  Math.random = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  try { return fn(); } finally { Math.random = orig; }
+}
+
+/** ステージを作る。上手い人が終わったとき「伸びの目安」に届くよう、ゲートの強さを二分探索で合わせる。
+    ただし1ステージで最低 1.3 倍・最大 9 倍（目安より多すぎても減らしすぎない） */
+function buildStage(st) {
+  const A = Math.max(10, crowd.count);
+  const goal = A * Math.max(1.3, Math.min(9, 1.8 * growTarget(st + 1, 0) / A));   // 実際は見込みより少し減るので、目安の1.8倍を狙う（自動プレイで調整）
+  const seed = (Math.random() * 4294967296) >>> 0;
+  let lo = Math.log(0.15), hi = Math.log(6);
+  for (let it = 0; it < 14; it++) {
+    const mid = (lo + hi) / 2;
+    if (seeded(seed, () => buildStageOnce(st, Math.exp(mid))) < goal) lo = mid; else hi = mid;
+  }
+  seeded(seed, () => buildStageOnce(st, Math.exp((lo + hi) / 2)));
 }
 
 /** ボーナスステージ。赤ゲートも敵もいない。左右の宝箱を拾って回る */
 function buildBonus() {
   items = [];
   let z = 26, expect = crowd.count, ew = crowd.weapon;
-  for (let i = 0; i < 7; i++) {
-    const g = makeGate(z, 1, expect, ew);      // ステージ1扱い＝増えるゲートだけ
+  for (let i = 0; i < 4; i++) {
+    // ステージ1扱い＝増えるゲートだけ。伸びは小さめ（ボーナス1回で最大5倍程度）
+    const g = makeGate(z, 1, expect, ew, 1, true);
     items.push(g);
     const r = evalOp(g.ops[0], expect, ew);
     expect = r.n; ew = r.w;
@@ -1839,7 +1892,7 @@ function openChest(c) {
     popText(wname(crowd.weapon), C.gold, c.z, true);
   } else {
     const before = crowd.count;
-    setCount(Math.round(before * 1.5));
+    setCount(Math.round(before * 1.15));
     popText("+" + fmt(crowd.count - before), C.good, c.z, true);
     bumpArmy();
   }
@@ -2022,7 +2075,16 @@ function updateBlade(b, dt) {
   }
 }
 
+/* 見込みより兵が少ないまま戦いに入ったら、敵も少しだけ小さくする（差がそのまま雪だるま式に
+   開かないように）。ゲートの選び方の差は残るよう、縮めるのは差の一部だけ */
+const SHORT_EXP = 0.8;
+function shortRatio(expect, ew) {
+  const r = (crowd.count * wpow(crowd.weapon)) / Math.max(1, expect * wpow(ew));
+  return r < 1 ? Math.pow(r, SHORT_EXP) : 1;
+}
 function startBattle(sq) {
+  const k = shortRatio(sq.expect || sq.count, sq.ew || sq.weapon);
+  if (k < 1) { sq.count = Math.max(3, Math.round(sq.count * k)); sq.max = sq.count; syncUnits(sq, C.foe); }
   battle = { sq, t: 0 };
   state = "battle";
   Snd.intense(true);
@@ -2031,6 +2093,11 @@ function startBattle(sq) {
 }
 
 function startGiant(g) {
+  const k = shortRatio(g.expect || 1, g.ew || 0);
+  if (k < 1 && g.expect) {
+    const ng = makeGiant(g.z, g.st, g.expect * k, g.ew, g.king);
+    g.hp = g.max = ng.hp; g.atk = ng.atk; g.frac = ng.frac;
+  }
   battle = { giant: g, t: 0 };
   g.phase = 0.15;
   state = "battle";
@@ -3252,7 +3319,7 @@ function tickHud(dt) {
   if ((state === "run" || state === "battle") && milestone < MILESTONES.length && crowd.count >= MILESTONES[milestone]) {
     while (milestone < MILESTONES.length && crowd.count >= MILESTONES[milestone]) milestone++;
     const m = MILESTONES[milestone - 1];
-    popText((m >= 1e4 ? fmt(m / 1e4) + "万" : fmt(m)) + " 突破!", C.gold, crowd.z + 5, true);
+    popText(jpShort(m) + " 突破!", C.gold, crowd.z + 5, true);
     Snd.great(); bumpArmy(); vib(30);
   }
   btnPause.hidden = !(state === "run" || state === "battle");
@@ -3723,6 +3790,14 @@ document.getElementById("btnRankTitle").addEventListener("click", () => openRank
 document.getElementById("btnRankRec").addEventListener("click", () => openRanking("today"));
 if (RANKING_API) document.getElementById("btnRankTitle").hidden = false;
 
+/* 結果画面の数字は折り返さず、枠に入るまで文字を小さくする */
+function fitNums(root) {
+  requestAnimationFrame(() => root.querySelectorAll(".stat .v").forEach((v) => {
+    v.style.fontSize = "";
+    let fs = parseFloat(getComputedStyle(v).fontSize);
+    while (v.scrollWidth > v.clientWidth + 1 && fs > 10) { fs -= 1; v.style.fontSize = fs + "px"; }
+  }));
+}
 /* --- 結果画面への差し込み --- */
 let lastResult = null, registered = false;
 function resultData(extra) {
@@ -3731,15 +3806,17 @@ function resultData(extra) {
 const Result = {
   prepareClear() {
     btnShareClear.hidden = false;
+    fitNums(ovClear);
     clearShare.prepare(resultData({ kind: "clear", stage, army: crowd.count }));
   },
-  hideClearShare() { btnShareClear.hidden = true; },       // ボーナス終了の画面ではシェアを出さない
+  hideClearShare() { btnShareClear.hidden = true; fitNums(ovClear); },       // ボーナス終了の画面ではシェアを出さない
   show(host, info) {
     lastResult = resultData({ kind: "result", stage: info.stage, win: !!info.win });
     registered = false;
     const tab = host.querySelector(".tablet");
     tab.insertBefore(recBox, tab.querySelector(".btn-row") || tab.querySelector(".btn"));
     recBox.hidden = false;
+    fitNums(host);
     const on = !!RANKING_API;
     document.getElementById("recReg").hidden = !on;
     document.getElementById("btnRankRec").hidden = !on;
