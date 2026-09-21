@@ -23,7 +23,8 @@
  *
  * 【順位の決め方】
  *   到達ステージが高い順 → 同じなら最高兵力が多い順 → 同じなら撃破数が多い順。
- *   ステージ 11 は「全10ステージ制覇」の意味。
+ *   ステージ 11 は「全10ステージ制覇」（またはエクストラ1面で力尽きた）の意味。
+ *   12 以降はエクストラステージ（EX2, EX3…）で力尽きた＝その手前の EX まで突破。
  *   兵力は上限なく増えるので、兵力だけで比べると新しい人が絶対に追いつけなくなる。
  *   そのため「どこまで進んだか」を一番の基準にしている。
  *
@@ -40,7 +41,8 @@ var SHEET_NAME = 'records';
 // ランキングに返す件数
 var TOP_N = 20;
 // ありえない値を弾く簡易チェック
-var MAX_STAGE = 11;
+var MAX_STAGE = 99;          // エクストラステージは終わりがないので余裕を持たせる
+var CLEAR_STAGE = 11;        // これ以上なら全10ステージ制覇
 var MAX_ARMY = 1e15;
 var MAX_KILLS = 1e12;
 var GAMES = ['geigeki', 'million'];
@@ -145,7 +147,7 @@ function monthAll_(game) {
       a.name = r.name;
       a.days += 1;
       a.points += PT_PLAY;
-      if (r.stage >= MAX_STAGE) a.points += PT_CLEAR;
+      if (r.stage >= CLEAR_STAGE) a.points += PT_CLEAR;
       if (i < PT_RANK.length) a.points += PT_RANK[i];
       if (better_(r, a) < 0) { a.stage = r.stage; a.army = r.army; a.kills = r.kills; }
     });
