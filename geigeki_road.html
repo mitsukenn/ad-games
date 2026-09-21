@@ -207,6 +207,10 @@
   @keyframes stamp{0%{opacity:0; transform:rotate(-14deg) scale(2.4)} 100%{opacity:1; transform:rotate(-14deg) scale(1)}}
   @keyframes pop{0%{opacity:0; transform:translateX(-50%) scale(.4)} 70%{transform:translateX(-50%) scale(1.12)} 100%{opacity:1; transform:translateX(-50%) scale(1)}}
   .rank.s{color:#ffd76a} .rank.a{color:#9ee6a8} .rank.b{color:#9cc0ff} .rank.c{color:#d9a8a0}
+  .over-life{margin:-2px 0 10px; font-size:26px; letter-spacing:4px}
+  .over-life i{font-style:normal; color:#ff5a4a} .over-life i.lost{color:rgba(228,219,198,.2)}
+  .over-life i.break{display:inline-block; animation:heartBreak .9s ease-out both}
+  @keyframes heartBreak{0%{color:#ff5a4a; transform:scale(1.5)} 60%{color:#ff5a4a; transform:scale(.8) rotate(-12deg)} 100%{color:rgba(228,219,198,.2); transform:none}}
   .next-theme{margin:-10px 0 18px; font-size:13px; font-weight:700; letter-spacing:.12em; color:rgba(224,168,60,.85)}
   .next-theme:empty{display:none}
   @media (prefers-reduced-motion:reduce){ #ovClear:not([hidden]) .rank, #ovClear:not([hidden]) .clear-icon{animation:none} }
@@ -260,6 +264,10 @@
   .rule b.b{background:#3b6fd1; color:#fff}
   /* 絵の背景の上でも読めるように、進み具合の見出しに下地を敷く */
   .chip.weap{position:relative; padding-right:46px}
+  /* ライフ：残りは赤、失ったハートは暗く */
+  .chip .life{font-size:13px; line-height:1.1; letter-spacing:1px; white-space:nowrap; margin-top:1px}
+  .chip .life i{font-style:normal; color:#ff5a4a; text-shadow:0 1px 0 rgba(0,0,0,.5)}
+  .chip .life i.lost{color:rgba(228,219,198,.22); text-shadow:none}
   .wicon{position:absolute; right:6px; top:50%; width:34px; height:34px; transform:translateY(-50%)}
   .chip.weap .v{white-space:nowrap}
   @media (max-width:520px){ .chip.weap .v{font-size:14px} .chip.weap{padding-right:40px} .wicon{width:28px; height:28px} }
@@ -332,6 +340,50 @@
   .btns{display:flex; flex-wrap:wrap; gap:10px; justify-content:center}
   .btns .btn.ghost{margin-left:0}
 
+  /* ---------- 結果のシェアとランキング登録 ---------- */
+  .rec{margin:0 0 16px; padding:12px 12px 10px; border:1px solid rgba(224,168,60,.3); background:rgba(20,15,12,.45)}
+  .rec.after{margin:16px 0 0}
+  .rec-reg{display:flex; gap:8px; margin-bottom:8px}
+  .rec-reg[hidden]{display:none}
+  .rec input{
+    flex:1; min-width:0; font:600 16px var(--ui); color:var(--stone-l);
+    background:rgba(36,28,24,.9); border:1px solid rgba(224,168,60,.45); border-radius:2px; padding:8px 10px;
+    user-select:text; -webkit-user-select:text; touch-action:manipulation;
+  }
+  .rec input:focus{outline:2px solid var(--gold); outline-offset:1px}
+  .rec .btn{font-size:15px; padding:9px 14px 8px; white-space:nowrap}
+  .rec-msg{font-size:13px; line-height:1.5; color:rgba(228,219,198,.72); margin:0 0 8px; min-height:1.5em}
+  .rec-msg b{color:var(--gold); font-size:16px}
+  .rec-msg:empty{display:none}
+  .rec-row{display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
+  .rec-row .btn.ghost{margin-left:0}
+  .btn.share{font-family:var(--ui); font-weight:700; font-size:15px; padding:9px 16px 8px; background:#3b6fd1; color:#fff; border-bottom-color:#27488a}
+  .btn.share:hover{background:#4a7de0}
+  .btn.share:disabled{opacity:.6; cursor:default}
+
+  .rk-tabs{display:flex; gap:0; margin:4px auto 10px; max-width:260px; border:1px solid rgba(224,168,60,.45)}
+  .rk-tabs button{flex:1; font:700 15px var(--ui); color:rgba(228,219,198,.7); background:transparent; border:0; padding:8px 0; cursor:pointer}
+  .rk-tabs button.on{background:var(--gold); color:var(--ink)}
+  .rk-note{font-size:12px; line-height:1.5; color:rgba(228,219,198,.55); margin:0 0 10px}
+  .rk-list{list-style:none; margin:0 0 10px; padding:0; text-align:left; max-height:min(46vh,420px); overflow-y:auto}
+  .rk-list li{display:grid; grid-template-columns:34px 1fr auto; gap:8px; align-items:center; padding:7px 8px; border-bottom:1px solid rgba(224,168,60,.14); font-size:15px}
+  .rk-list li.mine{background:rgba(224,168,60,.16)}
+  .rk-list .no{font-family:var(--disp); color:rgba(228,219,198,.6); text-align:center}
+  .rk-list li:nth-child(1) .no{color:#ffd76a} .rk-list li:nth-child(2) .no{color:#dfe6ee} .rk-list li:nth-child(3) .no{color:#e0a070}
+  .rk-list .nm{font-weight:700; color:var(--stone-l); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .rk-list .sc{font-family:var(--disp); font-size:13px; color:var(--gold); text-align:right; white-space:nowrap}
+  .rk-list .sc small{display:block; font-family:var(--ui); font-weight:600; font-size:11px; color:rgba(228,219,198,.55)}
+  .rk-list .empty{display:block; text-align:center; color:rgba(228,219,198,.6); border:0; padding:18px 0}
+  .rk-me{font-size:14px; color:var(--stone-l); margin:0 0 14px}
+  .rk-me:empty{display:none}
+  .rk-me b{color:var(--gold)}
+
+  .toast{position:absolute; left:50%; bottom:max(70px, env(safe-area-inset-bottom)); transform:translateX(-50%);
+         background:rgba(20,15,12,.92); border:1px solid rgba(224,168,60,.6); color:var(--stone-l);
+         padding:9px 16px; font-weight:700; font-size:14px; pointer-events:none; opacity:0; transition:opacity .25s;
+         width:max-content; max-width:calc(100% - 32px); z-index:5}
+  .toast.on{opacity:1}
+
   @media (prefers-reduced-motion:reduce){
     #hArmy.bump, .warn .band, .warn .msg b{animation:none}
     .announce.on{animation:annFade 2.2s ease forwards}
@@ -343,7 +395,7 @@
   <canvas id="game"></canvas>
 
   <div class="hud">
-    <div class="chip"><span class="k">Stage</span><span class="v" id="hStage">1</span></div>
+    <div class="chip"><span class="k">Stage</span><span class="v" id="hStage">1</span><span class="life" id="hLife" aria-label="ライフ"><i>♥</i><i>♥</i><i>♥</i></span></div>
     <div class="chip army"><span class="k">兵力</span><span class="v" id="hArmy">12</span></div>
     <div class="chip weap"><canvas class="wicon" id="hWeapIcon" aria-hidden="true"></canvas><span class="k">武器</span><span class="v" id="hWeap">投石</span><span class="s" id="hPow">×1.00</span></div>
     <div class="bar-wrap">
@@ -372,11 +424,13 @@
         <div class="rule"><b class="b">+1</b><span>青い板は兵が増える。そのレーンに立って受け止めろ</span></div>
         <div class="rule"><b>銃</b><span>武器の台座は撃ち壊すと、<strong>全員の武器が一段上がる</strong>。投石→弓→火縄銃→ライフル→マシンガン→大砲と、持ち替えるほど攻撃が重くなる</span></div>
         <div class="rule"><b class="r">敵</b><span>赤軍は撃って減らせ。同じレーンで受ければ白兵戦、よそ見をすると<strong>丸ごと突破される</strong></span></div>
+        <div class="rule"><b class="r">♥</b><span>ライフは3つ。全滅するとひとつ減り、そのステージからやり直せる。<strong>尽きたら最初から</strong></span></div>
         <div class="rule"><b class="r">巨</b><span>巨人はレーンをまたいで迫る。近づく前に削りきれ</span></div>
       </div>
       <div class="btns">
         <button class="btn" id="btnStart">防衛開始</button>
         <button class="btn ghost" id="btnContinue" hidden>続きから</button>
+        <button class="btn ghost" id="btnRankTitle" hidden>🏆 ランキング</button>
       </div>
       <p class="hint">ドラッグ、または ← → キーで隊列を左右に動かす</p>
     </div>
@@ -397,7 +451,10 @@
         <div class="stat w hi"><div class="k">武器</div><div class="v" id="cWeap">投石</div></div>
         <div class="stat"><div class="k">撃破数</div><div class="v" id="cKills">0</div></div>
       </div>
-      <button class="btn" id="btnNext">次の波へ</button>
+      <div class="btns">
+        <button class="btn" id="btnNext">次の波へ</button>
+        <button class="btn share" id="btnShareClear">📷 シェア</button>
+      </div>
     </div>
   </div>
 
@@ -433,9 +490,10 @@
 
   <div class="ov" id="ovOver" hidden>
     <div class="tablet">
-      <div class="eyebrow">防衛線崩壊</div>
-      <h2 class="lose">軍勢は尽きた</h2>
-      <p class="lede">どの門を開け、どのレーンで受けるか。順番を変えてみよう。</p>
+      <div class="eyebrow" id="overEyebrow">防衛線崩壊</div>
+      <h2 class="lose" id="overTitle">軍勢は尽きた</h2>
+      <p class="over-life" id="overLife"></p>
+      <p class="lede" id="overLede">どの門を開け、どのレーンで受けるか。順番を変えてみよう。</p>
       <div class="stats">
         <div class="stat"><div class="k">到達</div><div class="v" id="oStage">1</div></div>
         <div class="stat"><div class="k">撃破数</div><div class="v" id="oKills">0</div></div>
@@ -447,11 +505,42 @@
       </div>
     </div>
   </div>
+
+  <!-- 結果の登録とシェア。ゲームオーバー・全制覇の画面に差し込んで使う -->
+  <div class="rec" id="recBox" hidden>
+    <div class="rec-reg" id="recReg">
+      <input id="recName" maxlength="12" placeholder="なまえ（12文字まで）" autocomplete="nickname" enterkeyhint="done">
+      <button class="btn" id="btnRegister">ランキングに登録</button>
+    </div>
+    <p class="rec-msg" id="recMsg"></p>
+    <div class="rec-row">
+      <button class="btn share" id="btnShare">📷 結果を画像でシェア</button>
+      <button class="btn ghost" id="btnRankRec" hidden>🏆 ランキングを見る</button>
+    </div>
+  </div>
+
+  <div class="ov" id="ovRank" hidden>
+    <div class="tablet">
+      <div class="eyebrow">Ranking</div>
+      <h2>ランキング</h2>
+      <div class="rk-tabs" role="tablist">
+        <button data-v="today" class="on" role="tab">今日</button>
+        <button data-v="month" role="tab">今月</button>
+      </div>
+      <p class="rk-note" id="rkNote"></p>
+      <ol class="rk-list" id="rkList"></ol>
+      <p class="rk-me" id="rkMe"></p>
+      <button class="btn" id="btnRankClose">閉じる</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
 </div>
 
 <script src="assets/backgrounds/backgrounds.js"></script>
 <script src="assets/prepared/catalog.js"></script>
 <script src="assets/level-units/catalog.js"></script>
+<script src="assets/v2/catalog.js"></script>
 <script src="assets/sprite_bounds.js"></script>
 <script src="assets/sprite_kit.js"></script>
 <script>
@@ -732,6 +821,8 @@ const WEAPONS = [
   { n: "ショットガン", p: 8.00, rate: 0.8 },
   { n: "マシンガン",   p: 10.5, rate: 2.0 },   // 弾数が多い
   { n: "大砲",         p: 14.0, rate: 0.3 },   // 少ない弾が重い
+  { n: "戦車",         p: 19.0, rate: 0.35 },  // 大砲の次。砲弾が燃えて飛ぶ
+  { n: "ロケット砲",   p: 25.0, rate: 0.45 },  // 最強。煙を引いて飛ぶロケット
 ];
 const WMAX = WEAPONS.length - 1;
 function tierOf(p) { let t = 0; for (let i = 0; i < WEAPONS.length; i++) if (p >= WEAPONS[i].p) t = i; return t; }
@@ -744,10 +835,11 @@ const FLOOR = 10;
 
 let state = "title";     // title | run | battle | clear | over | win
 let stage = 1, kills = 0, best = 0, shake = 0, time = 0;
+let runBest = 0;         // 今回のプレイでの最高兵力（ランキングとシェアに使う）
 let dist = 0;            // 流れた距離（路面の模様を動かす）
 let flowV = 5;           // 世界が流れてくる速さ
 
-const crowd = { x: 0, tx: 0, count: 12, power: 1, units: [], fireAcc: 0 };
+const crowd = { x: 0, tx: 0, count: 12, power: 1, units: [], bigs: [], fireAcc: 0 };
 let items = [];
 let bullets = [];
 let battle = null;
@@ -768,8 +860,34 @@ function allySlot(i) {
   const col = i % COLS, row = (i / COLS) | 0;
   return { sx: (col - (COLS - 1) / 2) * COL_GAP + (row % 2 ? 0.08 : -0.08), sz: 0.4 - row * ROW_GAP };
 }
+/* 大軍は「格上げ」して見せる。1000人ごとに大隊長1体、1万人ごとにプチ巨人1体。
+   格上げした分は歩兵の数から引くので、隊列の見た目で規模がわかる */
+const CAPTAIN_UNIT = 1000, TITAN_UNIT = 10000;
+function crowdPlan(n) {
+  n = Math.max(0, Math.round(n));
+  const titans = Math.min(4, Math.floor(n / TITAN_UNIT));
+  const caps = Math.min(6, Math.floor((n - titans * TITAN_UNIT) / CAPTAIN_UNIT));
+  const soldiers = Math.min(MAX_UNITS, n - titans * TITAN_UNIT - caps * CAPTAIN_UNIT);
+  return { titans, caps, soldiers: Math.max(n > 0 ? 1 : 0, soldiers) };
+}
+function syncBigs() {
+  const plan = crowdPlan(crowd.count);
+  const want = [];
+  for (let i = 0; i < plan.caps; i++) want.push("captain");
+  for (let i = 0; i < plan.titans; i++) want.push("titan");
+  if (want.join() === crowd.bigs.map((b) => b.kind).join()) return;
+  const old = crowd.bigs;
+  crowd.bigs = want.map((kind, i) => {
+    const prev = old.find((b) => b.kind === kind && !b.used);
+    if (prev) { prev.used = true; return Object.assign(prev, { idx: i }); }
+    // 新しく格上げされた兵は、光に包まれて現れる
+    spawnFx("fx_spark", crowd.x, 1.6, 1.2, kind === "titan" ? 4 : 2.6, 0.7, { grow: 0.8 });
+    return { kind, idx: i, x: crowd.x, z: 0.5, ph: Math.random() * 6.28, pop: 1 };
+  });
+  crowd.bigs.forEach((b) => delete b.used);
+}
 function syncCrowd() {
-  const target = Math.max(0, Math.min(MAX_UNITS, Math.round(crowd.count)));
+  const target = Math.max(0, crowdPlan(crowd.count).soldiers);
   while (crowd.units.length > target) {
     const u = crowd.units.pop();
     if (u) puff(u.x, 0.5, u.z, C.ally, 3);
@@ -781,15 +899,17 @@ function syncCrowd() {
 }
 function setCount(n) {
   crowd.count = Math.max(0, n);
-  syncCrowd();
+  syncCrowd(); syncBigs();
   if (crowd.count > best) best = Math.round(crowd.count);
+  if (crowd.count > runBest) runBest = Math.round(crowd.count);
   hArmy.textContent = fmt(crowd.count);
 }
 /* --- 素材（assets/prepared）の対応表。読めないときは Canvas 描画に戻る --- */
 const SK = window.SpriteKit || { ok: () => false, foot: () => false, footW: () => false, center: () => false, paintIcon: () => false, onReady() {} };
 const BOUNDS = window.GAME_SPRITE_BOUNDS || {};
 const WEAPON_SPR = ["ranged_0_stone", "ranged_1_sling", "ranged_2_bow", "ranged_3_crossbow", "ranged_4_matchlock",
-                    "ranged_5_pistol", "ranged_6_rifle", "ranged_7_shotgun", "ranged_8_machinegun", "ranged_9_cannon"];
+                    "ranged_5_pistol", "ranged_6_rifle", "ranged_7_shotgun", "ranged_8_machinegun", "ranged_9_cannon",
+                    "weapon_tank", "weapon_rocket"];
 function paintWeaponIcon() {
   const el = document.getElementById("hWeapIcon");
   if (el) SK.paintIcon(el, WEAPON_SPR[tierOf(crowd.power)]);
@@ -799,7 +919,7 @@ SK.onReady(paintWeaponIcon);
 /* 素材の演出（土煙・衝撃波・火花・宝箱）。世界座標に置いて、広がりながら消える */
 const fxs = [];
 function spawnFx(id, x, y, z, size, life, opt) {
-  if (!SK.ok(id) || fxs.length > 40) return;
+  if (!SK.ok(id) || fxs.length > 48) return;
   fxs.push(Object.assign({ id, x, y, z, size, life, t: 0, grow: 0.5, rise: 0, flat: false }, opt || {}));
 }
 function updateFx(dt) {
@@ -818,7 +938,8 @@ function drawFx() {
     ctx.globalAlpha = Math.max(0, 1 - k * k);
     ctx.translate(g.x, g.y);
     if (f.flat) ctx.scale(1, 0.42);                       // 地面に寝かせた輪
-    SK.center(ctx, f.id, 0, 0, f.size * g.s * (1 + f.grow * k));
+    const id = f.frames ? f.frames[Math.min(f.frames.length - 1, (k * f.frames.length) | 0)] : f.id;
+    SK.center(ctx, id, 0, 0, f.size * g.s * (1 + f.grow * k));
     ctx.restore();
   }
 }
@@ -836,7 +957,15 @@ function squadSlot(i) {
   return { sx: (col - 2) * 0.4 + rnd(-0.06, 0.06), sz: row * 0.46 };
 }
 function syncSquad(sq) {
-  const target = Math.max(0, Math.min(SQUAD_DRAW, Math.round(sq.count)));
+  // 敵も1000人ごとに大隊長1体（最大5体）。大隊長は隊列の先頭に立つ
+  const caps = sq.beast ? 0 : Math.min(5, Math.floor(Math.max(0, sq.count) / CAPTAIN_UNIT));
+  if (!sq.bigs) sq.bigs = [];
+  while (sq.bigs.length > caps) { const b = sq.bigs.pop(); if (b) puff(b.x, 1, b.z, C.foe, 8); }
+  while (sq.bigs.length < caps) {
+    const i = sq.bigs.length;
+    sq.bigs.push({ kind: "ecaptain", sx: (i - (Math.min(5, caps) - 1) / 2) * 0.6, sz: -0.35, x: sq.x, z: sq.z, ph: Math.random() * 6.28, pop: 0 });
+  }
+  const target = Math.max(0, Math.min(SQUAD_DRAW, Math.round(sq.count - caps * CAPTAIN_UNIT)));
   while (sq.units.length > target) {
     const u = sq.units.pop();
     if (u) puff(u.x, 0.5, u.z, C.foe, 3);
@@ -947,6 +1076,7 @@ function buildStage(st) {
   const waves = 5 + Math.min(st, 6);
   const mid = Math.floor(waves / 2);
   const armWaves = st >= 3 && Math.random() < 0.5 ? [1, waves - 2] : [1 + ((Math.random() * (waves - 2)) | 0)];
+  const teaserWave = st <= 2 ? waves - 2 : -1;              // ステージ1・2の後半に「伝説の武器」を1回だけ流す
 
   for (let i = 0; i < waves; i++) {
     // 敵はふだん中央。後半は左右のレーンからも来る
@@ -974,6 +1104,10 @@ function buildStage(st) {
     n = (n + gN * take) * (gMul ? 1.4 : 1);
     if (armed) p += (WEAPONS[Math.min(WMAX, tierOf(p) + 1)].p - p) * take;
 
+    if (i === teaserWave) {
+      const tl = free[free.length - 1];
+      items.push({ type: "arm", teaser: true, lane: tl, x: LANES[tl], z: z + 9, hp: 9e9, max: 9e9, flash: 0, dead: false, ready: true });
+    }
     const ez = z + rnd(5, 8);
     if (i === mid || (st >= 6 && i === waves - 2)) {
       const { g, f } = makeGiant(eLane, ez + 4, st, n, p, false);
@@ -981,6 +1115,7 @@ function buildStage(st) {
       n = Math.max(FLOOR, n * (1 - f));
     } else {
       const { sq, m, pw } = makeSquad(eLane, ez, st, n, p, false);
+      if (st >= 3 && Math.random() < 0.3) sq.beast = true;    // 狼の群れ
       items.push(sq);
       n = Math.max(FLOOR, survivors(n, p, m, pw));
     }
@@ -1026,6 +1161,7 @@ let touched = false;                 // 一度も触れていない間は振動�
 addEventListener("pointerdown", () => { touched = true; }, true);
 addEventListener("keydown", (e) => {
   touched = true;
+  if (e.target && e.target.closest && e.target.closest("input")) return;   // 名前の入力中はゲーム操作にしない
   if (e.key === "p" || e.key === "P" || e.key === "Escape") {
     if (state === "pause") resumeGame(); else pauseGame();
     e.preventDefault();
@@ -1076,17 +1212,36 @@ function updateCrowdUnits(dt) {
     p.z += (0.4 + (p.sz - 0.4) * stretch - p.z) * k;
     if (p.pop > 0) p.pop = Math.max(0, p.pop - dt * 3.4);
   }
+  if (crowd.bigs.length !== crowdPlan(crowd.count).caps + crowdPlan(crowd.count).titans) syncBigs();
+  let ci = 0, ti = 0;
+  const caps = crowd.bigs.filter((b) => b.kind === "captain").length;
+  const capRows = Math.ceil(caps / 3);
+  for (const b of crowd.bigs) {
+    let sx, sz;
+    if (b.kind === "captain") { sx = ((ci % 3) - 1) * 0.62; sz = 0.95 + ((ci / 3) | 0) * 0.55; ci++; }
+    else { sx = ((ti % 2) - 0.5) * 0.95; sz = 1.1 + capRows * 0.55 + ((ti / 2) | 0) * 0.9; ti++; }
+    const tx = Math.max(-lim, Math.min(lim, crowd.x + sx));
+    b.x += (tx - b.x) * k;
+    b.z += (sz - b.z) * k;
+    if (b.pop > 0) b.pop = Math.max(0, b.pop - dt * 2.5);
+  }
 }
 
 function updateSquadUnits(sq, dt) {
   const k = 1 - Math.exp(-dt * 8);
-  for (const p of sq.units) {
+  for (const p of sq.units.concat(sq.bigs || [])) {
     p.x += (sq.x + p.sx - p.x) * k;
     p.z += (sq.z + p.sz - p.z) * k;
   }
 }
 
-const SHOT_GAP = [0.16, 0.16, 0.2, 0.24, 0.26, 0.16, 0.24, 0.32, 0.075, 0.7];   // 発射音の最短間隔（秒）
+/* 弾の見た目：武器の段階ごとの絵と大きさ（ワールド単位）。絵はすべて上向きで、尾が下 */
+const PROJ_SPR  = ["proj_stone", "proj_stone", "proj_arrow", "proj_bolt", "proj_bullet", "proj_bullet", "proj_bullet",
+                   "proj_shot", "proj_bullet", "proj_ball", "proj_shell", "proj_rocket"];
+const PROJ_SIZE = [0.55, 0.65, 1.0, 1.0, 0.8, 0.8, 0.9, 0.95, 0.7, 1.05, 1.2, 1.4];
+const muzzles = [];           // 発射炎（銃から先）
+let lastMuzzle = 0;
+const SHOT_GAP = [0.16, 0.16, 0.2, 0.24, 0.26, 0.16, 0.24, 0.32, 0.075, 0.7, 0.8, 0.5];   // 発射音の最短間隔（秒）
 let lastShot = 0;
 
 /* --- 射撃 ---------------------------------------------------
@@ -1101,6 +1256,10 @@ function fire(dt) {
     crowd.fireAcc -= 1;
     const u = crowd.units[(Math.random() * crowd.units.length) | 0];
     bullets.push({ x: u.x, z: u.z + 0.3, pz: u.z, dmg: dps / rate, t: wt });
+    if (wt >= 4 && time - lastMuzzle > (wt >= 9 ? 0.12 : 0.05) && muzzles.length < 12) {
+      lastMuzzle = time;
+      muzzles.push({ x: u.x, z: u.z + 0.5, t: 0, big: wt >= 9 });
+    }
     if (state !== "title" && time - lastShot > SHOT_GAP[wt]) { lastShot = time; Snd.shot(wt); }
   }
 }
@@ -1138,10 +1297,16 @@ function updateBullets(dt) {
 }
 
 function applyHit(t, b) {
-  if (b.t === 9) {                                   // 砲丸は着弾で爆ぜる
+  if (b.t >= 9) {                                    // 砲丸・戦車砲・ロケットは着弾で爆ぜる
+    spawnFx("fx_boom_1", b.x, 1.0, frontOf(t), b.t === 11 ? 3.2 : b.t === 10 ? 2.8 : 2.3, 0.5,
+            { frames: ["fx_boom_1", "fx_boom_2", "fx_boom_3"], grow: 0.35, rise: 0.8 });
     puff(b.x, 0.9, frontOf(t), pick(["#3a3a3a", "#f08a3c", C.gold]), 6);
     if (Math.random() < 0.3) { Snd.hit(); doShake(1.5); }
-  } else if (Math.random() < 0.25) puff(b.x, 0.9, frontOf(t), pick([C.gold, C.cream]), 1);
+  } else {
+    if (Math.random() < 0.35) spawnFx("fx_hit", b.x + rnd(-0.2, 0.2), 1.0, frontOf(t), 0.9, 0.18, { grow: 0.6 });
+    if (Math.random() < 0.25) puff(b.x, 0.9, frontOf(t), pick([C.gold, C.cream]), 1);
+  }
+  if (t.type === "arm" && t.teaser) { t.flash = 1; return; }   // 伝説の武器はまだ壊せない
   if (t.type === "arm") {
     t.hp -= b.dmg; t.flash = 1;
     if (t.hp <= 0) {
@@ -1149,7 +1314,7 @@ function applyHit(t, b) {
       const nt = Math.min(WMAX, tierOf(crowd.power) + 1);
       setPower(WEAPONS[nt].p);
       rec.arms++;
-      spawnFx("fx_spark", crowd.x, 1.6, 0.4, 3.2, 0.7, { grow: 0.8 });
+      spawnFx("fx_levelup", crowd.x, 1.8, 0.2, 4.2, 1.0, { grow: 0.15 });
       spawnFx("fx_spark", t.x, 1.0, t.z, 2.4, 0.5);
       for (let i = 0; i < 26; i++) puff(t.x + rnd(-1, 1), rnd(.2, 2), t.z, pick([C.gold, "#fff0cf", C.cream]), 1);
       popText(WEAPONS[nt].n + "！", C.gold, crowd.x, 1.6, true);
@@ -1325,6 +1490,7 @@ function update(dt) {
   }
   if (shake > 0) shake = Math.max(0, shake - dt * 42);
   updateFx(dt);
+  for (let i = muzzles.length - 1; i >= 0; i--) { muzzles[i].t += dt; if (muzzles[i].t > 0.1) muzzles.splice(i, 1); }
   for (const it of items) {
     if (it.flash > 0) it.flash = Math.max(0, it.flash - dt * 6);
     if (it.type === "giant") {
@@ -1382,6 +1548,14 @@ function update(dt) {
         it.passed = true;
         spawnFx("fx_spark", crowd.x, 1.8, 0.6, 3.6, 0.8, { grow: 0.9 });
         popText("GOAL", C.gold, crowd.x, 1.2, true);
+      }
+    } else if (it.type === "arm" && it.teaser) {
+      if (it.z <= front + 0.4) {
+        it.dead = true;
+        for (let i = 0; i < 14; i++) puff(it.x + rnd(-0.8, 0.8), rnd(.2, 1.6), it.z, pick([C.gold, "#fff0cf"]), 1);
+        popText("まだ壊せない…！", C.gold, it.x, 1.6, true);
+        flash(elMile, ["伝説の武器「戦車」", "もっと先のステージで手に入る…かも", ""]);
+        Snd.bad();
       }
     } else if (it.type === "arm") {
       if (it.z <= front + 0.4) {
@@ -1610,23 +1784,31 @@ function soldierSprite(body, bodyD, skin, wt) {
   soldierCache.set(key, sprite);
   return sprite;
 }
-function drawUnit(u, body, bodyD, skin, t, wt) {
+function drawUnit(u, body, bodyD, skin, t, wt, beast) {
   const p = proj(u.x, 0, u.z); if (!p || p.s < 2.2) return;
   const ally = body === C.ally;
   const frame = ((t * 5 + u.ph) | 0) % 2;                      // 2コマで足踏み
   const lv = Math.floor((Math.min(Math.max(stage, 1), 10) - 1) / 2) + 1;
-  const lvId = "soldier_" + lv + "_" + (frame + 1);
-  const sid = ally ? (SK.ok(lvId) ? lvId : frame ? "ally_run_2" : "ally_run_1") : (frame ? "enemy_stand_2" : "enemy_stand_1");
+  const f = "_" + (frame + 1);
+  // 素材の選び方：格上げした兵 → ステージ別の兵 → 共通の兵
+  let sid, scale = 1.25;
+  if (u.kind === "captain") { sid = "ally_captain" + f; scale = 1.6; }
+  else if (u.kind === "titan") { sid = "ally_titan" + f; scale = 2.6; }
+  else if (u.kind === "ecaptain") { sid = "enemy_captain" + f; scale = 1.8; }
+  else if (beast) { sid = "wolf" + f; scale = 1.05; }
+  else if (ally) sid = SK.ok("soldier_" + lv + f) ? "soldier_" + lv + f : "ally_run" + f;
+  else sid = SK.ok("enemy_" + lv + f) ? "enemy_" + lv + f : "enemy_stand" + f;
   if (p.s >= 3.2 && SK.ok(sid)) {
-    const hh = 1.25 * p.s * (1 - u.pop * 0.5);
+    const hh = scale * p.s * (1 - u.pop * 0.5);
     ctx.fillStyle = "rgba(21,34,29,.24)";
     ctx.beginPath(); ctx.ellipse(p.x, p.y, p.s * 0.3, p.s * 0.1, 0, 0, 6.2832); ctx.fill();
     SK.foot(ctx, sid, p.x, p.y, hh);
     // 手にした飛び道具：斜め45度の絵を立てて、右手の位置に持たせる
-    if (ally && wt > 0 && p.s >= 7) {
-      const cannon = wt === 9;
-      SK.center(ctx, WEAPON_SPR[wt], p.x + p.s * (cannon ? 0.05 : 0.3), p.y - hh * (cannon ? 0.78 : 0.62),
-                p.s * (cannon ? 0.75 : 0.85), cannon ? 0 : -Math.PI / 4);
+    if (ally && wt > 0 && p.s >= 7 && u.kind !== "titan") {
+      const big = u.kind === "captain" ? 1.35 : 1;
+      const flat = wt === 9 || wt === 10;                     // 大砲・戦車は傾けずに肩の上へ
+      SK.center(ctx, WEAPON_SPR[wt], p.x + p.s * (flat ? 0.05 : 0.3) * big, p.y - hh * (flat ? 0.78 : 0.62),
+                p.s * (flat ? 0.75 : 0.85) * big, flat ? 0 : -Math.PI / 4);
     }
     return;
   }
@@ -1640,10 +1822,10 @@ function drawUnit(u, body, bodyD, skin, t, wt) {
   if (wt > 0 && p.s >= 8) drawWeapon(p.x + w * 0.42, feet - h * 0.43, h * 0.88, wt, bob);
 }
 
-function drawHost(units, ally, t, wt) {
+function drawHost(units, ally, t, wt, beast) {
   const order = units.slice().sort((a, b) => b.z - a.z);
   const body = ally ? C.ally : C.foe, bodyD = ally ? C.allyD : C.foeD, skin = ally ? C.skin : C.skinF;
-  for (const u of order) drawUnit(u, body, bodyD, skin, t, wt);
+  for (const u of order) drawUnit(u, body, bodyD, skin, t, wt, beast);
 }
 
 /* --- 宝の板 ------------------------------------------------ */
@@ -1692,7 +1874,40 @@ function drawTile(t) {
 }
 
 /* --- 木の門 ------------------------------------------------ */
+/** 素材の絵の中央（木札）に、残り回数を大きく書く */
+function drawHpLabel(v, cx, cy, maxW, maxH) {
+  let fs = Math.min(maxH, maxW * 0.42);
+  if (fs <= 7) return;
+  const label = fmt(Math.ceil(v));
+  ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+  const mw = ctx.measureText(label).width;
+  if (mw > maxW) { fs *= maxW / mw; ctx.font = fs + 'px Chango, "Arial Black", sans-serif'; }
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  ctx.lineWidth = Math.max(2, fs * 0.16);
+  ctx.strokeStyle = "rgba(20,15,12,.85)";
+  ctx.strokeText(label, cx, cy);
+  ctx.fillStyle = "#fff3da";
+  ctx.fillText(label, cx, cy);
+}
+const stageLv = () => Math.floor((Math.min(Math.max(stage, 1), 10) - 1) / 2) + 1;
+
 function drawBar(bar) {
+  // ステージ別の門の絵（遺跡・砂漠・雪・火山・天空）
+  const bid = "barricade_" + stageLv();
+  if (SK.ok(bid)) {
+    const b = proj(bar.x, 0, bar.z);
+    if (!b) return;
+    ctx.globalAlpha = Math.max(0, Math.min(1, (DRAW_Z - bar.z) / 30));
+    const w = 2.25 * b.s, hImg = w / SK.aspect(bid);
+    SK.footW(ctx, bid, b.x, b.y, w);
+    if (bar.flash > 0.4 && !REDUCED) {
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha *= 0.28;
+      SK.footW(ctx, bid, b.x, b.y, w); ctx.restore();
+    }
+    drawHpLabel(bar.hp, b.x, b.y - hImg * 0.5, w * 0.36, hImg * 0.26);
+    ctx.globalAlpha = 1;
+    return;
+  }
   const x0 = bar.x - 1.0, x1 = bar.x + 1.0, h = 1.5, d = 0.45;
   const tl = proj(x0, h, bar.z), br = proj(x1, 0, bar.z);
   if (!tl || !br) return;
@@ -1730,6 +1945,43 @@ function drawBar(bar) {
 /* --- 武器の台座 ---------------------------------------------
    次に手に入る武器を掲げた石の台座。撃ち壊すと全員がその武器に持ち替える */
 function drawArm(a) {
+  // 台座の絵があれば、それに武器を浮かべる
+  if (SK.ok("pedestal")) {
+    const b = proj(a.x, 0, a.z);
+    if (!b) return;
+    ctx.globalAlpha = Math.max(0, Math.min(1, (DRAW_Z - a.z) / 30));
+    const w = 2.0 * b.s, hImg = w / SK.aspect("pedestal");
+    SK.footW(ctx, "pedestal", b.x, b.y, w);
+    if (a.flash > 0.4 && !REDUCED) {
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha *= 0.3;
+      SK.footW(ctx, "pedestal", b.x, b.y, w); ctx.restore();
+    }
+    const nt = a.teaser ? 10 : Math.min(WMAX, tierOf(crowd.power) + 1);
+    const u = b.s * 2.3 * (a.teaser ? 1.2 : 1);
+    const bob = Math.sin(time * 3 + a.z) * u * 0.05;
+    const cy = b.y - hImg * 0.95 - u * 0.45 + bob;
+    const glow = ctx.createRadialGradient(b.x, cy, 0, b.x, cy, u * 0.7);
+    glow.addColorStop(0, a.teaser ? "rgba(255,210,90,.75)" : "rgba(255,226,140,.45)");
+    glow.addColorStop(1, "rgba(255,226,140,0)");
+    ctx.fillStyle = glow; ctx.fillRect(b.x - u, cy - u, u * 2, u * 2);
+    SK.center(ctx, WEAPON_SPR[nt], b.x, cy, u * 0.95);
+    const fs2 = Math.max(11, Math.min(u * 0.26, 30));
+    ctx.font = "700 " + fs2 + 'px "Barlow Semi Condensed", "Hiragino Sans", sans-serif';
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, fs2 * 0.3); ctx.strokeStyle = "rgba(20,15,12,.85)";
+    const name = a.teaser ? "伝説の武器「" + WEAPONS[nt].n + "」" : WEAPONS[nt].n;
+    ctx.strokeText(name, b.x, cy - u * 0.62); ctx.fillStyle = C.gold; ctx.fillText(name, b.x, cy - u * 0.62);
+    if (a.teaser) {                                         // 壊せない台座：数字の代わりに「？？？」
+      const fs = Math.min(hImg * 0.2, w * 0.14);
+      ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+      ctx.lineWidth = Math.max(2, fs * 0.16); ctx.strokeStyle = "rgba(20,15,12,.85)";
+      ctx.strokeText("???", b.x, b.y - hImg * 0.42); ctx.fillStyle = "#ffd76a"; ctx.fillText("???", b.x, b.y - hImg * 0.42);
+    } else {
+      drawHpLabel(a.hp, b.x, b.y - hImg * 0.42, w * 0.34, hImg * 0.2);
+    }
+    ctx.globalAlpha = 1;
+    return;
+  }
   const x0 = a.x - 0.85, x1 = a.x + 0.85, h = 1.1, d = 0.9;
   const tl = proj(x0, h, a.z), br = proj(x1, 0, a.z);
   if (!tl || !br) return;
@@ -1858,7 +2110,12 @@ function drawGiant(g) {
   // 素材があれば、待機・振りかぶり・叩きつけの3ポーズで描く
   const pre = g.king ? "giant_king_" : "giant_";
   const fighting = battle && battle.giant === g && !g.dead;
-  const pose = pre + (!fighting ? "idle" : g.phase < 0.14 ? "slam" : g.phase < 0.42 ? "idle" : "raise");
+  let pose = pre + (!fighting ? "idle" : g.phase < 0.14 ? "slam" : g.phase < 0.42 ? "idle" : "raise");
+  // ふつうの巨人は、戦う前は5コマで歩いて近づいてくる
+  if (!fighting && !g.dead && !g.king && state === "run") {
+    const wid = "giant_walk_" + (1 + (((g.t * 5) | 0) % 5));
+    if (SK.ok(wid)) pose = wid;
+  }
   if (fighting && g.phase >= 0.42) {
     const k = (g.phase - 0.42) / 0.58;
     const r = proj(g.x, 0, g.z - 1.6 * g.scale);
@@ -2097,11 +2354,21 @@ function drawEnemyBanner(sq) {
 }
 
 function drawBullets() {
+  // 発射炎
+  for (const m of muzzles) {
+    const g = proj(m.x, 1.05, m.z);
+    if (!g) continue;
+    ctx.globalAlpha = 1 - m.t / 0.1;
+    SK.center(ctx, "fx_muzzle", g.x, g.y - g.s * 0.3, g.s * (m.big ? 1.5 : 0.95));
+  }
+  ctx.globalAlpha = 1;
   ctx.lineCap = "round";
   for (const b of bullets) {
     const a = proj(b.x, 0.95, b.z);
     if (!a) continue;
     const t = b.t | 0;
+    // 絵があれば、武器ごとの弾の絵で描く（尾が進む向きの後ろに伸びる）
+    if (a.s > 1.5 && SK.center(ctx, PROJ_SPR[t], a.x, a.y + a.s * PROJ_SIZE[t] * 0.25, a.s * PROJ_SIZE[t])) continue;
     ctx.globalAlpha = 0.95;
     if (t <= 1) {                                // 石
       ctx.fillStyle = "#9a9ca0";
@@ -2119,6 +2386,23 @@ function drawBullets() {
       ctx.strokeStyle = t === 7 ? "#ffcf7a" : "#ffe9a8";
       ctx.lineWidth = Math.max(1, a.s * (t === 8 ? 0.04 : 0.06));
       ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+    } else if (t === 11) {                       // ロケット：赤い弾体と、後ろに煙
+      const c = proj(b.x, 0.95, b.z - 1.4);
+      if (!c) continue;
+      ctx.strokeStyle = "rgba(230,225,215,.55)"; ctx.lineWidth = Math.max(2, a.s * 0.22);
+      ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+      ctx.fillStyle = "#ffb347";
+      ctx.beginPath(); ctx.arc(a.x, a.y + a.s * 0.12, Math.max(2, a.s * 0.12), 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "#c8322a";
+      ctx.beginPath(); ctx.ellipse(a.x, a.y - a.s * 0.05, Math.max(1.5, a.s * 0.1), Math.max(3, a.s * 0.24), 0, 0, 6.2832); ctx.fill();
+    } else if (t === 10) {                       // 戦車砲：燃える砲弾
+      const r = Math.max(2, a.s * 0.26);
+      ctx.fillStyle = "rgba(255,150,60,.45)";
+      ctx.beginPath(); ctx.arc(a.x, a.y - r * 0.2, r * 1.6, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "#2a2220";
+      ctx.beginPath(); ctx.arc(a.x, a.y - r * 0.3, r, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "#ffcf6a";
+      ctx.beginPath(); ctx.arc(a.x - r * 0.3, a.y - r * 0.6, r * 0.35, 0, 6.2832); ctx.fill();
     } else {                                     // 砲丸
       const r = Math.max(2, a.s * 0.24);
       ctx.fillStyle = "#1c1e21";
@@ -2194,13 +2478,13 @@ function render() {
     if (it.type === "goal") drawGoal(it);
     else if (it.type === "bar") drawBar(it);
     else if (it.type === "arm") drawArm(it);
-    else if (it.type === "squad") { drawEnemyBanner(it); drawHost(it.units, false, time, 0); drawSquadBanner(it); }
+    else if (it.type === "squad") { drawEnemyBanner(it); drawHost(it.units.concat(it.bigs || []), false, time, 0, it.beast); drawSquadBanner(it); }
     else if (it.type === "giant") drawGiant(it);
   };
   for (const it of objs) if (it.z > front) drawObj(it);
   drawBullets();
   drawAllyBanner();                                          // 旗は隊列の先頭に立て、兵の頭越しに見せる
-  drawHost(crowd.units, true, time, tierOf(crowd.power));
+  drawHost(crowd.units.concat(crowd.bigs), true, time, tierOf(crowd.power));
   for (const it of objs) if (it.z <= front) drawObj(it);
 
   drawParts();
@@ -2319,9 +2603,19 @@ hPause.addEventListener("click", pauseGame);
 document.getElementById("btnResume").addEventListener("click", resumeGame);
 document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });
 
+/* --- ライフ：3つ。全滅するたびに1つ減り、尽きたら最初から --- */
+const MAX_LIVES = 3;
+let lives = MAX_LIVES;
+function heartsHtml(n, breaking) {
+  let h = "";
+  for (let i = 0; i < MAX_LIVES; i++) h += '<i class="' + (i < n ? "" : i === n && breaking ? "break" : "lost") + '">♥</i>';
+  return h;
+}
+function paintLives() { document.getElementById("hLife").innerHTML = heartsHtml(lives); }
+
 /* --- 続きから：ステージ開始時に自動保存 --- */
 function saveProgress(st, army, power) {
-  try { localStorage.setItem("gr.save", JSON.stringify({ stage: st, army: Math.round(army), power })); } catch (e) {}
+  try { localStorage.setItem("gr.save", JSON.stringify({ stage: st, army: Math.round(army), power, lives, rb: runBest })); } catch (e) {}
 }
 function loadProgress() {
   try { const v = JSON.parse(localStorage.getItem("gr.save") || "null"); return v && v.stage >= 1 ? v : null; } catch (e) { return null; }
@@ -2330,7 +2624,7 @@ function clearProgress() { try { localStorage.removeItem("gr.save"); } catch (e)
 function refreshContinue() {
   const sv = loadProgress(), b = document.getElementById("btnContinue");
   b.hidden = !(sv && sv.stage > 1);
-  if (sv) b.textContent = "続きから（Stage " + sv.stage + "）";
+  if (sv) b.textContent = "続きから（Stage " + sv.stage + "・♥" + (sv.lives || MAX_LIVES) + "）";
 }
 
 function loadBest() { try { return parseInt(localStorage.getItem("gr.best") || "0", 10) || 0; } catch (e) { return 0; } }
@@ -2338,9 +2632,9 @@ function saveBest() { try { localStorage.setItem("gr.best", String(best)); } cat
 
 function resetCrowd(n, p) {
   crowd.x = crowd.tx = 0;
-  crowd.units.length = 0;
+  crowd.units.length = 0; crowd.bigs = [];
   crowd.count = Math.max(0, n);
-  syncCrowd();
+  syncCrowd(); syncBigs();
   syncArmy();
   setPower(p);
 }
@@ -2350,6 +2644,7 @@ const rec = { start: 0, low: 0, giants: 0, kills: 0, arms: 0 };
 
 function beginStage(st, army, power) {
   stage = st;
+  runBest = Math.max(runBest, Math.round(army));
   Object.assign(rec, { start: Math.max(1, army), low: army, giants: 0, kills, arms: 0 });
   flowV = 4.6 + Math.min(st - 1, 9) * 0.28;
   resetCrowd(army, power);
@@ -2427,6 +2722,7 @@ function stageClear() {
     document.getElementById("wWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
     document.getElementById("wKills").textContent = fmt(kills);
     ovWin.hidden = false;
+    Result.show(ovWin, { stage: FINAL_STAGE + 1, final: true });
     return;
   }
   showClearMessage();
@@ -2435,6 +2731,7 @@ function stageClear() {
   document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
   document.getElementById("cKills").textContent = fmt(kills);
   ovClear.hidden = false;
+  Result.prepareClear(document.getElementById("clearRank").textContent);
 }
 
 function gameOver() {
@@ -2443,10 +2740,31 @@ function gameOver() {
   battle = null;
   Snd.music(false);
   Snd.lose(); saveBest(); doShake(16);
+  lives = Math.max(0, lives - 1);
+  paintLives();
+  const sv = loadProgress();
+  const retry = document.getElementById("btnRetryStage"), again = document.getElementById("btnRetry");
+  document.getElementById("overLife").innerHTML = heartsHtml(lives, true);
+  if (lives > 0) {
+    if (sv) { sv.lives = lives; try { localStorage.setItem("gr.save", JSON.stringify(sv)); } catch (e) {} }
+    document.getElementById("overEyebrow").textContent = "防衛線崩壊";
+    document.getElementById("overTitle").textContent = "軍勢は尽きた";
+    document.getElementById("overLede").textContent = "ライフはあと " + lives + " つ。どの門を開け、どのレーンで受けるか、変えてみよう。";
+    retry.hidden = false; retry.textContent = "このステージから（残り♥" + lives + "）";
+    again.className = "btn ghost";
+  } else {
+    clearProgress();
+    document.getElementById("overEyebrow").textContent = "Game Over";
+    document.getElementById("overTitle").textContent = "ライフが尽きた";
+    document.getElementById("overLede").textContent = "Stage " + stage + " まで到達！ 次はどこまで行けるか、もう一度。";
+    retry.hidden = true;
+    again.className = "btn";
+  }
   document.getElementById("oStage").textContent = "Stage " + stage;
   document.getElementById("oKills").textContent = fmt(kills);
   document.getElementById("oBest").textContent = fmt(best);
   ovOver.hidden = false;
+  Result.show(ovOver, { stage, final: lives <= 0 });
 }
 
 function setupDemo() {
@@ -2455,10 +2773,11 @@ function setupDemo() {
   resetCrowd(24, 2.6);
   hStage.textContent = "1/" + FINAL_STAGE;
   state = "title";
+  lives = MAX_LIVES; paintLives();
   refreshContinue();
 }
 
-const startRun = () => { Snd.kick(); kills = 0; beginStage(1, 12, 1); };
+const startRun = () => { Snd.kick(); kills = 0; runBest = 0; lives = MAX_LIVES; paintLives(); beginStage(1, 12, 1); };
 document.getElementById("btnStart").addEventListener("click", () => { best = loadBest(); startRun(); });
 document.getElementById("btnNext").addEventListener("click", () => {
   beginStage(stage + 1, Math.max(10, Math.round(crowd.count)), crowd.power);
@@ -2467,12 +2786,13 @@ document.getElementById("btnRetry").addEventListener("click", startRun);
 document.getElementById("btnRetryStage").addEventListener("click", () => {
   const sv = loadProgress();
   Snd.kick();
-  if (sv) beginStage(sv.stage, sv.army, sv.power); else startRun();
+  if (sv) { lives = sv.lives || MAX_LIVES; paintLives(); beginStage(sv.stage, sv.army, sv.power); } else startRun();
 });
 document.getElementById("btnContinue").addEventListener("click", () => {
   const sv = loadProgress();
   if (!sv) return;
-  best = loadBest(); Snd.kick(); kills = 0;
+  best = loadBest(); Snd.kick(); kills = 0; runBest = sv.rb || 0;
+  lives = sv.lives || MAX_LIVES; paintLives();
   beginStage(sv.stage, sv.army, sv.power);
 });
 document.getElementById("btnQuit").addEventListener("click", () => {
@@ -2487,6 +2807,287 @@ document.getElementById("btnSound").addEventListener("click", (e) => {
   e.currentTarget.textContent = on ? "♪" : "✕";
   e.currentTarget.style.color = on ? C.gold : "rgba(228,219,198,.45)";
 });
+
+/* ============================================================
+   9.5 結果のシェアとオンラインランキング
+   ============================================================ */
+/* ランキングは Google Apps Script（ranking-gas.js）に記録する。
+   URL が空の間はランキング関係のボタンを隠し、シェアだけ使えるようにする */
+const RANKING_API = "";
+const GAME_ID = "geigeki";
+const SHARE_URL = "https://machino-ai.jp/ad-games/geigeki_road.html";
+const ovRank = document.getElementById("ovRank");
+const recBox = document.getElementById("recBox");
+const recName = document.getElementById("recName"), recMsg = document.getElementById("recMsg");
+const btnRegister = document.getElementById("btnRegister"), btnShare = document.getElementById("btnShare");
+const btnShareClear = document.getElementById("btnShareClear");
+const toastEl = document.getElementById("toast");
+
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+function getUid() {
+  let id = lsGet("gr.uid", "");
+  if (!id) { id = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); lsSet("gr.uid", id); }
+  return id;
+}
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+/* 大きな数は「1.2万」「3.4億」に縮める（画像やランキングの狭い欄用） */
+function jpShort(n) {
+  n = Math.round(n);
+  const cut = (v) => (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toString();
+  if (n >= 1e12) return cut(n / 1e12) + "兆";
+  if (n >= 1e8) return cut(n / 1e8) + "億";
+  if (n >= 1e4) return cut(n / 1e4) + "万";
+  return n.toLocaleString("ja-JP");
+}
+const stageLabel = (st) => (st > FINAL_STAGE ? "全制覇" : "Stage " + st);
+let toastTimer = 0;
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("on"), 2600);
+}
+
+/* --- シェア画像（1080×1080）。背景はいま戦っていたステージの景色 --- */
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function buildShareImage(r) {
+  const S = 1080, cv = document.createElement("canvas");
+  cv.width = cv.height = S;
+  const g = cv.getContext("2d");
+  const JP = '"Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif';
+  const DISP = 'Chango, "Arial Black", ' + JP;
+  g.fillStyle = "#241c18"; g.fillRect(0, 0, S, S);
+  if (window.StageBackgrounds) StageBackgrounds.draw(g, Math.min(r.bgStage, FINAL_STAGE), S, S);
+  const gr = g.createLinearGradient(0, 0, 0, S);
+  gr.addColorStop(0, "rgba(20,15,12,.55)"); gr.addColorStop(.45, "rgba(20,15,12,.62)"); gr.addColorStop(1, "rgba(20,15,12,.94)");
+  g.fillStyle = gr; g.fillRect(0, 0, S, S);
+  g.strokeStyle = "rgba(224,168,60,.85)"; g.lineWidth = 6; g.strokeRect(26, 26, S - 52, S - 52);
+  g.strokeStyle = "rgba(224,168,60,.3)"; g.lineWidth = 2; g.strokeRect(42, 42, S - 84, S - 84);
+  g.textAlign = "center"; g.textBaseline = "alphabetic";
+
+  g.fillStyle = "rgba(224,168,60,.9)"; g.font = "700 30px " + JP;
+  g.fillText("L A N E   D E F E N S E", S / 2, 128);
+  g.shadowColor = "rgba(0,0,0,.6)"; g.shadowOffsetY = 6; g.shadowBlur = 0;
+  g.fillStyle = "#e0a83c"; g.font = "900 118px " + JP;
+  g.fillText("迎撃ロード", S / 2, 262);
+  const titleW = g.measureText("迎撃ロード").width;
+  g.shadowColor = "transparent";
+
+  // 主役の結果
+  const allClear = r.kind !== "clear" && r.stage > FINAL_STAGE;
+  const big = allClear ? "全10ステージ" : "STAGE " + r.stage;
+  const sub = r.kind === "clear" ? "防衛成功！" : allClear ? "完全制覇！" : "まで到達！";
+  g.fillStyle = "#fff3da";
+  g.font = allClear ? "900 108px " + JP : "150px " + DISP;
+  g.shadowColor = "rgba(0,0,0,.55)"; g.shadowOffsetY = 5;
+  g.fillText(big, S / 2, 450);
+  g.shadowColor = "transparent";
+  g.fillStyle = "#e4dbc6"; g.font = "800 54px " + JP;
+  g.fillText(sub, S / 2, 530);
+
+  // ランクの判子（ステージクリア時）
+  if (r.rank) {
+    const col = { S: "#ffd76a", A: "#9ee6a8", B: "#9cc0ff", C: "#d9a8a0" }[r.rank] || "#ffd76a";
+    // タイトルの右肩に押す（結果の数字とは重ねない）
+    g.save(); g.translate(Math.min(S - 112, S / 2 + titleW / 2 + 72), 200); g.rotate(-0.25);
+    g.fillStyle = "rgba(20,15,12,.94)"; g.beginPath(); g.arc(0, 0, 72, 0, 7); g.fill();
+    g.strokeStyle = col; g.lineWidth = 8; g.stroke();
+    g.fillStyle = col; g.font = "84px " + DISP; g.textBaseline = "middle"; g.fillText(r.rank, 0, 6);
+    g.restore(); g.textBaseline = "alphabetic";
+  }
+
+  // 数字の3枠
+  const top = 590, h = 220, pad = 70, gap = 18, w = (S - pad * 2 - gap * 2) / 3;
+  const cells = [
+    { k: r.kind === "clear" ? "兵力" : "最高兵力", v: jpShort(r.army) + "人" },
+    { k: "武器", v: r.weapon, icon: r.weaponIcon },
+    { k: "撃破数", v: jpShort(r.kills) },
+  ];
+  cells.forEach((c, i) => {
+    const x = pad + i * (w + gap);
+    g.fillStyle = "rgba(36,28,24,.86)"; roundRect(g, x, top, w, h, 6); g.fill();
+    g.strokeStyle = "rgba(224,168,60,.45)"; g.lineWidth = 2; g.stroke();
+    g.fillStyle = "rgba(224,168,60,.9)"; g.font = "700 30px " + JP;
+    g.fillText(c.k, x + w / 2, top + 50);
+    if (c.icon) SK.center(g, c.icon, x + w / 2, top + 108, 78);
+    g.fillStyle = i === 0 ? "#e0a83c" : "#e4dbc6";
+    let fs = c.icon ? 40 : 60;
+    g.font = "800 " + fs + "px " + JP;
+    while (g.measureText(c.v).width > w - 24 && fs > 22) { fs -= 2; g.font = "800 " + fs + "px " + JP; }
+    g.fillText(c.v, x + w / 2, top + (c.icon ? 190 : 160));
+  });
+
+  // 今日の順位、なければ挑戦のひとこと
+  g.font = "800 46px " + JP;
+  if (r.place) {
+    g.fillStyle = "#ffd76a";
+    g.fillText("今日のランキング " + r.place + "位", S / 2, 890);
+    g.fillStyle = "rgba(228,219,198,.75)"; g.font = "700 30px " + JP;
+    g.fillText(r.total + "人中", S / 2, 934);
+  } else {
+    g.fillStyle = "#fff3da";
+    g.fillText("あなたはどこまで守れる？", S / 2, 900);
+  }
+
+  g.fillStyle = "rgba(228,219,198,.7)"; g.font = "700 28px " + JP;
+  g.fillText("AIだけで作ったゲーム｜AIゲーム実験室", S / 2, 994);
+  g.fillStyle = "#e0a83c"; g.font = "700 30px " + JP;
+  g.fillText("machino-ai.jp/ad-games", S / 2, 1036);
+  return new Promise((res) => cv.toBlob(res, "image/png"));
+}
+
+function shareText(r) {
+  let t;
+  if (r.kind === "clear") t = "迎撃ロード Stage " + r.stage + " をランク" + r.rank + "で突破！兵力 " + jpShort(r.army) + "人、武器は" + r.weapon + "。";
+  else if (r.stage > FINAL_STAGE) t = "迎撃ロード 全10ステージ完全制覇！最高兵力 " + jpShort(r.army) + "人。";
+  else t = "迎撃ロードで Stage " + r.stage + " まで到達！最高兵力 " + jpShort(r.army) + "人。";
+  if (r.place) t = "【今日のランキング " + r.place + "位】" + t;
+  return t + "\nAIだけで作ったゲームです。あなたはどこまで守れる？\n#AIゲーム実験室 #迎撃ロード";
+}
+
+async function shareImage(blob, text) {
+  const name = "geigeki-road-result.png";
+  if (blob && navigator.canShare) {
+    const file = new File([blob], name, { type: "image/png" });
+    if (navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: text + "\n" + SHARE_URL }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+  }
+  if (navigator.share) {
+    try { await navigator.share({ text, url: SHARE_URL }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  // 共有機能がない環境（パソコンなど）は、画像を保存して文章をコピーする
+  if (blob) {
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+  try { await navigator.clipboard.writeText(text + "\n" + SHARE_URL); toast("画像を保存し、文章をコピーしました"); }
+  catch (e) { toast("画像を保存しました"); }
+}
+
+/* 共有はタップの中で呼ぶ必要があるので、画像は結果を出した時点で作っておく */
+function makeShare(btn, label) {
+  let blob = null, data = null, ver = 0;
+  return {
+    prepare(r) {
+      data = r; blob = null; const my = ++ver;
+      btn.disabled = true; btn.textContent = "📷 画像を準備中…";
+      buildShareImage(r).then((b) => { if (my === ver) blob = b; }).catch(() => {}).then(() => {
+        if (my === ver) { btn.disabled = false; btn.textContent = label; }
+      });
+    },
+    run() { if (data) { Snd.good(); shareImage(blob, shareText(data)); } },
+  };
+}
+const clearShare = makeShare(btnShareClear, "📷 シェア");
+const resultShare = makeShare(btnShare, "📷 結果を画像でシェア");
+btnShareClear.addEventListener("click", () => clearShare.run());
+btnShare.addEventListener("click", () => resultShare.run());
+
+/* --- ランキング（GAS） --- */
+async function apiGet(view) {
+  const res = await fetch(RANKING_API + "?view=" + view + "&game=" + GAME_ID + "&uid=" + encodeURIComponent(getUid()), { cache: "no-store" });
+  return res.json();
+}
+async function apiPost(body) {
+  const res = await fetch(RANKING_API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
+  return res.json();
+}
+
+let rkReq = 0;
+const RK_NOTE = {
+  today: "到達ステージ → 最高兵力の順。毎日0時にリセット。何回挑戦してもOK（一番いい記録が残ります）",
+  month: "遊んだ日 +1点 ／ その日の1〜3位 +10・7・5点 ／ 全制覇 +3点。続けるほど上位へ",
+};
+async function loadRanking(view) {
+  ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === view));
+  document.getElementById("rkNote").textContent = RK_NOTE[view];
+  const list = document.getElementById("rkList"), meEl = document.getElementById("rkMe");
+  list.innerHTML = '<li class="empty">読み込み中…</li>'; meEl.textContent = "";
+  const my = ++rkReq;
+  try {
+    const d = await apiGet(view);
+    if (my !== rkReq) return;
+    const es = d.entries || [];
+    list.innerHTML = es.length ? es.map((e) => {
+      const sc = view === "month"
+        ? e.points + "点<small>" + e.days + "日・" + stageLabel(e.stage) + "</small>"
+        : stageLabel(e.stage) + "<small>兵力 " + jpShort(e.army) + "人</small>";
+      return '<li class="' + (e.mine ? "mine" : "") + '"><span class="no">' + e.rank + '</span><span class="nm">' + esc(e.name) + '</span><span class="sc">' + sc + "</span></li>";
+    }).join("") : '<li class="empty">' + (view === "today" ? "今日はまだ誰も登録していません。一番乗りのチャンス！" : "今月の記録はまだありません") + "</li>";
+    if (d.me) {
+      const tail = view === "month" ? d.me.points + "点" : stageLabel(d.me.stage) + "・兵力 " + jpShort(d.me.army) + "人";
+      meEl.innerHTML = "あなたは <b>" + d.total + "人中 " + d.me.rank + "位</b>（" + esc(tail) + "）";
+    } else if (view === "today") meEl.textContent = "登録すると、ここにあなたの順位が出ます";
+  } catch (e) {
+    if (my === rkReq) list.innerHTML = '<li class="empty">読み込めませんでした。通信のよい場所でもう一度どうぞ</li>';
+  }
+}
+function openRanking(view) { ovRank.hidden = false; loadRanking(view || "today"); }
+ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.addEventListener("click", () => loadRanking(b.dataset.v)));
+document.getElementById("btnRankClose").addEventListener("click", () => { ovRank.hidden = true; });
+document.getElementById("btnRankTitle").addEventListener("click", () => openRanking("today"));
+document.getElementById("btnRankRec").addEventListener("click", () => openRanking("today"));
+if (RANKING_API) document.getElementById("btnRankTitle").hidden = false;
+
+/* --- 結果画面への差し込み --- */
+let lastResult = null, registered = false;
+function resultData(extra) {
+  const t = tierOf(crowd.power);
+  return Object.assign({ army: runBest, kills, weapon: WEAPONS[t].n, weaponIcon: WEAPON_SPR[t], bgStage: stage }, extra);
+}
+const Result = {
+  prepareClear(rank) {
+    clearShare.prepare(resultData({ kind: "clear", stage, rank, army: crowd.count }));
+  },
+  show(host, info) {
+    lastResult = resultData({ kind: "result", stage: info.stage, final: info.final });
+    registered = false;
+    // 続きがあるときはリトライを先に、ゲームが終わったときは登録とシェアを先に見せる
+    const tab = host.querySelector(".tablet");
+    if (info.final) tab.insertBefore(recBox, tab.querySelector(".btns") || tab.querySelector(".btn"));
+    else { tab.appendChild(recBox); }
+    recBox.classList.toggle("after", !info.final);
+    recBox.hidden = false;
+    const on = !!RANKING_API;
+    document.getElementById("recReg").hidden = !on;
+    document.getElementById("btnRankRec").hidden = !on;
+    recName.value = lsGet("gr.name", "");
+    btnRegister.disabled = false; btnRegister.textContent = "ランキングに登録";
+    recMsg.textContent = on && info.final ? "今日のランキングに記録を残そう" : "";
+    resultShare.prepare(lastResult);
+  },
+};
+async function register() {
+  if (!RANKING_API || !lastResult || registered) return;
+  const name = (recName.value || "").replace(/[\r\n\t]/g, " ").trim().slice(0, 12);
+  if (!name) { recMsg.textContent = "なまえを入れてください"; recName.focus(); return; }
+  lsSet("gr.name", name);
+  btnRegister.disabled = true; btnRegister.textContent = "送信中…";
+  try {
+    const d = await apiPost({ game: GAME_ID, name, stage: lastResult.stage, army: Math.round(lastResult.army), kills: Math.round(lastResult.kills), uid: getUid() });
+    if (!d.ok) throw new Error(d.error || "failed");
+    registered = true;
+    btnRegister.textContent = "登録済み";
+    if (d.me) {
+      const better = d.me.stage > lastResult.stage || (d.me.stage === lastResult.stage && d.me.army > lastResult.army);
+      recMsg.innerHTML = "今日のランキング <b>" + d.total + "人中 " + d.me.rank + "位</b>" + (better ? "（今日のベスト記録で集計）" : "");
+      lastResult.place = d.me.rank; lastResult.total = d.total;
+      resultShare.prepare(lastResult);                // 順位入りの画像に作り直す
+    } else recMsg.textContent = "登録しました";
+    Snd.great();
+  } catch (e) {
+    btnRegister.disabled = false; btnRegister.textContent = "もう一度送る";
+    recMsg.textContent = "送れませんでした。通信のよい場所でもう一度どうぞ";
+  }
+}
+btnRegister.addEventListener("click", register);
+recName.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); register(); } });
 
 /* ============================================================
    10. メインループ

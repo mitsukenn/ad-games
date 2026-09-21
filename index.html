@@ -84,6 +84,39 @@
   .card .go{margin-top:auto; padding-top:8px; font-family:var(--disp); color:var(--gold); font-size:17px}
   .t2 .tag{color:#9cc0ff} .t3 .tag{color:#e0a83c}
 
+  /* ---------- イチオシ：迎撃ロード ---------- */
+  .feature{
+    position:relative; margin:0 0 44px; padding:24px 20px 22px;
+    background:linear-gradient(180deg,#2c3a5c 0%,#2a2430 38%,var(--ink) 100%);
+    border:1px solid rgba(156,192,255,.55); box-shadow:0 22px 50px rgba(0,0,0,.5);
+  }
+  .feature::before{content:""; position:absolute; inset:6px; border:1px solid rgba(156,192,255,.18); pointer-events:none}
+  .pick{display:inline-block; font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--ink); background:var(--gold);
+        padding:3px 10px 4px; margin-bottom:10px}
+  .feature .tag{color:#9cc0ff; display:block; margin-bottom:4px}
+  .feature h3{font-family:var(--disp); font-weight:400; font-size:clamp(34px,8vw,48px); line-height:1.05; margin:0 0 10px;
+              color:#fff3da; text-shadow:0 3px 0 rgba(0,0,0,.45)}
+  .feature .intro{margin:0 0 18px; font-size:16px; line-height:1.75; color:var(--soft); max-width:36em}
+  .feature .intro strong{color:var(--stone)}
+  .shots{display:grid; grid-auto-flow:column; grid-auto-columns:58%; gap:12px; margin:0 -20px 18px; padding:0 20px 6px;
+         overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch}
+  .shots figure{margin:0; scroll-snap-align:start}
+  .shots img{display:block; width:100%; height:auto; aspect-ratio:540/1052; border-radius:14px;
+             border:3px solid #16110e; box-shadow:0 0 0 1px rgba(156,192,255,.35), 0 12px 26px rgba(0,0,0,.45); background:#16110e}
+  .shots figcaption{margin-top:7px; font-size:13px; font-weight:600; color:var(--soft); text-align:center}
+  .points{list-style:none; margin:0 0 18px; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px}
+  .points li{background:rgba(0,0,0,.28); padding:9px 12px; font-size:14px; line-height:1.5; color:var(--soft)}
+  .points b{color:var(--stone)}
+  .play{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; max-width:420px;
+        font-family:var(--disp); font-size:21px; color:var(--ink); background:var(--gold); text-decoration:none;
+        padding:15px 20px 13px; border-bottom:5px solid #a37520; margin:4px 0 8px}
+  .play:hover{background:#eeb748}
+  .play:active{transform:translateY(2px); border-bottom-width:3px}
+  .play:focus-visible{outline:2px solid var(--stone); outline-offset:3px}
+  .play-note{font-size:13px; color:rgba(228,219,198,.6); margin:0 0 16px}
+  .feature .order{max-width:40em}
+  @media (min-width:700px){ .feature{padding:30px 30px 26px} .shots{grid-auto-columns:1fr; margin:0 auto 20px; padding:0; overflow:visible; max-width:640px} }
+
   /* ---------- AIの担当 ---------- */
   .roles{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1px; margin:0 0 40px;
          background:rgba(224,168,60,.22); border:1px solid rgba(224,168,60,.22)}
@@ -105,7 +138,27 @@
   <h1>AIゲーム実験室</h1>
   <p class="catch">AIだけで、<br>どこまでゲームを作れるか。</p>
   <p class="lede">スマホの広告でよく見る「あのゲーム」を、<strong>AIだけで作ってみる実験</strong>です。プログラムも、絵も、音も、難しさの調整もAI。人がやったのは、遊んでみて「もっとこうして」と言葉で頼むことだけ。どこまでちゃんと遊べるか、ぜひ試してみてください。</p>
-  <a class="jump" href="#games">さっそく遊ぶ ↓</a>
+  <a class="jump" href="geigeki_road.html">迎撃ロードで遊ぶ →</a>
+
+  <section class="feature" id="games" aria-labelledby="ftTitle">
+    <span class="pick">いちばんのおすすめ</span>
+    <span class="tag">Lane Defense ／ 撃って守る</span>
+    <h3 id="ftTitle">迎撃ロード</h3>
+    <p class="intro">動かずに撃ちまくる防衛戦。流れてくる門を撃ち開けて仲間を増やし、武器は<strong>投石からロケット砲まで12段階</strong>に進化。3本の道を見きわめて、押し寄せる大軍と巨人を食い止めろ！</p>
+    <div class="shots">
+      <figure><img src="assets/screens/geigeki_1.jpg" width="540" height="1052" alt="迎撃ロードの序盤。緑の谷の道に門と兵が増える青い板が流れてくる" loading="lazy"><figcaption>門を撃ち開けて、兵を増やす</figcaption></figure>
+      <figure><img src="assets/screens/geigeki_2.jpg" width="540" height="1052" alt="雪の神殿のステージ。青い軍勢がショットガンで敵を撃つ" loading="lazy"><figcaption>武器はどんどん強くなる</figcaption></figure>
+      <figure><img src="assets/screens/geigeki_3.jpg" width="540" height="1052" alt="火山の要塞のステージ。数十万の敵軍と白兵戦になり爆発が起きている" loading="lazy"><figcaption>数十万の大軍と激突</figcaption></figure>
+    </div>
+    <ul class="points">
+      <li><b>全10ステージ</b>　谷・砂漠・雪・火山・天空と景色が変わる</li>
+      <li><b>巨人と巨人王</b>　近づく前に削りきれるか</li>
+      <li><b>結果をシェア</b>　到達ステージを画像にして送れる</li>
+    </ul>
+    <a class="play" href="geigeki_road.html">▶ いますぐ遊ぶ</a>
+    <p class="play-note">無料・登録なし。スマホでそのまま遊べます</p>
+    <p class="order"><small>AIにこう頼んだら</small>「武器は銃とかマシンガンとか砲丸とか、そういう感じの方がいいんじゃないかな」<span class="res">投石・弓・火縄銃…マシンガン・大砲・ロケット砲まで、12段階の武器が登場</span></p>
+  </section>
 
   <h2 class="sec">実験のルール</h2>
   <ul class="rules">
@@ -114,15 +167,8 @@
     <li><b><span class="n">03</span>遊んで、直して、また遊ぶ</b><span>気になったところを伝えると、AIが直して次の版が届きます。</span></li>
   </ul>
 
-  <h2 class="sec" id="games">遊んでみる</h2>
+  <h2 class="sec">ほかのゲーム</h2>
   <div class="grid">
-    <a class="card t2" href="geigeki_road.html">
-      <span class="tag">Lane Defense ／ 撃って守る</span>
-      <h3>迎撃ロード</h3>
-      <p>動かずに撃ちまくる防衛戦。流れてくる門を撃ち開けて仲間を増やし、武器は投石から大砲へ進化。3本の道を見きわめて、押し寄せる大軍と巨人を食い止めろ！</p>
-      <p class="order"><small>AIにこう頼んだら</small>「武器は銃とかマシンガンとか砲丸とか、そういう感じの方がいいんじゃないかな」<span class="res">投石・弓・火縄銃…マシンガン・大砲まで、10段階の武器が登場</span></p>
-      <span class="go">遊んでみる →</span>
-    </a>
     <a class="card t3" href="million_march.html">
       <span class="tag">March Runner ／ 率いて進む</span>
       <h3>Million March</h3>

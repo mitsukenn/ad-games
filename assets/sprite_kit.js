@@ -3,6 +3,7 @@
    先に次を読み込んでおく（無いものは飛ばしてよい）
      assets/prepared/catalog.js     … 兵士・巨人・武器・小物（GAME_ASSET_CATALOG）
      assets/level-units/catalog.js  … レベル別の兵士・ゲート（LEVEL_UNITS_CATALOG）
+     assets/v2/catalog.js           … 迎撃ロード v2 素材（GEIGEKI_V2_CATALOG）
      assets/sprite_bounds.js        … 各素材の「見えている部分」の矩形
 
    - 読み込み前・失敗時は各関数が false を返す。ゲーム側はそのとき今までの描画を使う
@@ -27,6 +28,7 @@
   }
   addCatalog(window.GAME_ASSET_CATALOG, "assets/prepared/");
   addCatalog(window.LEVEL_UNITS_CATALOG, "assets/level-units/");
+  addCatalog(window.GEIGEKI_V2_CATALOG, "assets/v2/");            // 迎撃ロード v2（敵・門・台座・格上げ兵・新武器）
 
   function load(key) {
     const sh = sheets[key];
@@ -41,7 +43,7 @@
     return img;
   }
   // 基本の素材（兵士・巨人・武器・小物）は最初から読み始める
-  for (const key of Object.keys(sheets)) if (key.startsWith("assets/prepared/")) load(key);
+  for (const key of Object.keys(sheets)) if (key.startsWith("assets/prepared/") || key.startsWith("assets/v2/")) load(key);
 
   /** その素材がいま描けるか（まだ読んでいなければ読み始める） */
   function ok(id) {
