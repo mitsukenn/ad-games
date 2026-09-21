@@ -313,6 +313,50 @@
   @media (prefers-reduced-motion:reduce){
     .banner,.warn,.warn .band,.warn .wtxt,.chip.army.bump .v{animation:none}
   }
+  /* ---------- 結果のシェアとランキング登録 ---------- */
+  .rec{margin:0 0 16px; padding:12px 12px 10px; border:1px solid rgba(224,168,60,.3); background:rgba(20,15,12,.45)}
+  .rec.after{margin:16px 0 0}
+  .rec-reg{display:flex; gap:8px; margin-bottom:8px}
+  .rec-reg[hidden]{display:none}
+  .rec input{
+    flex:1; min-width:0; font:600 16px var(--ui); color:var(--stone-l);
+    background:rgba(36,28,24,.9); border:1px solid rgba(224,168,60,.45); border-radius:2px; padding:8px 10px;
+    user-select:text; -webkit-user-select:text; touch-action:manipulation;
+  }
+  .rec input:focus{outline:2px solid var(--gold); outline-offset:1px}
+  .rec .btn{font-size:15px; padding:9px 14px 8px; white-space:nowrap}
+  .rec-msg{font-size:13px; line-height:1.5; color:rgba(228,219,198,.72); margin:0 0 8px; min-height:1.5em}
+  .rec-msg b{color:var(--gold); font-size:16px}
+  .rec-msg:empty{display:none}
+  .rec-row{display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
+  .rec-row .btn.ghost{margin-left:0}
+  .btn.share{font-family:var(--ui); font-weight:700; font-size:15px; padding:9px 16px 8px; background:#3b6fd1; color:#fff; border-bottom-color:#27488a}
+  .btn.share:hover{background:#4a7de0}
+  .btn.share:disabled{opacity:.6; cursor:default}
+
+  .rk-tabs{display:flex; gap:0; margin:4px auto 10px; max-width:260px; border:1px solid rgba(224,168,60,.45)}
+  .rk-tabs button{flex:1; font:700 15px var(--ui); color:rgba(228,219,198,.7); background:transparent; border:0; padding:8px 0; cursor:pointer}
+  .rk-tabs button.on{background:var(--gold); color:var(--ink)}
+  .rk-note{font-size:12px; line-height:1.5; color:rgba(228,219,198,.55); margin:0 0 10px}
+  .rk-list{list-style:none; margin:0 0 10px; padding:0; text-align:left; max-height:min(46vh,420px); overflow-y:auto}
+  .rk-list li{display:grid; grid-template-columns:34px 1fr auto; gap:8px; align-items:center; padding:7px 8px; border-bottom:1px solid rgba(224,168,60,.14); font-size:15px}
+  .rk-list li.mine{background:rgba(224,168,60,.16)}
+  .rk-list .no{font-family:var(--disp); color:rgba(228,219,198,.6); text-align:center}
+  .rk-list li:nth-child(1) .no{color:#ffd76a} .rk-list li:nth-child(2) .no{color:#dfe6ee} .rk-list li:nth-child(3) .no{color:#e0a070}
+  .rk-list .nm{font-weight:700; color:var(--stone-l); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .rk-list .sc{font-family:var(--disp); font-size:13px; color:var(--gold); text-align:right; white-space:nowrap}
+  .rk-list .sc small{display:block; font-family:var(--ui); font-weight:600; font-size:11px; color:rgba(228,219,198,.55)}
+  .rk-list .empty{display:block; text-align:center; color:rgba(228,219,198,.6); border:0; padding:18px 0}
+  .rk-me{font-size:14px; color:var(--stone-l); margin:0 0 14px}
+  .rk-me:empty{display:none}
+  .rk-me b{color:var(--gold)}
+
+  .toast{position:absolute; left:50%; bottom:max(70px, env(safe-area-inset-bottom)); transform:translateX(-50%);
+         background:rgba(20,15,12,.92); border:1px solid rgba(224,168,60,.6); color:var(--stone-l);
+         padding:9px 16px; font-weight:700; font-size:14px; pointer-events:none; opacity:0; transition:opacity .25s;
+         width:max-content; max-width:calc(100% - 32px); z-index:5}
+  .toast.on{opacity:1}
+
 </style>
 
 <div id="app">
@@ -353,6 +397,7 @@
       <div class="btn-row">
         <button class="btn" id="btnStart">出撃する</button>
         <button class="btn ghost" id="btnContinue" hidden>続きから</button>
+        <button class="btn ghost" id="btnRankTitle" hidden>🏆 ランキング</button>
       </div>
       <p class="hint">ドラッグ、または ← → キーで隊列を動かす。P キーで一時停止</p>
     </div>
@@ -368,7 +413,10 @@
         <div class="stat w hi"><div class="k">武器</div><div class="v" id="cWeap">素手</div></div>
         <div class="stat"><div class="k">撃破数</div><div class="v" id="cKills">0</div></div>
       </div>
-      <button class="btn" id="btnNext">次のステージへ</button>
+      <div class="btn-row">
+        <button class="btn" id="btnNext">次のステージへ</button>
+        <button class="btn share" id="btnShareClear">📷 シェア</button>
+      </div>
     </div>
   </div>
 
@@ -430,6 +478,36 @@
       <button class="btn" id="btnSetClose">閉じる</button>
     </div>
   </div>
+
+  <!-- 結果の登録とシェア。全滅・全制覇の画面に差し込んで使う -->
+  <div class="rec" id="recBox" hidden>
+    <div class="rec-reg" id="recReg">
+      <input id="recName" maxlength="12" placeholder="なまえ（12文字まで）" autocomplete="nickname" enterkeyhint="done">
+      <button class="btn" id="btnRegister">ランキングに登録</button>
+    </div>
+    <p class="rec-msg" id="recMsg"></p>
+    <div class="rec-row">
+      <button class="btn share" id="btnShare">📷 結果を画像でシェア</button>
+      <button class="btn ghost" id="btnRankRec" hidden>🏆 ランキングを見る</button>
+    </div>
+  </div>
+
+  <div class="ov" id="ovRank" hidden>
+    <div class="tablet">
+      <div class="eyebrow">Ranking</div>
+      <h2>ランキング</h2>
+      <div class="rk-tabs" role="tablist">
+        <button data-v="today" class="on" role="tab">今日</button>
+        <button data-v="month" role="tab">今月</button>
+      </div>
+      <p class="rk-note" id="rkNote"></p>
+      <ol class="rk-list" id="rkList"></ol>
+      <p class="rk-me" id="rkMe"></p>
+      <button class="btn" id="btnRankClose">閉じる</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
 </div>
 
 <script>
@@ -1375,6 +1453,7 @@ let state = "title";        // title | run | battle | clear | over
 let stage = 1;
 let kills = 0;
 let best  = 0;
+let runBest = 0;         // 今回の遠征での最高兵力（ランキングとシェアに使う）
 let shake = 0;
 let time  = 0;
 
@@ -1443,6 +1522,7 @@ function setCount(n) {
   crowd.count = Math.max(0, n);
   syncUnits(crowd, C.ally);
   if (crowd.count > best) best = Math.round(crowd.count);
+  if (crowd.count > runBest) runBest = Math.round(crowd.count);
   hArmy.textContent = fmt(crowd.count);
 }
 
@@ -1765,6 +1845,7 @@ function doShake(v) { if (!REDUCED) shake = Math.min(shake + v, 22); }
    ============================================================ */
 const keys = Object.create(null);
 addEventListener("keydown", (e) => {
+  if (e.target && e.target.closest && e.target.closest("input")) return;   // 名前の入力中はゲーム操作にしない
   keys[e.key] = true;
   if (["ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
 });
@@ -3186,7 +3267,8 @@ function resetCrowd(n, w) {
 function beginStage(st, army, weapon) {
   stage = st;
   inBonus = false;
-  store.set("mm.save", { st, army, weapon, kills, endless });
+  runBest = Math.max(runBest, Math.round(army));
+  store.set("mm.save", { st, army, weapon, kills, endless, rb: runBest });
   if (st > store.get("mm.bestStage", 0)) store.set("mm.bestStage", st);
   crowd.speed = 8 + Math.min(st - 1, 9) * 0.6;     // 8 → 13.4（旧版の約2/3）
   resetCrowd(army, weapon);
@@ -3244,17 +3326,19 @@ function stageClear() {
     document.getElementById("clearLede").textContent = "ふくらんだ軍勢で Stage " + (stage + 1) + " へ。";
     document.getElementById("btnNext").textContent = "Stage " + (stage + 1) + " へ";
     ovClear.hidden = false;
+    Result.hideClearShare();
     return;
   }
   document.getElementById("clearTitle").textContent = "神殿を制圧した";
   document.getElementById("btnNext").textContent = bonusAfter(stage) ? "ボーナスステージへ" : "次のステージへ";
 
   if (stage >= FINAL_STAGE && !endless) {          // 完全制覇
-    store.set("mm.save", { st: stage + 1, army: Math.max(10, Math.round(crowd.count)), weapon: crowd.weapon, kills, endless: true });
+    store.set("mm.save", { st: stage + 1, army: Math.max(10, Math.round(crowd.count)), weapon: crowd.weapon, kills, endless: true, rb: runBest });
     document.getElementById("wArmy").textContent  = fmt(crowd.count);
     document.getElementById("wWeap").textContent  = wname(crowd.weapon);
     document.getElementById("wKills").textContent = fmt(kills);
     ovWin.hidden = false;
+    Result.show(ovWin, { stage: FINAL_STAGE + 1, win: true });
     return;
   }
 
@@ -3265,6 +3349,7 @@ function stageClear() {
   document.getElementById("clearLede").textContent =
     "残存兵力 " + fmt(crowd.count) + " と " + wname(crowd.weapon) + " を引き継いで次の神殿へ。";
   ovClear.hidden = false;
+  Result.prepareClear();
 }
 
 function gameOver() {
@@ -3279,6 +3364,7 @@ function gameOver() {
   document.getElementById("oKills").textContent = fmt(kills);
   document.getElementById("oBest").textContent = fmt(best);
   ovOver.hidden = false;
+  Result.show(ovOver, { stage });
 }
 
 /* --- タイトル画面用のデモ隊列 ------------------------------ */
@@ -3292,11 +3378,11 @@ function setupDemo() {
   state = "title";
 }
 
-const startRun = () => { Snd.kick(); kills = 0; endless = false; beginStage(1, 20, 0); };
+const startRun = () => { Snd.kick(); kills = 0; runBest = 0; endless = false; beginStage(1, 20, 0); };
 function continueSaved() {
   const sv = store.get("mm.save", null);
   if (!sv) { startRun(); return; }
-  Snd.kick(); kills = sv.kills || 0; endless = !!sv.endless;
+  Snd.kick(); kills = sv.kills || 0; endless = !!sv.endless; runBest = sv.rb || 0;
   beginStage(sv.st, sv.army, sv.weapon);
 }
 
@@ -3354,6 +3440,7 @@ document.getElementById("btnQuit").addEventListener("click", () => {
   setupDemo(); refreshTitle(); ovTitle.hidden = false;
 });
 addEventListener("keydown", (e) => {
+  if (e.target && e.target.closest && e.target.closest("input")) return;
   if (e.key === "p" || e.key === "P" || e.key === "Escape") {
     if (state === "paused" && ovSettings.hidden) resumeGame(); else pauseGame();
   }
@@ -3374,6 +3461,275 @@ document.getElementById("btnSound").addEventListener("click", (e) => {
   e.currentTarget.textContent = on ? "♪" : "✕";
   e.currentTarget.style.color = on ? C.gold : "rgba(228,219,198,.45)";
 });
+
+/* ============================================================
+   8.5 結果のシェアとオンラインランキング（迎撃ロードと同じ GAS に game="million" で記録）
+   ============================================================ */
+const RANKING_API = "https://script.google.com/macros/s/AKfycbyNh85RNVYJM1_cn5vn6d4_lFm-3_9MeQZe1vMGU4xk-fHRvGbbGUIgkgI2QUXhYyySMw/exec";
+const GAME_ID = "million";
+const SHARE_URL = "https://machino-ai.jp/ad-games/million_march.html";
+const ovRank = document.getElementById("ovRank");
+const recBox = document.getElementById("recBox");
+const recName = document.getElementById("recName"), recMsg = document.getElementById("recMsg");
+const btnRegister = document.getElementById("btnRegister"), btnShare = document.getElementById("btnShare");
+const btnShareClear = document.getElementById("btnShareClear");
+const toastEl = document.getElementById("toast");
+
+function getUid() {
+  let id = store.get("mm.uid", "");
+  if (!id) { id = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); store.set("mm.uid", id); }
+  return id;
+}
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+/* 大きな数は「1.2万」「3.4億」に縮める（画像やランキングの狭い欄用） */
+function jpShort(n) {
+  n = Math.round(n);
+  const cut = (v) => (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toString();
+  if (n >= 1e12) return cut(n / 1e12) + "兆";
+  if (n >= 1e8) return cut(n / 1e8) + "億";
+  if (n >= 1e4) return cut(n / 1e4) + "万";
+  return n.toLocaleString("ja-JP");
+}
+/* ランキングの stage：1〜10＝その面で全滅、11＝全10面制覇（またはエンドレス11面で全滅）、12〜＝エンドレスのその面で全滅 */
+const stageLabel = (st) => (st === FINAL_STAGE + 1 ? "全制覇" : "Stage " + st);
+let toastTimer = 0;
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("on"), 2600);
+}
+
+/* --- シェア画像（1080×1080）。背景はいま戦っていたステージの景色 --- */
+function roundRect(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function buildShareImage(r) {
+  const S = 1080, cv = document.createElement("canvas");
+  cv.width = cv.height = S;
+  const g = cv.getContext("2d");
+  const JP = '"Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif';
+  const DISP = 'Chango, "Arial Black", ' + JP;
+  g.fillStyle = "#241c18"; g.fillRect(0, 0, S, S);
+  const img = bgImage(themeFor(r.bgStage));
+  if (bgReady(img)) {
+    const sc = Math.max(S / img.naturalWidth, S / img.naturalHeight), dw = img.naturalWidth * sc, dh = img.naturalHeight * sc;
+    g.drawImage(img, (S - dw) / 2, (S - dh) / 2, dw, dh);
+  }
+  const gr = g.createLinearGradient(0, 0, 0, S);
+  gr.addColorStop(0, "rgba(20,15,12,.5)"); gr.addColorStop(.45, "rgba(20,15,12,.6)"); gr.addColorStop(1, "rgba(20,15,12,.94)");
+  g.fillStyle = gr; g.fillRect(0, 0, S, S);
+  g.strokeStyle = "rgba(224,168,60,.85)"; g.lineWidth = 6; g.strokeRect(26, 26, S - 52, S - 52);
+  g.strokeStyle = "rgba(224,168,60,.3)"; g.lineWidth = 2; g.strokeRect(42, 42, S - 84, S - 84);
+  g.textAlign = "center"; g.textBaseline = "alphabetic";
+
+  g.fillStyle = "rgba(224,168,60,.9)"; g.font = "700 30px " + JP;
+  g.fillText("M A R C H   R U N N E R", S / 2, 128);
+  g.shadowColor = "rgba(0,0,0,.6)"; g.shadowOffsetY = 6; g.shadowBlur = 0;
+  g.fillStyle = "#e0a83c"; g.font = "104px " + DISP;
+  g.fillText("Million March", S / 2, 258);
+  g.shadowColor = "transparent";
+
+  // 主役の結果
+  let big = "STAGE " + r.stage, sub = "まで到達！", bigFont = "150px " + DISP;
+  if (r.kind === "clear") sub = "制圧！";
+  else if (r.win) { big = "全10ステージ"; sub = "完全制覇！"; bigFont = "900 108px " + JP; }
+  else if (r.stage > FINAL_STAGE) sub = "エンドレス遠征で到達！";
+  g.fillStyle = "#fff3da"; g.font = bigFont;
+  g.shadowColor = "rgba(0,0,0,.55)"; g.shadowOffsetY = 5;
+  g.fillText(big, S / 2, 450);
+  g.shadowColor = "transparent";
+  g.fillStyle = "#e4dbc6"; g.font = "800 54px " + JP;
+  g.fillText(sub, S / 2, 530);
+
+  // 数字の3枠
+  const top = 590, h = 220, pad = 70, gap = 18, w = (S - pad * 2 - gap * 2) / 3;
+  const cells = [
+    { k: r.kind === "clear" ? "兵力" : "最高兵力", v: jpShort(r.army) + "人" },
+    { k: "武器", v: r.weapon, icon: r.weaponIcon },
+    { k: "撃破数", v: jpShort(r.kills) },
+  ];
+  cells.forEach((c, i) => {
+    const x = pad + i * (w + gap);
+    g.fillStyle = "rgba(36,28,24,.86)"; roundRect(g, x, top, w, h, 6); g.fill();
+    g.strokeStyle = "rgba(224,168,60,.45)"; g.lineWidth = 2; g.stroke();
+    g.fillStyle = "rgba(224,168,60,.9)"; g.font = "700 30px " + JP;
+    g.fillText(c.k, x + w / 2, top + 50);
+    const drew = c.icon && SpriteKit.center(g, c.icon, x + w / 2, top + 108, 78);
+    g.fillStyle = i === 0 ? "#e0a83c" : "#e4dbc6";
+    let fs = drew ? 40 : 60;
+    g.font = "800 " + fs + "px " + JP;
+    while (g.measureText(c.v).width > w - 24 && fs > 22) { fs -= 2; g.font = "800 " + fs + "px " + JP; }
+    g.fillText(c.v, x + w / 2, top + (drew ? 190 : 160));
+  });
+
+  // 今日の順位、なければ挑戦のひとこと
+  g.font = "800 46px " + JP;
+  if (r.place) {
+    g.fillStyle = "#ffd76a";
+    g.fillText("今日のランキング " + r.place + "位", S / 2, 890);
+    g.fillStyle = "rgba(228,219,198,.75)"; g.font = "700 30px " + JP;
+    g.fillText(r.total + "人中", S / 2, 934);
+  } else {
+    g.fillStyle = "#fff3da";
+    g.fillText("あなたは何万人まで増やせる？", S / 2, 900);
+  }
+
+  g.fillStyle = "rgba(228,219,198,.7)"; g.font = "700 28px " + JP;
+  g.fillText("AIだけで作ったゲーム｜AIゲーム実験室", S / 2, 994);
+  g.fillStyle = "#e0a83c"; g.font = "700 30px " + JP;
+  g.fillText("machino-ai.jp/ad-games", S / 2, 1036);
+  return new Promise((res) => cv.toBlob(res, "image/png"));
+}
+
+function shareText(r) {
+  let t;
+  if (r.kind === "clear") t = "Million March Stage " + r.stage + " を制圧！兵力 " + jpShort(r.army) + "人、武器は" + r.weapon + "。";
+  else if (r.win) t = "Million March 全10ステージ完全制覇！最高兵力 " + jpShort(r.army) + "人。";
+  else if (r.stage > FINAL_STAGE) t = "Million March エンドレス遠征で Stage " + r.stage + " まで到達！最高兵力 " + jpShort(r.army) + "人。";
+  else t = "Million March で Stage " + r.stage + " まで到達！最高兵力 " + jpShort(r.army) + "人。";
+  if (r.place) t = "【今日のランキング " + r.place + "位】" + t;
+  return t + "\nAIだけで作ったゲームです。あなたは何万人まで増やせる？\n#AIゲーム実験室 #MillionMarch";
+}
+
+async function shareImage(blob, text) {
+  const name = "million-march-result.png";
+  if (blob && navigator.canShare) {
+    const file = new File([blob], name, { type: "image/png" });
+    if (navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], text: text + "\n" + SHARE_URL }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+  }
+  if (navigator.share) {
+    try { await navigator.share({ text, url: SHARE_URL }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  // 共有機能がない環境（パソコンなど）は、画像を保存して文章をコピーする
+  if (blob) {
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+  try { await navigator.clipboard.writeText(text + "\n" + SHARE_URL); toast("画像を保存し、文章をコピーしました"); }
+  catch (e) { toast("画像を保存しました"); }
+}
+
+/* 共有はタップの中で呼ぶ必要があるので、画像は結果を出した時点で作っておく */
+function makeShare(btn, label) {
+  let blob = null, data = null, ver = 0;
+  return {
+    prepare(r) {
+      data = r; blob = null; const my = ++ver;
+      btn.disabled = true; btn.textContent = "📷 画像を準備中…";
+      buildShareImage(r).then((b) => { if (my === ver) blob = b; }).catch(() => {}).then(() => {
+        if (my === ver) { btn.disabled = false; btn.textContent = label; }
+      });
+    },
+    run() { if (data) { Snd.good(); shareImage(blob, shareText(data)); } },
+  };
+}
+const clearShare = makeShare(btnShareClear, "📷 シェア");
+const resultShare = makeShare(btnShare, "📷 結果を画像でシェア");
+btnShareClear.addEventListener("click", () => clearShare.run());
+btnShare.addEventListener("click", () => resultShare.run());
+
+/* --- ランキング（GAS） --- */
+async function apiGet(view) {
+  const res = await fetch(RANKING_API + "?view=" + view + "&game=" + GAME_ID + "&uid=" + encodeURIComponent(getUid()), { cache: "no-store" });
+  return res.json();
+}
+async function apiPost(body) {
+  const res = await fetch(RANKING_API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
+  return res.json();
+}
+
+let rkReq = 0;
+const RK_NOTE = {
+  today: "到達ステージ → 最高兵力の順。毎日0時にリセット。何回挑戦してもOK（一番いい記録が残ります）",
+  month: "遊んだ日 +1点 ／ その日の1〜3位 +10・7・5点 ／ 全制覇 +3点。続けるほど上位へ",
+};
+async function loadRanking(view) {
+  ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === view));
+  document.getElementById("rkNote").textContent = RK_NOTE[view];
+  const list = document.getElementById("rkList"), meEl = document.getElementById("rkMe");
+  list.innerHTML = '<li class="empty">読み込み中…</li>'; meEl.textContent = "";
+  const my = ++rkReq;
+  try {
+    const d = await apiGet(view);
+    if (my !== rkReq) return;
+    const es = d.entries || [];
+    list.innerHTML = es.length ? es.map((e) => {
+      const sc = view === "month"
+        ? e.points + "点<small>" + e.days + "日・" + stageLabel(e.stage) + "</small>"
+        : stageLabel(e.stage) + "<small>兵力 " + jpShort(e.army) + "人</small>";
+      return '<li class="' + (e.mine ? "mine" : "") + '"><span class="no">' + e.rank + '</span><span class="nm">' + esc(e.name) + '</span><span class="sc">' + sc + "</span></li>";
+    }).join("") : '<li class="empty">' + (view === "today" ? "今日はまだ誰も登録していません。一番乗りのチャンス！" : "今月の記録はまだありません") + "</li>";
+    if (d.me) {
+      const tail = view === "month" ? d.me.points + "点" : stageLabel(d.me.stage) + "・兵力 " + jpShort(d.me.army) + "人";
+      meEl.innerHTML = "あなたは <b>" + d.total + "人中 " + d.me.rank + "位</b>（" + esc(tail) + "）";
+    } else if (view === "today") meEl.textContent = "登録すると、ここにあなたの順位が出ます";
+  } catch (e) {
+    if (my === rkReq) list.innerHTML = '<li class="empty">読み込めませんでした。通信のよい場所でもう一度どうぞ</li>';
+  }
+}
+function openRanking(view) { ovRank.hidden = false; loadRanking(view || "today"); }
+ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.addEventListener("click", () => loadRanking(b.dataset.v)));
+document.getElementById("btnRankClose").addEventListener("click", () => { ovRank.hidden = true; });
+document.getElementById("btnRankTitle").addEventListener("click", () => openRanking("today"));
+document.getElementById("btnRankRec").addEventListener("click", () => openRanking("today"));
+if (RANKING_API) document.getElementById("btnRankTitle").hidden = false;
+
+/* --- 結果画面への差し込み --- */
+let lastResult = null, registered = false;
+function resultData(extra) {
+  return Object.assign({ army: runBest, kills, weapon: wname(crowd.weapon), weaponIcon: WEAPON_IDS[crowd.weapon], bgStage: stage }, extra);
+}
+const Result = {
+  prepareClear() {
+    btnShareClear.hidden = false;
+    clearShare.prepare(resultData({ kind: "clear", stage, army: crowd.count }));
+  },
+  hideClearShare() { btnShareClear.hidden = true; },       // ボーナス終了の画面ではシェアを出さない
+  show(host, info) {
+    lastResult = resultData({ kind: "result", stage: info.stage, win: !!info.win });
+    registered = false;
+    const tab = host.querySelector(".tablet");
+    tab.insertBefore(recBox, tab.querySelector(".btn-row") || tab.querySelector(".btn"));
+    recBox.hidden = false;
+    const on = !!RANKING_API;
+    document.getElementById("recReg").hidden = !on;
+    document.getElementById("btnRankRec").hidden = !on;
+    recName.value = store.get("mm.name", "");
+    btnRegister.disabled = false; btnRegister.textContent = "ランキングに登録";
+    recMsg.textContent = on ? "今日のランキングに記録を残そう" : "";
+    resultShare.prepare(lastResult);
+  },
+};
+async function register() {
+  if (!RANKING_API || !lastResult || registered) return;
+  const name = (recName.value || "").replace(/[\r\n\t]/g, " ").trim().slice(0, 12);
+  if (!name) { recMsg.textContent = "なまえを入れてください"; recName.focus(); return; }
+  store.set("mm.name", name);
+  btnRegister.disabled = true; btnRegister.textContent = "送信中…";
+  try {
+    const d = await apiPost({ game: GAME_ID, name, stage: lastResult.stage, army: Math.round(lastResult.army), kills: Math.round(lastResult.kills), uid: getUid() });
+    if (!d.ok) throw new Error(d.error || "failed");
+    registered = true;
+    btnRegister.textContent = "登録済み";
+    if (d.me) {
+      const better = d.me.stage > lastResult.stage || (d.me.stage === lastResult.stage && d.me.army > lastResult.army);
+      recMsg.innerHTML = "今日のランキング <b>" + d.total + "人中 " + d.me.rank + "位</b>" + (better ? "（今日のベスト記録で集計）" : "");
+      lastResult.place = d.me.rank; lastResult.total = d.total;
+      resultShare.prepare(lastResult);                // 順位入りの画像に作り直す
+    } else recMsg.textContent = "登録しました";
+    Snd.great();
+  } catch (e) {
+    btnRegister.disabled = false; btnRegister.textContent = "もう一度送る";
+    recMsg.textContent = "送れませんでした。通信のよい場所でもう一度どうぞ";
+  }
+}
+btnRegister.addEventListener("click", register);
+recName.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); register(); } });
 
 /* ============================================================
    9. メインループ
