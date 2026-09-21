@@ -2118,8 +2118,10 @@ function drawGiant(g) {
   // 素材があれば、待機・振りかぶり・叩きつけの3ポーズで描く
   // 砂漠から先は、そのステージの巨人（サイクロプス・イエティ・溶岩・嵐の巨神）。絵がまだ届いていなければ遺跡の巨人
   const lv = stageLv();
+  // 巨人王も、砂漠から先はそのステージの王（ファラオ・氷の王・炎の王・天空の王）
   const own = !g.king && lv >= 2 && SK.ok("giant_" + lv + "_idle");
-  const pre = g.king ? "giant_king_" : own ? "giant_" + lv + "_" : "giant_";
+  const ownKing = g.king && lv >= 2 && SK.ok("giant_" + lv + "_king_idle");
+  const pre = g.king ? (ownKing ? "giant_" + lv + "_king_" : "giant_king_") : own ? "giant_" + lv + "_" : "giant_";
   const fighting = battle && battle.giant === g && !g.dead;
   let pose = pre + (!fighting ? "idle" : g.phase < 0.14 ? "slam" : g.phase < 0.42 ? "idle" : "raise");
   let walking = false;
@@ -2826,7 +2828,7 @@ document.getElementById("btnSound").addEventListener("click", (e) => {
    ============================================================ */
 /* ランキングは Google Apps Script（ranking-gas.js）に記録する。
    URL が空の間はランキング関係のボタンを隠し、シェアだけ使えるようにする */
-const RANKING_API = "";
+const RANKING_API = "https://script.google.com/macros/s/AKfycbyNh85RNVYJM1_cn5vn6d4_lFm-3_9MeQZe1vMGU4xk-fHRvGbbGUIgkgI2QUXhYyySMw/exec";
 const GAME_ID = "geigeki";
 const SHARE_URL = "https://machino-ai.jp/ad-games/geigeki_road.html";
 const ovRank = document.getElementById("ovRank");
