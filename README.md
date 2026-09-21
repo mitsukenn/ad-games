@@ -2,7 +2,7 @@
 
 スマホ広告でよく見るゲームを、ブラウザで遊べるように再現したゲーム集です。
 
-遊ぶ：https://mitsukenn.github.io/ad-games/
+遊ぶ：https://machino-ai.jp/ad-games/
 
 | ゲーム | ファイル | 内容 |
 |---|---|---|
