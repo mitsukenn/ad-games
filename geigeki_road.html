@@ -177,7 +177,7 @@
   .rule strong{color:var(--gold); font-weight:700}
 
   .stats{
-    display:grid; grid-template-columns:repeat(3,1fr);
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
     gap:1px; background:rgba(224,168,60,.22);
     border:1px solid rgba(224,168,60,.22);
     margin:0 0 22px;
@@ -188,11 +188,11 @@
     color:rgba(224,168,60,.8); font-weight:600; margin-bottom:4px;
   }
   .stat .v{
-    font-family:var(--disp); font-size:26px; line-height:1;
+    font-family:var(--disp); font-size:clamp(16px,5.4vw,26px); line-height:1;
     color:var(--stone-l); font-variant-numeric:tabular-nums;
   }
   .stat.hi .v{color:var(--gold)}
-  .stat.w .v{font-family:var(--ui); font-weight:700; font-size:21px; line-height:1.2}
+  .stat.w .v{font-family:var(--ui); font-weight:700; font-size:clamp(14px,4.4vw,21px); line-height:1.2; white-space:nowrap}
 
   /* ---------- クリア画面：ランクの判子とごほうびの絵 ---------- */
   .clear-head{position:relative; height:84px; margin:-6px auto 6px; width:180px}
@@ -338,6 +338,8 @@
   .vol input{width:100%; accent-color:var(--gold)}
   .vol output{font-family:var(--disp); font-size:13px; color:var(--gold); text-align:right}
   .btns{display:flex; flex-wrap:wrap; gap:10px; justify-content:center}
+  .btn.ex{background:linear-gradient(180deg,#9b4dd6,#6a2aa0); color:#fff3da; border-bottom-color:#3f1766}
+  .exnote{margin:10px 0 0; font-size:13px; color:rgba(228,219,198,.7)}
   .btns .btn.ghost{margin-left:0}
 
   /* ---------- 結果のシェアとランキング登録 ---------- */
@@ -462,13 +464,17 @@
     <div class="tablet">
       <div class="eyebrow">Stage 10 — 完全防衛</div>
       <h1 style="font-size:clamp(28px,6vw,42px)">道は守られた</h1>
-      <p class="lede">10の波をすべて退けた。</p>
+      <p class="lede">10の波をすべて退けた。……だが、道の果てから、さらに強い軍勢が迫っている。</p>
       <div class="stats">
         <div class="stat"><div class="k">最終兵力</div><div class="v" id="wArmy">0</div></div>
         <div class="stat w hi"><div class="k">武器</div><div class="v" id="wWeap">投石</div></div>
         <div class="stat"><div class="k">総撃破数</div><div class="v" id="wKills">0</div></div>
       </div>
-      <button class="btn" id="btnAgain">もう一度</button>
+      <div class="btns">
+        <button class="btn ex" id="btnExtra">エクストラステージへ</button>
+        <button class="btn ghost" id="btnAgain">もう一度</button>
+      </div>
+      <p class="exnote">ここから先は、敵も巨人王もぐっと強くなる上級者向け。ライフは♥3に戻る。</p>
     </div>
   </div>
 
@@ -843,6 +849,7 @@ let flowV = 5;           // 世界が流れてくる速さ
 const crowd = { x: 0, tx: 0, count: 12, power: 1, units: [], bigs: [], fireAcc: 0 };
 let items = [];
 let bullets = [];
+let ebullets = [];            // 敵の銃兵が撃ってくる弾（隊列に向かって飛んでくる）
 let battle = null;
 let totalZ = 1;
 const parts = [], pops = [];
@@ -986,6 +993,7 @@ let colSeq = 0;
 
 /** 宝の列：手前に木の門、その奥に板が並ぶ */
 function makeColumn(lane, z, st, n, p, kind) {
+  const exGain = 1 - 0.06 * exRamp(st);          // エクストラは増える量が渋い
   const col = ++colSeq;
   const x = LANES[lane];
   const hp = Math.max(3, Math.round(FIRE_K * n * p * rnd(0.8, 1.35)));
@@ -1001,7 +1009,7 @@ function makeColumn(lane, z, st, n, p, kind) {
     } else if (i === T - 1 && Math.random() < 0.12) {
       t = { kind: "mul", v: 2 }; mul = true;
     } else {
-      t = { kind: "add", v: Math.max(1, Math.round(n * rnd(0.013, 0.022))) };
+      t = { kind: "add", v: Math.max(1, Math.round(n * rnd(0.013, 0.022) * exGain)) };
       gainN += t.v;
     }
     items.push({ type: "tile", lane, x, z: tz, col, kind: t.kind, v: t.v, gone: false });
@@ -1013,7 +1021,9 @@ function makeSquad(lane, z, st, n, p, boss) {
   const pw = 1 + (st - 1) * 0.32 + (boss ? 0.4 : 0);
   const pre = (FIRE_K * n * p * 1.6) / pw;                 // 届くまでに撃ち減らせる見込み（門にも弾を割くので控えめ）
   const grow = Math.min(st, 10) * 0.012;
-  const m = n * Math.sqrt(p / pw) * (boss ? rnd(0.55, 0.66 + grow) : rnd(0.33, 0.46 + grow * 1.5));
+  // エクストラは敵の数を一段ずつ増やす（生き残る割合が目に見えて下がる）
+  const hard = 1 + 0.08 * exRamp(st);
+  const m = n * Math.sqrt(p / pw) * Math.min(boss ? 0.92 : 0.85, (boss ? rnd(0.55, 0.66 + grow) : rnd(0.33, 0.46 + grow * 1.5)) * hard);
   const count = Math.max(5, Math.round(pre * 0.85 + m));
   const sq = { type: "squad", lane, x: LANES[lane], z, count, max: count, pw, boss: !!boss, units: [], dead: false };
   syncSquad(sq);
@@ -1029,7 +1039,8 @@ function makeGiant(lane, z, st, n, p, king) {
   n = Math.max(FLOOR, n);
   const k = Math.min(st, 10);
   const T = king ? rnd(3.3, 3.9) : rnd(2.5, 3.1);
-  const f = king ? Math.min(0.68, 0.46 + k * 0.022) : Math.min(0.58, 0.30 + k * 0.028);
+  const ex = exRamp(st) * 0.015;                  // エクストラは一撃が重くなる（1面ごとに+1.5%）
+  const f = king ? Math.min(0.68, 0.46 + k * 0.022) + ex : Math.min(0.58, 0.30 + k * 0.028) + ex;
   const atk = (f * n) / T;
   let hp = 0;
   for (let t = 0; t < T; t += 0.01) hp += GIANT_K * giantRamp(t) * (n - atk * t) * p * 0.01;
@@ -1038,7 +1049,7 @@ function makeGiant(lane, z, st, n, p, king) {
     g: {
       type: "giant", lane, x: LANES[lane], z, king: !!king,
       hp, max: hp, atk,
-      scale: (king ? 1.4 : 0.95) + k * 0.02,
+      scale: (king ? 1.4 + [0, 0.12, 0.26][kingTier(st)] : 0.95) + k * 0.02,
       period: king ? 0.78 : 0.92,
       phase: 0, t: rnd(0, 6), flash: 0, dead: false, fall: 0,
     },
@@ -1057,9 +1068,11 @@ function finalize(it) {
     if (tierOf(crowd.power) >= WMAX) { it.dead = true; return; }   // もう最上位なら出さない
     it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * rnd(1.6, 2.3)));
   } else if (it.type === "bar") {
-    it.hp = it.max = Math.max(3, Math.round(FIRE_K * n * p * rnd(0.8, 1.35)));
+    it.hp = it.max = Math.max(3, Math.round(FIRE_K * n * p * rnd(0.8, 1.35) * (1 + 0.08 * exRamp(stage))));
+  } else if (it.type === "spike") {
+    it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * rnd(1.1, 1.6)));
   } else if (it.type === "tile") {
-    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022)));
+    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage))));
   } else if (it.type === "squad") {
     const { sq } = makeSquad(it.lane, it.z, stage, n, p, it.boss);
     it.count = it.max = sq.count; it.pw = sq.pw;
@@ -1071,17 +1084,18 @@ function finalize(it) {
 }
 
 function buildStage(st) {
-  items = []; bullets = [];
+  items = []; bullets = []; ebullets = [];
   let n = crowd.count, p = crowd.power;
   let z = 30;
-  const waves = 5 + Math.min(st, 6);
+  const ex = exOf(st);
+  const waves = 5 + Math.min(st, 6) + Math.min(ex, 2);
   const mid = Math.floor(waves / 2);
   const armWaves = st >= 3 && Math.random() < 0.5 ? [1, waves - 2] : [1 + ((Math.random() * (waves - 2)) | 0)];
   const teaserWave = st <= 2 ? waves - 2 : -1;              // ステージ1・2の後半に「伝説の武器」を1回だけ流す
 
   for (let i = 0; i < waves; i++) {
     // 敵はふだん中央。後半は左右のレーンからも来る
-    const eLane = (st >= 4 && Math.random() < 0.4) ? pick([0, 2]) : 1;
+    const eLane = (st >= 4 && Math.random() < (ex ? 0.6 : 0.4)) ? pick([0, 2]) : 1;
     const free = [0, 1, 2].filter((l) => l !== eLane);
     const two = i % 2 === 0;
     let gN = 0, gP = 0, gMul = false, len = 0;
@@ -1105,30 +1119,37 @@ function buildStage(st) {
     n = (n + gN * take) * (gMul ? 1.4 : 1);
     if (armed) p += (WEAPONS[Math.min(WMAX, tierOf(p) + 1)].p - p) * take;
 
+    // エクストラ：トゲの柵。撃ち壊さずに自分のレーンで受けると、兵がごっそり削られる
+    if (ex && i > 0 && Math.random() < 0.65) {
+      const sl = pick([0, 1, 2]);
+      items.push({ type: "spike", lane: sl, x: LANES[sl], z: z - 5, hp: 10, max: 10, flash: 0, dead: false });
+    }
     if (i === teaserWave) {
       const tl = free[free.length - 1];
       items.push({ type: "arm", teaser: true, lane: tl, x: LANES[tl], z: z + 9, hp: 9e9, max: 9e9, flash: 0, dead: false, ready: true });
     }
     const ez = z + rnd(5, 8);
-    if (i === mid || (st >= 6 && i === waves - 2)) {
+    // 巨人：ふつうは1体、6面から2体、エクストラ5面目から3体
+    if (i === mid || (st >= 6 && i === waves - 2) || (ex >= 5 && i === 2)) {
       const { g, f } = makeGiant(eLane, ez + 4, st, n, p, false);
       items.push(g);
       n = Math.max(FLOOR, n * (1 - f));
     } else {
       const { sq, m, pw } = makeSquad(eLane, ez, st, n, p, false);
-      if (st >= 3 && Math.random() < 0.3) sq.beast = true;    // 狼の群れ
+      if (st >= 4 && Math.random() < (ex ? 0.4 : 0.25)) sq.gun = true;           // 銃兵：遠くから撃ってくる
+      else if (st >= 3 && Math.random() < (ex ? 0.5 : 0.3)) sq.beast = true;    // 狼の群れ
       items.push(sq);
       n = Math.max(FLOOR, survivors(n, p, m, pw));
     }
     z += Math.max(len, 10) + rnd(12, 17) - Math.min(st, 8) * 0.4;
   }
 
-  // 最後の波：守護軍、3・6・9・10 は巨人王も
+  // 最後の波：守護軍。3・6・8・9・10 とエクストラは巨人王も（どの景色の王も一度は出てくる）
   const { sq, m, pw } = makeSquad(1, z + 4, st, n, p, true);
   items.push(sq);
   n = Math.max(FLOOR, survivors(n, p, m, pw));
   let endZ = z + 4 + Math.min(sq.count, SQUAD_DRAW) / 5 * 0.46;   // 隊列の奥行きは描く人数で決まる
-  if (st % 3 === 0 || st === FINAL_STAGE) {
+  if (st % 3 === 0 || st === 8 || st >= FINAL_STAGE) {
     const { g } = makeGiant(1, endZ + 12, st, n, p, true);
     items.push(g);
     endZ += 12;
@@ -1334,6 +1355,14 @@ function applyHit(t, b) {
       spawnFx("fx_spark", t.x, 1.4, t.z, 2.2, 0.5);
       Snd.good(); doShake(3);
     }
+  } else if (t.type === "spike") {
+    t.hp -= b.dmg; t.flash = 1;
+    if (t.hp <= 0) {
+      t.dead = true;
+      for (let i = 0; i < 14; i++) puff(t.x + rnd(-1, 1), rnd(.2, 1.2), t.z, pick([C.iron, C.woodD, "#6b6f78"]), 1);
+      popText("破壊", C.gold, t.x, t.z, false);
+      Snd.good(); doShake(2);
+    }
   } else if (t.type === "squad") {
     const before = t.count;
     t.count = Math.max(0, t.count - b.dmg / t.pw);
@@ -1389,6 +1418,53 @@ function onBarricade(bar) {
   for (let i = 0; i < 12; i++) puff(bar.x + rnd(-1, 1), rnd(.2, 1.4), bar.z, pick([C.wood, C.woodD]), 1);
   popText("取り逃し", C.bad, bar.x, 1.2, false);
   Snd.bad();
+}
+
+function onSpike(sp) {
+  sp.dead = true;
+  const inLane = Math.abs(sp.x - crowd.x) <= crowdHalfW() + LANE_HW * 0.3;
+  if (!inLane) return;                                  // 別のレーンにいれば素通り
+  const loss = crowd.count * Math.min(0.32, 0.16 + 0.02 * exOf(stage));
+  setCount(crowd.count - loss);
+  for (let i = 0; i < 18; i++) puff(sp.x + rnd(-1.2, 1.2), rnd(.2, 1.4), 0.6, pick([C.bad, C.iron, C.foe]), 1);
+  popText("トゲの柵 −" + fmt(loss), C.bad, sp.x, 1.2, true);
+  Snd.bad(); doShake(10); buzz(40);
+  if (crowd.count <= 0.5) gameOver();
+}
+
+/* 銃兵の隊：射程に入ると、一定の間隔で隊列めがけて一斉射撃してくる。
+   撃たれた瞬間にいた場所へ飛んでくるので、レーンを移ればよけられる */
+const GUN_RANGE = 42, GUN_CD = 1.25;
+function updateGunners(dt, front) {
+  for (const it of items) {
+    if (it.type !== "squad" || !it.gun || it.dead || !it.ready) continue;
+    if (it.gunT > 0) it.gunT -= dt;
+    if (it.z > GUN_RANGE || it.z < front + 3) continue;
+    it.gunCd = (it.gunCd === undefined ? rnd(0.2, 0.9) : it.gunCd) - dt;
+    if (it.gunCd > 0) continue;
+    it.gunCd = GUN_CD * rnd(0.85, 1.15);
+    it.gunT = 0.18;                                    // 撃った瞬間の絵を少し見せる
+    const dmg = (it.count * it.pw / crowd.power) * (0.1 + 0.01 * exRamp(stage));
+    ebullets.push({ x: it.x, tx: crowd.x, z: it.z - 0.4, z0: it.z - 0.4, dmg });
+    muzzles.push({ x: it.x, z: it.z - 0.6, t: 0, big: false, foe: true });
+    if (time - lastShot > 0.1) { lastShot = time; Snd.shot(4); }
+  }
+  for (let i = ebullets.length - 1; i >= 0; i--) {
+    const b = ebullets[i];
+    b.z -= 30 * dt;
+    b.x = b.tx + (b.x - b.tx) * Math.exp(-dt * 6);     // 撃った瞬間の隊列の位置へ寄っていく
+    if (b.z > front) continue;
+    ebullets.splice(i, 1);
+    if (Math.abs(b.x - crowd.x) > crowdHalfW() + 0.2) {  // よけた
+      puff(b.x, 0.3, front, C.roadD, 2);
+      continue;
+    }
+    setCount(crowd.count - b.dmg);
+    popText("−" + fmt(b.dmg), C.bad, crowd.x + rnd(-0.6, 0.6), 1.0, false);
+    spawnFx("fx_hit", b.x, 1.0, front + 0.2, 1.1, 0.2, { grow: 0.6 });
+    doShake(3); buzz(15);
+    if (crowd.count <= 0.5) { gameOver(); return; }
+  }
 }
 
 function onSquad(sq) {
@@ -1567,6 +1643,8 @@ function update(dt) {
       }
     } else if (it.type === "bar") {
       if (it.z <= front + 0.4) onBarricade(it);
+    } else if (it.type === "spike") {
+      if (it.z <= front + 0.4) { onSpike(it); if (state !== "run") return; }
     } else if (it.type === "squad") {
       updateSquadUnits(it, dt);
       if (it.z <= front + 0.3) { onSquad(it); if (state !== "run") return; }
@@ -1577,6 +1655,8 @@ function update(dt) {
       if (it.z - 0.9 * it.scale <= front) { it.z = front + 0.9 * it.scale; startGiant(it); return; }
     }
   }
+  updateGunners(dt, front);
+  if (state !== "run") return;
   hBar.style.width = Math.min(100, (1 - remaining / totalZ) * 100) + "%";
   if (remaining <= 0 && !items.some((it) => it.type === "giant" && it.dead && it.fall < 1)) stageClear();
 }
@@ -1593,7 +1673,9 @@ function drawSky() {
   sky.addColorStop(0, "#70aaa9"); sky.addColorStop(0.4, "#c1d5bf"); sky.addColorStop(1, "#144f50");
   ctx.fillStyle = sky; ctx.fillRect(-40, -40, W + 80, H + 80);
   // ステージごとの背景（1–2 遺跡の谷／3–4 砂漠／5–6 雪／7–8 火山／9–10 天空）。読めなければ谷の絵
-  if (window.StageBackgrounds && StageBackgrounds.draw(ctx, stage, W, H)) { /* 描けた */ }
+  if (window.StageBackgrounds && StageBackgrounds.draw(ctx, visStage(stage), W, H)) {
+    if (exOf(stage)) { ctx.fillStyle = "rgba(48,8,56,.34)"; ctx.fillRect(-40, -40, W + 80, H + 80); }   // エクストラは不穏な紫
+  }
   else if (valleyArt.complete && valleyArt.naturalWidth) {
     const dh = H + 80, dw = Math.max(W + 100, dh * valleyArt.naturalWidth / valleyArt.naturalHeight);
     ctx.drawImage(valleyArt, (W - dw) / 2 - cam.x * 3, -30, dw, dh);
@@ -1785,11 +1867,11 @@ function soldierSprite(body, bodyD, skin, wt) {
   soldierCache.set(key, sprite);
   return sprite;
 }
-function drawUnit(u, body, bodyD, skin, t, wt, beast) {
+function drawUnit(u, body, bodyD, skin, t, wt, beast, gun) {
   const p = proj(u.x, 0, u.z); if (!p || p.s < 2.2) return;
   const ally = body === C.ally;
   const frame = ((t * 5 + u.ph) | 0) % 2;                      // 2コマで足踏み
-  const lv = Math.floor((Math.min(Math.max(stage, 1), 10) - 1) / 2) + 1;
+  const lv = stageLv();
   const f = "_" + (frame + 1);
   // 素材の選び方：格上げした兵 → ステージ別の兵 → 共通の兵
   let sid, scale = 1.25;
@@ -1797,6 +1879,7 @@ function drawUnit(u, body, bodyD, skin, t, wt, beast) {
   else if (u.kind === "titan") { sid = "ally_titan" + f; scale = 2.6; }
   else if (u.kind === "ecaptain") { sid = "enemy_captain" + f; scale = 1.8; }
   else if (beast) { sid = "wolf" + f; scale = 1.05; }
+  else if (gun && SK.ok("enemy_gunner_1")) { sid = "enemy_gunner_" + gun; scale = 1.3; }
   else if (ally) sid = SK.ok("soldier_" + lv + f) ? "soldier_" + lv + f : "ally_run" + f;
   else sid = SK.ok("enemy_" + lv + f) ? "enemy_" + lv + f : "enemy_stand" + f;
   if (p.s >= 3.2 && SK.ok(sid)) {
@@ -1823,10 +1906,10 @@ function drawUnit(u, body, bodyD, skin, t, wt, beast) {
   if (wt > 0 && p.s >= 8) drawWeapon(p.x + w * 0.42, feet - h * 0.43, h * 0.88, wt, bob);
 }
 
-function drawHost(units, ally, t, wt, beast) {
+function drawHost(units, ally, t, wt, beast, gun) {
   const order = units.slice().sort((a, b) => b.z - a.z);
   const body = ally ? C.ally : C.foe, bodyD = ally ? C.allyD : C.foeD, skin = ally ? C.skin : C.skinF;
-  for (const u of order) drawUnit(u, body, bodyD, skin, t, wt, beast);
+  for (const u of order) drawUnit(u, body, bodyD, skin, t, wt, beast, gun);
 }
 
 /* --- 宝の板 ------------------------------------------------ */
@@ -1890,7 +1973,7 @@ function drawHpLabel(v, cx, cy, maxW, maxH) {
   ctx.fillStyle = "#fff3da";
   ctx.fillText(label, cx, cy);
 }
-const stageLv = () => Math.floor((Math.min(Math.max(stage, 1), 10) - 1) / 2) + 1;
+const stageLv = () => Math.floor((Math.min(Math.max(visStage(stage), 1), 10) - 1) / 2) + 1;
 
 function drawBar(bar) {
   // ステージ別の門の絵（遺跡・砂漠・雪・火山・天空）
@@ -2064,13 +2147,14 @@ function drawSquadBanner(sq) {
   ctx.strokeText(label, p.x, p.y);
   ctx.fillStyle = sq.boss ? "#ffd9a0" : "#ffd2cd";
   ctx.fillText(label, p.x, p.y);
-  if (sq.boss) {
-    const fs2 = fs * 0.36;
+  if (sq.boss || sq.gun) {
+    const tag = sq.boss ? "守護軍" : "銃兵隊";        // 銃兵隊は遠くから撃ってくる。見分けがつくよう赤い札を付ける
+    const fs2 = fs * (sq.gun ? 0.42 : 0.36);
     ctx.font = "700 " + fs2 + 'px "Barlow Semi Condensed", "Hiragino Sans", sans-serif';
     ctx.lineWidth = Math.max(2, fs2 * 0.3);
-    ctx.strokeText("守護軍", p.x, p.y - fs * 0.72);
-    ctx.fillStyle = C.gold;
-    ctx.fillText("守護軍", p.x, p.y - fs * 0.72);
+    ctx.strokeText(tag, p.x, p.y - fs * 0.72);
+    ctx.fillStyle = sq.boss ? C.gold : "#ff7a5c";
+    ctx.fillText(tag, p.x, p.y - fs * 0.72);
   }
   ctx.globalAlpha = 1;
 }
@@ -2103,6 +2187,31 @@ function spriteH(id) {
   return V2G[id] ? V2G[id].h : 1;
 }
 
+/* 強い巨人王のオーラ：体の後ろで脈打つ光と、立ちのぼる火の粉（8〜10面は赤い炎、エクストラは紫黒） */
+function drawKingAura(x, y, hh, tier) {
+  const pulse = 0.85 + 0.15 * Math.sin(time * (tier === 2 ? 5 : 3.4));
+  const cy = y - hh * 0.5, r = hh * 0.62 * pulse;
+  const g = ctx.createRadialGradient(x, cy, r * 0.15, x, cy, r);
+  if (tier === 2) { g.addColorStop(0, "rgba(190,90,255,.55)"); g.addColorStop(0.55, "rgba(90,20,140,.32)"); g.addColorStop(1, "rgba(20,0,40,0)"); }
+  else { g.addColorStop(0, "rgba(255,170,70,.45)"); g.addColorStop(0.55, "rgba(220,60,30,.25)"); g.addColorStop(1, "rgba(120,20,0,0)"); }
+  ctx.save();
+  ctx.globalCompositeOperation = tier === 2 ? "source-over" : "lighter";
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.ellipse(x, cy, r * 0.8, r, 0, 0, 6.2832); ctx.fill();
+  // 立ちのぼる火の粉
+  ctx.globalCompositeOperation = "lighter";
+  const n = tier === 2 ? 14 : 9;
+  for (let i = 0; i < n; i++) {
+    const ph = (time * (0.5 + (i % 3) * 0.17) + i * 0.37) % 1;
+    const px = x + Math.sin(i * 12.9 + time * 1.3) * hh * 0.36;
+    const py = y - hh * (0.1 + ph * 1.0);
+    ctx.globalAlpha = (1 - ph) * 0.9;
+    ctx.fillStyle = tier === 2 ? (i % 2 ? "#d9a0ff" : "#8a3cff") : (i % 2 ? "#ffd27a" : "#ff6a2a");
+    ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, hh * 0.012 * (1.4 - ph)), 0, 6.2832); ctx.fill();
+  }
+  ctx.restore();
+}
+
 function drawGiant(g) {
   if (g.dead && g.fall >= 1) return;
   const base = proj(g.x, 0, g.z);
@@ -2120,8 +2229,10 @@ function drawGiant(g) {
   const lv = stageLv();
   // 巨人王も、砂漠から先はそのステージの王（ファラオ・氷の王・炎の王・天空の王）
   const own = !g.king && lv >= 2 && SK.ok("giant_" + lv + "_idle");
+  const tier = g.king ? kingTier(stage) : 0;
+  const awake = tier === 2 && SK.ok("giant_" + lv + "_kingx_idle");           // エクストラは覚醒した王の絵
   const ownKing = g.king && lv >= 2 && SK.ok("giant_" + lv + "_king_idle");
-  const pre = g.king ? (ownKing ? "giant_" + lv + "_king_" : "giant_king_") : own ? "giant_" + lv + "_" : "giant_";
+  const pre = g.king ? (awake ? "giant_" + lv + "_kingx_" : ownKing ? "giant_" + lv + "_king_" : "giant_king_") : own ? "giant_" + lv + "_" : "giant_";
   const fighting = battle && battle.giant === g && !g.dead;
   let pose = pre + (!fighting ? "idle" : g.phase < 0.14 ? "slam" : g.phase < 0.42 ? "idle" : "raise");
   let walking = false;
@@ -2152,6 +2263,7 @@ function drawGiant(g) {
     ctx.globalAlpha = alpha;
     ctx.fillStyle = "rgba(0,0,0,.28)";
     ctx.beginPath(); ctx.ellipse(base.x, base.y, U * 0.34, U * 0.075, 0, 0, 6.2832); ctx.fill();
+    if (tier && !g.dead) drawKingAura(base.x, base.y, hh, tier);
     ctx.translate(base.x + jitter, base.y);
     if (g.fall > 0) { ctx.rotate(g.fall * 0.9); ctx.translate(0, g.fall * U * 0.25); }
     ctx.scale(1, 1 + breath);
@@ -2367,6 +2479,47 @@ function drawEnemyBanner(sq) {
   drawFlag("banner_enemy", sq.x + 0.7, far + 0.4, 2.6);
 }
 
+/* トゲの柵：鉄のトゲを植えた丸太。素材があればそれを、なければ Canvas で描く */
+function drawSpike(sp) {
+  const b = proj(sp.x, 0, sp.z);
+  if (!b) return;
+  ctx.globalAlpha = Math.max(0, Math.min(1, (DRAW_Z - sp.z) / 30));
+  const w = ROAD_W * 0.95 * b.s;
+  // 足元に赤い危険の帯（遠くからでも「このレーンは危ない」と分かるように）
+  const f = proj(sp.x, 0, sp.z - 1.2);
+  if (f) {
+    ctx.fillStyle = "rgba(230,40,30," + (0.22 + 0.12 * Math.sin(time * 8)) + ")";
+    ctx.beginPath(); ctx.ellipse(b.x, (b.y + f.y) / 2, w * 0.55, Math.max(3, (f.y - b.y) * 0.9), 0, 0, 6.2832); ctx.fill();
+  }
+  if (!SK.footW(ctx, "obstacle_spike", b.x, b.y, w)) {
+    const h = 0.5 * b.s;
+    ctx.fillStyle = "#4a3222"; ctx.fillRect(b.x - w / 2, b.y - h, w, h);
+    ctx.fillStyle = sp.flash > 0 ? "#fff" : "#b9bec8";
+    const n = 7;
+    for (let i = 0; i < n; i++) {
+      const x0 = b.x - w / 2 + (w / n) * i;
+      ctx.beginPath(); ctx.moveTo(x0, b.y - h); ctx.lineTo(x0 + w / n / 2, b.y - h - 0.9 * b.s); ctx.lineTo(x0 + w / n, b.y - h); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  drawHpLabel(sp.hp, b.x, b.y - w * 0.3, w * 0.5, 0.9 * b.s);
+}
+
+function drawEnemyBullets() {
+  ctx.lineCap = "round";
+  for (const b of ebullets) {
+    const a = proj(b.x, 1.0, b.z), c = proj(b.x, 1.0, b.z + 1.1);
+    if (!a || !c) continue;
+    // 味方の弾（金色）と見分けがつくよう、赤く光る弾にする
+    ctx.strokeStyle = "rgba(255,50,40,.55)"; ctx.lineWidth = Math.max(4, a.s * 0.3);
+    ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,120,90,.95)"; ctx.lineWidth = Math.max(2, a.s * 0.12);
+    ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+    ctx.fillStyle = "#fff1c9";
+    ctx.beginPath(); ctx.arc(a.x, a.y, Math.max(2, a.s * 0.1), 0, 6.2832); ctx.fill();
+  }
+}
+
 function drawBullets() {
   // 発射炎
   for (const m of muzzles) {
@@ -2492,11 +2645,13 @@ function render() {
     if (it.type === "goal") drawGoal(it);
     else if (it.type === "bar") drawBar(it);
     else if (it.type === "arm") drawArm(it);
-    else if (it.type === "squad") { drawEnemyBanner(it); drawHost(it.units.concat(it.bigs || []), false, time, 0, it.beast); drawSquadBanner(it); }
+    else if (it.type === "squad") { drawEnemyBanner(it); drawHost(it.units.concat(it.bigs || []), false, time, 0, it.beast, it.gun ? (it.gunT > 0 ? 2 : 1) : 0); drawSquadBanner(it); }
+    else if (it.type === "spike") drawSpike(it);
     else if (it.type === "giant") drawGiant(it);
   };
   for (const it of objs) if (it.z > front) drawObj(it);
   drawBullets();
+  drawEnemyBullets();
   drawAllyBanner();                                          // 旗は隊列の先頭に立て、兵の頭越しに見せる
   drawHost(crowd.units.concat(crowd.bigs), true, time, tierOf(crowd.power));
   for (const it of objs) if (it.z <= front) drawObj(it);
@@ -2512,6 +2667,15 @@ function render() {
    9. 進行制御
    ============================================================ */
 const FINAL_STAGE = 10;
+/* エクストラステージ（11面〜・終わりなし）。EX1 は遺跡、EX2 は砂漠…と5つの景色を巡り、1周ごとにさらに強くなる */
+function exOf(st) { return Math.max(0, st - FINAL_STAGE); }
+const EX_CAP = 4;             // 強くなるのは EX4 まで。そこから先は同じ強さで、どこまで粘れるかの勝負
+/** エクストラの強さの段階：EX1 で 1 段ぐっと上がり、あとは EX4 まで 0.4 段ずつ（0, 1, 1.4, 1.8, 2.2, 2.2…） */
+function exRamp(st) { const ex = exOf(st); return ex ? 1 + 0.4 * (Math.min(ex, EX_CAP) - 1) : 0; }
+function kingTier(st) { return st > FINAL_STAGE ? 2 : st >= 8 ? 1 : 0; }
+function visStage(st) { return st <= FINAL_STAGE ? st : ((st - FINAL_STAGE - 1) % 5) * 2 + 2; }
+function stageName(st) { return st <= FINAL_STAGE ? "Stage " + st : "EX" + exOf(st); }
+function stageChip(st) { return st <= FINAL_STAGE ? st + "/" + FINAL_STAGE : "EX" + exOf(st); }
 const hStage = document.getElementById("hStage");
 const hArmy  = document.getElementById("hArmy");
 const hWeap  = document.getElementById("hWeap");
@@ -2540,17 +2704,20 @@ function flash(el, lines) {
   el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
 }
 function giantWarning(g) {
-  document.getElementById("warnText").textContent = g.king ? "巨人王 接近" : "巨人接近";
+  const tier = g.king ? kingTier(stage) : 0;
+  document.getElementById("warnText").textContent = !g.king ? "巨人接近" : tier === 2 ? "覚醒した巨人王 接近" : tier === 1 ? "猛る巨人王 接近" : "巨人王 接近";
   elWarn.classList.remove("on"); void elWarn.offsetWidth; elWarn.classList.add("on");
   Snd.siren(); buzz([60, 60, 60]);
   if (!REDUCED) camKick = 1;
 }
 // 難しさが変わるステージ
-const HARD = { 4: "ここからが本番　敵が左右からも来る", 6: "巨人が2体に増える", 10: "最終決戦" };
+const HARD = { 4: "敵が左右から、銃兵隊は遠くから撃ってくる", 6: "巨人が2体に増える", 10: "最終決戦",
+  11: "エクストラ開始　トゲの柵と巨人王に注意", 15: "巨人が3体に増える", 16: "2周目　敵がさらに強くなる" };
 function announceStage(st) {
-  const theme = window.StageBackgrounds ? StageBackgrounds.themeFor(st).name : "";
-  flash(elAnn, ["STAGE " + st, theme, HARD[st] || ""]);
-  if (HARD[st]) Snd.fanfare(); else Snd.good();
+  const theme = window.StageBackgrounds ? StageBackgrounds.themeFor(visStage(st)).name : "";
+  const ex = exOf(st);
+  flash(elAnn, [ex ? "EXTRA " + ex : "STAGE " + st, theme, HARD[st] || (ex ? "エクストラ " + ex + " 面" : "")]);
+  if (HARD[st] || ex) Snd.fanfare(); else Snd.good();
 }
 
 /* 兵力の数字は本当の数へ毎フレーム近づける。増えるときはゆっくり回し、減るときは素早く */
@@ -2638,7 +2805,7 @@ function clearProgress() { try { localStorage.removeItem("gr.save"); } catch (e)
 function refreshContinue() {
   const sv = loadProgress(), b = document.getElementById("btnContinue");
   b.hidden = !(sv && sv.stage > 1);
-  if (sv) b.textContent = "続きから（Stage " + sv.stage + "・♥" + (sv.lives || MAX_LIVES) + "）";
+  if (sv) b.textContent = "続きから（" + stageName(sv.stage) + "・♥" + (sv.lives || MAX_LIVES) + "）";
 }
 
 function loadBest() { try { return parseInt(localStorage.getItem("gr.best") || "0", 10) || 0; } catch (e) { return 0; } }
@@ -2660,14 +2827,15 @@ function beginStage(st, army, power) {
   stage = st;
   runBest = Math.max(runBest, Math.round(army));
   Object.assign(rec, { start: Math.max(1, army), low: army, giants: 0, kills, arms: 0 });
-  flowV = 4.6 + Math.min(st - 1, 9) * 0.28;
+  flowV = 4.6 + Math.min(st - 1, 9) * 0.28 + exRamp(st) * 0.16;   // エクストラは流れも速い
   resetCrowd(army, power);
   buildStage(st);
   SK.ok("giant_" + stageLv() + "_idle");        // このステージの巨人の絵を、出てくる前に読み始めておく
+  if (exOf(st)) SK.ok("giant_" + stageLv() + "_kingx_idle");
   parts.length = 0; pops.length = 0;
   battle = null;
   state = "run";
-  hStage.textContent = st + "/" + FINAL_STAGE;
+  hStage.textContent = stageChip(st);
   hBar.style.width = "0%";
   ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = true;
   Snd.intense(false); Snd.music(true);
@@ -2718,8 +2886,8 @@ function showClearMessage() {
   // 次のステージの景色
   const nx = stage + 1;
   document.getElementById("clearNext").textContent =
-    window.StageBackgrounds && StageBackgrounds.themeFor(nx).name !== StageBackgrounds.themeFor(stage).name
-      ? "次は " + StageBackgrounds.themeFor(nx).name : "";
+    window.StageBackgrounds && StageBackgrounds.themeFor(visStage(nx)).name !== StageBackgrounds.themeFor(visStage(stage)).name
+      ? "次は " + StageBackgrounds.themeFor(visStage(nx)).name : "";
   document.getElementById("btnNext").textContent = pickOne(NEXT_LABELS);
   // ごほうびの絵
   const icon = document.getElementById("clearIcon");
@@ -2731,8 +2899,9 @@ function stageClear() {
   Snd.music(false);
   bullets.length = 0;
   Snd.win(); saveBest();
-  if (stage >= FINAL_STAGE) {
-    clearProgress();                  // 完全制覇したら「続きから」は消す
+  if (stage === FINAL_STAGE) {
+    lives = MAX_LIVES;
+    saveProgress(FINAL_STAGE + 1, crowd.count, crowd.power);   // 「続きから」はエクストラから
     document.getElementById("wArmy").textContent = fmt(crowd.count);
     document.getElementById("wWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
     document.getElementById("wKills").textContent = fmt(kills);
@@ -2741,7 +2910,7 @@ function stageClear() {
     return;
   }
   showClearMessage();
-  document.getElementById("clearEyebrow").textContent = "Stage " + stage + " 防衛成功";
+  document.getElementById("clearEyebrow").textContent = stageName(stage) + " 防衛成功";
   document.getElementById("cArmy").textContent = fmt(crowd.count);
   document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
   document.getElementById("cKills").textContent = fmt(kills);
@@ -2771,11 +2940,11 @@ function gameOver() {
     clearProgress();
     document.getElementById("overEyebrow").textContent = "Game Over";
     document.getElementById("overTitle").textContent = "ライフが尽きた";
-    document.getElementById("overLede").textContent = "Stage " + stage + " まで到達！ 次はどこまで行けるか、もう一度。";
+    document.getElementById("overLede").textContent = stageName(stage) + " まで到達！ 次はどこまで行けるか、もう一度。";
     retry.hidden = true;
     again.className = "btn";
   }
-  document.getElementById("oStage").textContent = "Stage " + stage;
+  document.getElementById("oStage").textContent = stageName(stage);
   document.getElementById("oKills").textContent = fmt(kills);
   document.getElementById("oBest").textContent = fmt(best);
   ovOver.hidden = false;
@@ -2817,6 +2986,10 @@ document.getElementById("btnQuit").addEventListener("click", () => {
   ovTitle.hidden = false;
 });
 document.getElementById("btnAgain").addEventListener("click", startRun);
+document.getElementById("btnExtra").addEventListener("click", () => {
+  Snd.kick(); lives = MAX_LIVES; paintLives();
+  beginStage(FINAL_STAGE + 1, Math.max(10, Math.round(crowd.count)), crowd.power);
+});
 document.getElementById("btnSound").addEventListener("click", (e) => {
   const on = Snd.toggle();
   e.currentTarget.textContent = on ? "♪" : "✕";
@@ -2855,7 +3028,7 @@ function jpShort(n) {
   if (n >= 1e4) return cut(n / 1e4) + "万";
   return n.toLocaleString("ja-JP");
 }
-const stageLabel = (st) => (st > FINAL_STAGE ? "全制覇" : "Stage " + st);
+const stageLabel = (st) => (st === FINAL_STAGE + 1 ? "全制覇" : st > FINAL_STAGE + 1 ? "EX" + exOf(st) : "Stage " + st);
 let toastTimer = 0;
 function toast(msg) {
   toastEl.textContent = msg; toastEl.classList.add("on");
@@ -2874,7 +3047,7 @@ function buildShareImage(r) {
   const JP = '"Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif';
   const DISP = 'Chango, "Arial Black", ' + JP;
   g.fillStyle = "#241c18"; g.fillRect(0, 0, S, S);
-  if (window.StageBackgrounds) StageBackgrounds.draw(g, Math.min(r.bgStage, FINAL_STAGE), S, S);
+  if (window.StageBackgrounds) StageBackgrounds.draw(g, visStage(r.bgStage), S, S);
   const gr = g.createLinearGradient(0, 0, 0, S);
   gr.addColorStop(0, "rgba(20,15,12,.55)"); gr.addColorStop(.45, "rgba(20,15,12,.62)"); gr.addColorStop(1, "rgba(20,15,12,.94)");
   g.fillStyle = gr; g.fillRect(0, 0, S, S);
@@ -2891,8 +3064,8 @@ function buildShareImage(r) {
   g.shadowColor = "transparent";
 
   // 主役の結果
-  const allClear = r.kind !== "clear" && r.stage > FINAL_STAGE;
-  const big = allClear ? "全10ステージ" : "STAGE " + r.stage;
+  const allClear = r.kind !== "clear" && r.stage === FINAL_STAGE + 1;
+  const big = allClear ? "全10ステージ" : r.stage > FINAL_STAGE ? "EXTRA " + exOf(r.stage) : "STAGE " + r.stage;
   const sub = r.kind === "clear" ? "防衛成功！" : allClear ? "完全制覇！" : "まで到達！";
   g.fillStyle = "#fff3da";
   g.font = allClear ? "900 108px " + JP : "150px " + DISP;
@@ -2955,8 +3128,9 @@ function buildShareImage(r) {
 
 function shareText(r) {
   let t;
-  if (r.kind === "clear") t = "迎撃ロード Stage " + r.stage + " をランク" + r.rank + "で突破！兵力 " + jpShort(r.army) + "人、武器は" + r.weapon + "。";
-  else if (r.stage > FINAL_STAGE) t = "迎撃ロード 全10ステージ完全制覇！最高兵力 " + jpShort(r.army) + "人。";
+  if (r.kind === "clear") t = "迎撃ロード " + stageName(r.stage) + " をランク" + r.rank + "で突破！兵力 " + jpShort(r.army) + "人、武器は" + r.weapon + "。";
+  else if (r.stage === FINAL_STAGE + 1) t = "迎撃ロード 全10ステージ完全制覇！最高兵力 " + jpShort(r.army) + "人。";
+  else if (r.stage > FINAL_STAGE) t = "迎撃ロード 全10ステージ制覇のその先、エクストラ " + exOf(r.stage) + " 面まで到達！最高兵力 " + jpShort(r.army) + "人。";
   else t = "迎撃ロードで Stage " + r.stage + " まで到達！最高兵力 " + jpShort(r.army) + "人。";
   if (r.place) t = "【今日のランキング " + r.place + "位】" + t;
   return t + "\nAIだけで作ったゲームです。あなたはどこまで守れる？\n#AIゲーム実験室 #迎撃ロード";
