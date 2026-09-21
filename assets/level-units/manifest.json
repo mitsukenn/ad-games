@@ -1,0 +1,144 @@
+{
+  "sheets": {
+    "soldiers": {
+      "file": "soldiers.png",
+      "width": 1254,
+      "height": 1254
+    },
+    "gates": {
+      "file": "gates.png",
+      "width": 1254,
+      "height": 1254
+    }
+  },
+  "sprites": {
+    "soldier_1_1": {
+      "sheet": "soldiers",
+      "x": 0,
+      "y": 140,
+      "w": 251,
+      "h": 460,
+      "name": "遺跡の歩兵"
+    },
+    "soldier_1_2": {
+      "sheet": "soldiers",
+      "x": 0,
+      "y": 640,
+      "w": 251,
+      "h": 460,
+      "name": "遺跡の歩兵"
+    },
+    "soldier_2_1": {
+      "sheet": "soldiers",
+      "x": 251,
+      "y": 140,
+      "w": 251,
+      "h": 460,
+      "name": "砂漠の銅鎧兵"
+    },
+    "soldier_2_2": {
+      "sheet": "soldiers",
+      "x": 251,
+      "y": 640,
+      "w": 251,
+      "h": 460,
+      "name": "砂漠の銅鎧兵"
+    },
+    "soldier_3_1": {
+      "sheet": "soldiers",
+      "x": 502,
+      "y": 140,
+      "w": 250,
+      "h": 460,
+      "name": "氷雪の銀鎧兵"
+    },
+    "soldier_3_2": {
+      "sheet": "soldiers",
+      "x": 502,
+      "y": 640,
+      "w": 250,
+      "h": 460,
+      "name": "氷雪の銀鎧兵"
+    },
+    "soldier_4_1": {
+      "sheet": "soldiers",
+      "x": 752,
+      "y": 140,
+      "w": 251,
+      "h": 460,
+      "name": "火山の重装兵"
+    },
+    "soldier_4_2": {
+      "sheet": "soldiers",
+      "x": 752,
+      "y": 640,
+      "w": 251,
+      "h": 460,
+      "name": "火山の重装兵"
+    },
+    "soldier_5_1": {
+      "sheet": "soldiers",
+      "x": 1003,
+      "y": 140,
+      "w": 251,
+      "h": 460,
+      "name": "天空の聖騎士"
+    },
+    "soldier_5_2": {
+      "sheet": "soldiers",
+      "x": 1003,
+      "y": 640,
+      "w": 251,
+      "h": 460,
+      "name": "天空の聖騎士"
+    },
+    "gate_1": {
+      "sheet": "gates",
+      "x": 0,
+      "y": 0,
+      "w": 627,
+      "h": 418,
+      "name": "遺跡の門"
+    },
+    "gate_2": {
+      "sheet": "gates",
+      "x": 627,
+      "y": 0,
+      "w": 627,
+      "h": 418,
+      "name": "砂漠の門"
+    },
+    "gate_3": {
+      "sheet": "gates",
+      "x": 0,
+      "y": 418,
+      "w": 627,
+      "h": 418,
+      "name": "氷雪の門"
+    },
+    "gate_4": {
+      "sheet": "gates",
+      "x": 627,
+      "y": 418,
+      "w": 627,
+      "h": 418,
+      "name": "火山の門"
+    },
+    "gate_5": {
+      "sheet": "gates",
+      "x": 0,
+      "y": 836,
+      "w": 627,
+      "h": 418,
+      "name": "天空の門"
+    },
+    "gate_6": {
+      "sheet": "gates",
+      "x": 627,
+      "y": 836,
+      "w": 627,
+      "h": 418,
+      "name": "最終決戦の門"
+    }
+  }
+}

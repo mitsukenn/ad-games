@@ -1,59 +1,74 @@
 /* ============================================================
-   SpriteKit：assets/prepared の素材シートを、ゲームの Canvas 描画から使うための小さな道具。
-   先に assets/prepared/catalog.js と assets/sprite_bounds.js を読み込んでおく。
+   SpriteKit：素材シートを、ゲームの Canvas 描画から使うための小さな道具。
+   先に次を読み込んでおく（無いものは飛ばしてよい）
+     assets/prepared/catalog.js     … 兵士・巨人・武器・小物（GAME_ASSET_CATALOG）
+     assets/level-units/catalog.js  … レベル別の兵士・ゲート（LEVEL_UNITS_CATALOG）
+     assets/sprite_bounds.js        … 各素材の「見えている部分」の矩形
 
    - 読み込み前・失敗時は各関数が false を返す。ゲーム側はそのとき今までの描画を使う
    - 位置合わせは「絵の見えている部分」で行う（セルの余白は無視）
+   - 画像は軽い WebP を先に読み、読めない端末では元の PNG に切り替える
+   - シートは初めて使うときに読み込む（まだ来ないステージの素材で通信しない）
    - 小さく何百体も描く兵士などは、縮小済みの画像を作って使い回す（軽くて、縮小のギザギザも出ない）
    ============================================================ */
 (() => {
-  const catalog = window.GAME_ASSET_CATALOG;
   const bounds = window.GAME_SPRITE_BOUNDS || {};
-  const images = {};
+  const sheets = {};                 // シート名 → { png, img }
+  const sprites = {};                // 素材ID → { sheet, x, y, w, h }
   const listeners = [];
-  let loaded = false;
 
-  if (catalog) {
-    const base = "assets/prepared/";
-    const keys = Object.keys(catalog.sheets);
-    let left = keys.length;
-    for (const k of keys) {
-      const img = new Image();
-      img.onload = img.onerror = () => {
-        if (--left === 0) { loaded = true; listeners.splice(0).forEach((f) => f()); }
-      };
-      img.src = base + catalog.sheets[k].file;
-      images[k] = img;
+  function addCatalog(cat, base) {
+    if (!cat) return;
+    for (const k of Object.keys(cat.sheets)) sheets[base + k] = { png: base + cat.sheets[k].file, img: null };
+    for (const id of Object.keys(cat.sprites)) {
+      const s = cat.sprites[id];
+      sprites[id] = { sheet: base + s.sheet, x: s.x, y: s.y, w: s.w, h: s.h };
     }
   }
+  addCatalog(window.GAME_ASSET_CATALOG, "assets/prepared/");
+  addCatalog(window.LEVEL_UNITS_CATALOG, "assets/level-units/");
 
-  /** その素材がいま描けるか */
+  function load(key) {
+    const sh = sheets[key];
+    if (sh.img) return sh.img;
+    const img = new Image();
+    img.decoding = "async";
+    let triedPng = false;
+    img.onerror = () => { if (!triedPng) { triedPng = true; img.src = sh.png; } };   // WebP が読めなければ PNG
+    img.onload = () => listeners.forEach((f) => f());
+    img.src = sh.png.replace(/\.png$/, ".webp");
+    sh.img = img;
+    return img;
+  }
+  // 基本の素材（兵士・巨人・武器・小物）は最初から読み始める
+  for (const key of Object.keys(sheets)) if (key.startsWith("assets/prepared/")) load(key);
+
+  /** その素材がいま描けるか（まだ読んでいなければ読み始める） */
   function ok(id) {
-    const s = catalog && catalog.sprites[id];
+    const s = sprites[id];
     if (!s) return false;
-    const img = images[s.sheet];
-    return !!(img && img.complete && img.naturalWidth);
+    const img = load(s.sheet);
+    return !!(img.complete && img.naturalWidth);
   }
 
   /** 見えている部分（シート上の座標） */
   function rect(id) {
-    const s = catalog.sprites[id], b = bounds[id] || [0, 0, s.w, s.h];
-    return { img: images[s.sheet], x: s.x + b[0], y: s.y + b[1], w: b[2], h: b[3] };
+    const s = sprites[id], b = bounds[id] || [0, 0, s.w, s.h];
+    return { img: sheets[s.sheet].img, x: s.x + b[0], y: s.y + b[1], w: b[2], h: b[3] };
   }
 
-  /* 縮小済みの画像。高さ 40/80/160px の3段階（元画像は約300px）。
-     半分ずつ縮めていくので、細い線もつぶれにくい */
+  /* 縮小済みの画像。高さ 40/80/160px の3段階。半分ずつ縮めていくので、細い線もつぶれにくい */
   const cache = new Map();
   const BUCKETS = [40, 80, 160];
   function scaled(id, needH) {
-    let hB = BUCKETS.find((b) => b >= needH);
-    if (!hB) return null;                             // 大きく描くときは元画像から直接
+    const hB = BUCKETS.find((b) => b >= needH);
+    if (!hB) return null;                              // 大きく描くときは元画像から直接
     const key = id + "@" + hB;
     let c = cache.get(key);
     if (c) return c;
     const r = rect(id);
     let src = r.img, sx = r.x, sy = r.y, sw = r.w, sh = r.h;
-    while (sh / 2 >= hB) {                             // 半分ずつ縮める
+    while (sh / 2 >= hB) {
       const t = document.createElement("canvas");
       t.width = Math.max(1, Math.round(sw / 2)); t.height = Math.max(1, Math.round(sh / 2));
       const tc = t.getContext("2d");
@@ -109,9 +124,9 @@
 
   /** 見えている部分の縦横比（幅 ÷ 高さ） */
   function aspect(id) {
-    if (!catalog || !catalog.sprites[id]) return 1;
-    const r = rect(id);
-    return r.w / r.h;
+    if (!sprites[id]) return 1;
+    const s = sprites[id], b = bounds[id] || [0, 0, s.w, s.h];
+    return b[2] / b[3];
   }
 
   /** 小さな canvas（画面上部の武器欄など）にアイコンを描き直す */
@@ -124,8 +139,8 @@
     return center(c, id, cw / 2, ch / 2, Math.min(cw, ch) * 0.92);
   }
 
-  /** 読み込みが終わったら呼ぶ（もう終わっていればすぐ呼ぶ） */
-  function onReady(f) { if (loaded) f(); else listeners.push(f); }
+  /** シートを読み終えるたびに呼ぶ（今すぐも一度呼ぶ） */
+  function onReady(f) { listeners.push(f); f(); }
 
   window.SpriteKit = { ok, foot, footW, center, aspect, paintIcon, onReady };
 })();

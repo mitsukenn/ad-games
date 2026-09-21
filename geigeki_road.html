@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#241c18"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="迎撃ロード"><link rel="apple-touch-icon" href="assets/icon-180.png"><link rel="icon" type="image/png" href="assets/icon-192.png"><link rel="manifest" href="geigeki_road.webmanifest"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
 <title>迎撃ロード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,8 @@
     --ui:"Barlow Semi Condensed", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   }
 
-  html,body{height:100%}
+  html,body{height:100%; overscroll-behavior:none; -webkit-tap-highlight-color:transparent}
+  #app{-webkit-touch-callout:none}
   body{
     background:var(--ink);
     color:var(--stone-l);
@@ -91,7 +92,7 @@
   }
 
   .btn-sound{
-    position:absolute; right:14px; bottom:14px;
+    position:absolute; right:max(14px, env(safe-area-inset-right)); bottom:max(14px, env(safe-area-inset-bottom));
     pointer-events:auto;
     width:40px; height:40px; border-radius:3px;
     background:rgba(36,28,24,.72);
@@ -117,6 +118,7 @@
   .ov[hidden]{display:none}
 
   .tablet{
+    box-sizing:border-box;               /* 内側の余白込みで画面幅に収める（スマホではみ出さない） */
     width:min(460px, 100%);
     background:linear-gradient(180deg,#332a23,#241c18);
     border:1px solid rgba(224,168,60,.5);
@@ -192,6 +194,23 @@
   .stat.hi .v{color:var(--gold)}
   .stat.w .v{font-family:var(--ui); font-weight:700; font-size:21px; line-height:1.2}
 
+  /* ---------- クリア画面：ランクの判子とごほうびの絵 ---------- */
+  .clear-head{position:relative; height:84px; margin:-6px auto 6px; width:180px}
+  .clear-icon{position:absolute; left:50%; top:0; width:84px; height:84px; transform:translateX(-50%)}
+  .rank{
+    position:absolute; right:-6px; top:4px; width:58px; height:58px; border-radius:50%;
+    display:grid; place-items:center; font-family:var(--disp); font-size:30px; line-height:1;
+    border:3px solid currentColor; transform:rotate(-14deg); background:rgba(20,15,12,.55);
+  }
+  #ovClear:not([hidden]) .rank{animation:stamp .5s cubic-bezier(.2,1.6,.4,1) .25s both}
+  #ovClear:not([hidden]) .clear-icon{animation:pop .5s ease-out both}
+  @keyframes stamp{0%{opacity:0; transform:rotate(-14deg) scale(2.4)} 100%{opacity:1; transform:rotate(-14deg) scale(1)}}
+  @keyframes pop{0%{opacity:0; transform:translateX(-50%) scale(.4)} 70%{transform:translateX(-50%) scale(1.12)} 100%{opacity:1; transform:translateX(-50%) scale(1)}}
+  .rank.s{color:#ffd76a} .rank.a{color:#9ee6a8} .rank.b{color:#9cc0ff} .rank.c{color:#d9a8a0}
+  .next-theme{margin:-10px 0 18px; font-size:13px; font-weight:700; letter-spacing:.12em; color:rgba(224,168,60,.85)}
+  .next-theme:empty{display:none}
+  @media (prefers-reduced-motion:reduce){ #ovClear:not([hidden]) .rank, #ovClear:not([hidden]) .clear-icon{animation:none} }
+
   .btn{
     font-family:var(--disp); font-size:19px;
     background:var(--gold); color:var(--ink);
@@ -247,9 +266,9 @@
   #app .bar-lab{display:table; padding:4px 7px; border-radius:3px; background:rgba(30,38,30,.72); color:#f1e5c6}
 
   /* ---------- 一時停止ボタン ---------- */
-  .hud{padding-right:64px}
+  .hud{padding-right:64px; padding-top:max(14px, env(safe-area-inset-top)); padding-left:max(16px, env(safe-area-inset-left))}
   .btn-pause{
-    position:absolute; right:14px; top:14px; pointer-events:auto;
+    position:absolute; right:max(14px, env(safe-area-inset-right)); top:max(14px, env(safe-area-inset-top)); pointer-events:auto;
     width:40px; height:40px; border-radius:3px;
     background:rgba(36,28,24,.72); border:1px solid rgba(224,168,60,.42);
     color:var(--gold); font:700 15px var(--ui); cursor:pointer; display:grid; place-items:center;
@@ -365,9 +384,14 @@
 
   <div class="ov" id="ovClear" hidden>
     <div class="tablet">
+      <div class="clear-head">
+        <canvas class="clear-icon" id="clearIcon" aria-hidden="true"></canvas>
+        <div class="rank" id="clearRank" aria-label="ランク">S</div>
+      </div>
       <div class="eyebrow" id="clearEyebrow">Stage 1 防衛成功</div>
-      <h2 class="win">持ちこたえた</h2>
+      <h2 class="win" id="clearTitle">持ちこたえた</h2>
       <p class="lede" id="clearLede">残った兵と火力を引き継いで次の波へ。</p>
+      <p class="next-theme" id="clearNext"></p>
       <div class="stats">
         <div class="stat"><div class="k">残存兵力</div><div class="v" id="cArmy">0</div></div>
         <div class="stat w hi"><div class="k">武器</div><div class="v" id="cWeap">投石</div></div>
@@ -427,6 +451,7 @@
 
 <script src="assets/backgrounds/backgrounds.js"></script>
 <script src="assets/prepared/catalog.js"></script>
+<script src="assets/level-units/catalog.js"></script>
 <script src="assets/sprite_bounds.js"></script>
 <script src="assets/sprite_kit.js"></script>
 <script>
@@ -972,7 +997,10 @@ function buildStage(st) {
     items.push(g);
     endZ += 12;
   }
-  totalZ = endZ + 4;
+  // ゴールの門（2ステージごとに意匠が変わり、最終ステージは紫水晶の門）。くぐった時点でクリア
+  const goalZ = endZ + 14;
+  items.push({ type: "goal", lane: 1, x: 0, z: goalZ, gate: "gate_" + (st >= FINAL_STAGE ? 6 : Math.floor((st - 1) / 2) + 1), dead: false, passed: false });
+  totalZ = goalZ + 2;
   items.sort((a, b) => a.z - b.z);
 }
 
@@ -1010,6 +1038,7 @@ addEventListener("keyup", (e) => { keys[e.key] = false; });
 
 let dragging = false, lastPX = 0;
 const app = document.getElementById("app");
+app.addEventListener("contextmenu", (e) => e.preventDefault());   // 長押しのメニューを出さない
 app.addEventListener("pointerdown", (e) => {
   if (e.target.closest("button, .ov")) return;
   dragging = true; lastPX = e.clientX;
@@ -1084,7 +1113,7 @@ function frontOf(it) {
 function hitTarget(b) {
   let best = null, bz = Infinity;
   for (const it of items) {
-    if (it.dead || it.type === "tile") continue;
+    if (it.dead || it.type === "tile" || it.type === "goal") continue;
     const hw = it.type === "giant" ? 1.4 * it.scale : LANE_HW;
     if (Math.abs(b.x - it.x) > hw) continue;
     const zf = frontOf(it);
@@ -1119,6 +1148,7 @@ function applyHit(t, b) {
       t.dead = true;
       const nt = Math.min(WMAX, tierOf(crowd.power) + 1);
       setPower(WEAPONS[nt].p);
+      rec.arms++;
       spawnFx("fx_spark", crowd.x, 1.6, 0.4, 3.2, 0.7, { grow: 0.8 });
       spawnFx("fx_spark", t.x, 1.0, t.z, 2.4, 0.5);
       for (let i = 0; i < 26; i++) puff(t.x + rnd(-1, 1), rnd(.2, 2), t.z, pick([C.gold, "#fff0cf", C.cream]), 1);
@@ -1155,6 +1185,7 @@ function applyHit(t, b) {
 }
 
 function killGiant(g) {
+  rec.giants++;
   spawnFx("fx_dust", g.x, 1.2, g.z, 7 * g.scale, 1.1, { grow: 0.6, rise: 0.6 });
   spawnFx("fx_spark", g.x, 3 * g.scale, g.z, 4, 0.6);
   g.dead = true; g.fall = 0.001;
@@ -1346,7 +1377,13 @@ function update(dt) {
     it.z -= step;
     remaining = Math.max(remaining, it.z);
 
-    if (it.type === "arm") {
+    if (it.type === "goal") {
+      if (!it.passed && it.z <= front + 0.6) {
+        it.passed = true;
+        spawnFx("fx_spark", crowd.x, 1.8, 0.6, 3.6, 0.8, { grow: 0.9 });
+        popText("GOAL", C.gold, crowd.x, 1.2, true);
+      }
+    } else if (it.type === "arm") {
       if (it.z <= front + 0.4) {
         it.dead = true;
         for (let i = 0; i < 10; i++) puff(it.x + rnd(-0.8, 0.8), rnd(.2, 1.2), it.z, C.roadD, 1);
@@ -1374,7 +1411,8 @@ function update(dt) {
    ============================================================ */
 // 背景は描き込んだ一枚絵。読み込めなかったときはグラデーションだけで遊べる
 const valleyArt = new Image();
-valleyArt.src = "assets/ancient-valley.png";
+valleyArt.onerror = () => { if (!valleyArt.dataset.png) { valleyArt.dataset.png = 1; valleyArt.src = "assets/ancient-valley.png"; } };
+valleyArt.src = "assets/ancient-valley.webp";
 function drawSky() {
   const sky = ctx.createLinearGradient(0, 0, 0, H);
   sky.addColorStop(0, "#70aaa9"); sky.addColorStop(0.4, "#c1d5bf"); sky.addColorStop(1, "#144f50");
@@ -1576,7 +1614,9 @@ function drawUnit(u, body, bodyD, skin, t, wt) {
   const p = proj(u.x, 0, u.z); if (!p || p.s < 2.2) return;
   const ally = body === C.ally;
   const frame = ((t * 5 + u.ph) | 0) % 2;                      // 2コマで足踏み
-  const sid = ally ? (frame ? "ally_run_2" : "ally_run_1") : (frame ? "enemy_stand_2" : "enemy_stand_1");
+  const lv = Math.floor((Math.min(Math.max(stage, 1), 10) - 1) / 2) + 1;
+  const lvId = "soldier_" + lv + "_" + (frame + 1);
+  const sid = ally ? (SK.ok(lvId) ? lvId : frame ? "ally_run_2" : "ally_run_1") : (frame ? "enemy_stand_2" : "enemy_stand_1");
   if (p.s >= 3.2 && SK.ok(sid)) {
     const hh = 1.25 * p.s * (1 - u.pop * 0.5);
     ctx.fillStyle = "rgba(21,34,29,.24)";
@@ -1745,6 +1785,15 @@ function drawArm(a) {
     ctx.fillStyle = "#fff3da";
     ctx.fillText(label, tl.x + w / 2, tl.y + hh * 0.52);
   }
+  ctx.globalAlpha = 1;
+}
+
+/* --- ゴールの門：道いっぱいの幅で、奥から近づいてくる --- */
+function drawGoal(gl) {
+  const b = proj(0, 0, gl.z);
+  if (!b) return;
+  ctx.globalAlpha = Math.max(0, Math.min(1, (DRAW_Z - gl.z) / 30));
+  SK.footW(ctx, gl.gate, b.x, b.y, (ROAD_W * 2 + 1.4) * b.s);
   ctx.globalAlpha = 1;
 }
 
@@ -2142,7 +2191,8 @@ function render() {
   const objs = items.filter((it) => it.type !== "tile" && (!it.dead || (it.type === "giant" && it.fall < 1)));
   objs.sort((a, b) => b.z - a.z);
   const drawObj = (it) => {
-    if (it.type === "bar") drawBar(it);
+    if (it.type === "goal") drawGoal(it);
+    else if (it.type === "bar") drawBar(it);
     else if (it.type === "arm") drawArm(it);
     else if (it.type === "squad") { drawEnemyBanner(it); drawHost(it.units, false, time, 0); drawSquadBanner(it); }
     else if (it.type === "giant") drawGiant(it);
@@ -2221,6 +2271,7 @@ function syncArmy() {
 }
 function tickHud(dt) {
   const target = crowd.count;
+  if (state === "run" || state === "battle") rec.low = Math.min(rec.low, target);
   if (target > lastArmy * 1.2 + 2) { hArmy.classList.remove("bump"); void hArmy.offsetWidth; hArmy.classList.add("bump"); }
   lastArmy = target;
   const k = target > shownArmy ? 1 - Math.exp(-dt * 5) : 1 - Math.exp(-dt * 16);
@@ -2294,8 +2345,12 @@ function resetCrowd(n, p) {
   setPower(p);
 }
 
+// ステージ中の記録（クリア時のメッセージに使う）
+const rec = { start: 0, low: 0, giants: 0, kills: 0, arms: 0 };
+
 function beginStage(st, army, power) {
   stage = st;
+  Object.assign(rec, { start: Math.max(1, army), low: army, giants: 0, kills, arms: 0 });
   flowV = 4.6 + Math.min(st - 1, 9) * 0.28;
   resetCrowd(army, power);
   buildStage(st);
@@ -2311,6 +2366,56 @@ function beginStage(st, army, power) {
   announceStage(st);
 }
 
+/* --- クリア時のメッセージ。そのステージで起きたことに合わせて選び、毎回ちがう言い回しにする --- */
+const pickOne = (a) => a[(Math.random() * a.length) | 0];
+const CLEAR_TITLES = ["圧勝！", "見事な防衛！", "鉄壁の守り！", "敵軍、総崩れ！", "完全勝利！", "文句なしの勝利！", "道は守られた！", "作戦大成功！"];
+const CLEAR_LINES = [
+  "撃破 {k}。敵の司令官が頭を抱えている。",
+  "兵は {n} 人に。この勢い、誰にも止められない。",
+  "{w}の威力、見せつけた！",
+  "敵陣から「聞いてないよ！」の声が聞こえる。",
+  "この調子なら次も余裕…かもしれない。",
+  "味方の士気は最高潮。おにぎりが配られた。",
+  "偵察兵より報告：「向こう、めちゃくちゃ焦ってます」",
+  "隊長のひとこと：「今日はカレーだ！」",
+  "勝利の行進曲、鳴りやまず。",
+  "道の石畳まで誇らしげだ。",
+];
+const NEXT_LABELS = ["次の波へ", "まだまだいける！", "次もいただき", "進軍を続ける", "この勢いで次へ"];
+const REWARD_ICONS = ["chest_open", "coin_gold", "banner_ally", "fx_spark", "chest_closed", "supply_crate"];
+
+function showClearMessage() {
+  const n = crowd.count, grow = n / rec.start, lowRate = rec.low / rec.start;
+  const stageKills = kills - rec.kills;
+  // ランク：ステージ中に兵がどれだけ増えたか
+  const rank = grow >= 5 ? "S" : grow >= 2 ? "A" : grow >= 0.8 ? "B" : "C";
+  const rEl = document.getElementById("clearRank");
+  rEl.textContent = rank; rEl.className = "rank " + rank.toLowerCase();
+  // 見出し：印象に残る出来事を優先し、なければいつもの中から
+  let title;
+  if (lowRate < 0.25) title = pickOne(["ギリギリセーフ！", "首の皮一枚！", "危なかった…！"]);
+  else if (rec.giants >= 2) title = pickOne(["巨人ハンター！", "巨人、まとめて撃破！"]);
+  else if (rec.giants === 1 && Math.random() < 0.6) title = pickOne(["巨人殺し！", "巨人も退けた！"]);
+  else if (grow >= 5) title = pickOne(["兵が大増殖！", "軍勢、爆増！", "ふくらみすぎた軍勢！"]);
+  else if (rec.arms >= 2) title = pickOne(["武器屋も驚く大出世！", "装備、大進化！"]);
+  else if (lowRate >= 0.95 && grow >= 1) title = pickOne(["無傷の完封！", "かすり傷ひとつなし！"]);
+  else title = pickOne(CLEAR_TITLES);
+  document.getElementById("clearTitle").textContent = title;
+  // ひとこと：実際の数字を入れる
+  const lines = stageKills >= 1 ? CLEAR_LINES : CLEAR_LINES.filter((l) => !l.includes("{k}"));
+  document.getElementById("clearLede").textContent = pickOne(lines)
+    .replace("{k}", fmt(stageKills)).replace("{n}", fmt(n)).replace("{w}", WEAPONS[tierOf(crowd.power)].n);
+  // 次のステージの景色
+  const nx = stage + 1;
+  document.getElementById("clearNext").textContent =
+    window.StageBackgrounds && StageBackgrounds.themeFor(nx).name !== StageBackgrounds.themeFor(stage).name
+      ? "次は " + StageBackgrounds.themeFor(nx).name : "";
+  document.getElementById("btnNext").textContent = pickOne(NEXT_LABELS);
+  // ごほうびの絵
+  const icon = document.getElementById("clearIcon");
+  requestAnimationFrame(() => SK.paintIcon(icon, pickOne(REWARD_ICONS)));
+}
+
 function stageClear() {
   state = "clear";
   Snd.music(false);
@@ -2324,6 +2429,7 @@ function stageClear() {
     ovWin.hidden = false;
     return;
   }
+  showClearMessage();
   document.getElementById("clearEyebrow").textContent = "Stage " + stage + " 防衛成功";
   document.getElementById("cArmy").textContent = fmt(crowd.count);
   document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;

@@ -15,8 +15,11 @@
   }
   function getImage(theme) {
     if(!images.has(theme.file)) {
+      // 軽い WebP を先に読み、読めない端末では元の PNG に切り替える
       const img = new Image();
-      img.src = new URL(theme.file,base).href;
+      let triedPng = false;
+      img.onerror = () => { if (!triedPng) { triedPng = true; img.src = new URL(theme.file,base).href; } };
+      img.src = new URL(theme.file.replace(/\.png$/, '.webp'),base).href;
       images.set(theme.file,img);
     }
     return images.get(theme.file);
