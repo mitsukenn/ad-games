@@ -845,6 +845,7 @@ let stage = 1, kills = 0, best = 0, shake = 0, time = 0;
 let runBest = 0;         // 今回のプレイでの最高兵力（ランキングとシェアに使う）
 let dist = 0;            // 流れた距離（路面の模様を動かす）
 let flowV = 5;           // 世界が流れてくる速さ
+let inBonus = false;     // ボーナスステージ（宝物庫）の最中
 
 const crowd = { x: 0, tx: 0, count: 12, power: 1, units: [], bigs: [], fireAcc: 0 };
 let items = [];
@@ -1071,6 +1072,9 @@ function finalize(it) {
     it.hp = it.max = Math.max(3, Math.round(FIRE_K * n * p * rnd(0.8, 1.35) * (1 + 0.08 * exRamp(stage))));
   } else if (it.type === "spike") {
     it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * rnd(1.1, 1.6)));
+  } else if (it.type === "chest") {
+    // 金の箱・ハート・武器は少し硬い。しっかり狙えば開く
+    it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * (it.kind === "army" ? rnd(1.5, 2.1) : rnd(2.3, 2.9))));
   } else if (it.type === "tile") {
     if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage))));
   } else if (it.type === "squad") {
@@ -1159,6 +1163,59 @@ function buildStage(st) {
   items.push({ type: "goal", lane: 1, x: 0, z: goalZ, gate: "gate_" + (st >= FINAL_STAGE ? 6 : Math.floor((st - 1) / 2) + 1), dead: false, passed: false });
   totalZ = goalZ + 2;
   items.sort((a, b) => a.z - b.z);
+}
+
+/* ボーナスステージ「宝物庫」：敵は出ない。流れてくる宝箱を撃ち開けてごほうびを取る。
+   届くまでに開けられなかった箱は取り逃し。2つ同時に来ることもあるので、どちらを狙うか選ぶ */
+const BONUS_KINDS = {
+  army:   { label: "+6%",   col: "#9cc0ff" },
+  big:    { label: "×1.2",  col: "#b8f5c2" },
+  heart:  { label: "♥+1",   col: "#ff8f8f" },
+  weapon: { label: "武器UP", col: "#ffd27a" },
+};
+function buildBonus() {
+  items = []; bullets = []; ebullets = [];
+  let z = 32, hearts = 0, weapons = 0;          // ハートと武器の箱は1回の宝物庫に1つまで
+  for (let i = 0; i < 12; i++) {
+    const two = i > 0 && Math.random() < 0.5;
+    const lanes = two ? pick([[0, 2], [0, 1], [1, 2]]) : [(Math.random() * 3) | 0];
+    lanes.forEach((l, k) => {
+      let kind = "army";
+      const r = Math.random();
+      if (r < 0.14) kind = "big";
+      else if (r < 0.24 && hearts < 1) { kind = "heart"; hearts++; }
+      else if (r < 0.32 && weapons < 1 && tierOf(crowd.power) < WMAX) { kind = "weapon"; weapons++; }
+      items.push({ type: "chest", kind, lane: l, x: LANES[l], z: z + k * rnd(1, 4), hp: 10, max: 10, flash: 0, dead: false });
+    });
+    z += rnd(12, 15);
+  }
+  const goalZ = z + 10;
+  items.push({ type: "goal", lane: 1, x: 0, z: goalZ, gate: "gate_" + stageLv(), dead: false, passed: false });
+  totalZ = goalZ + 2;
+  items.sort((a, b) => a.z - b.z);
+}
+
+function openChest(c) {
+  c.dead = true;
+  const k = c.kind;
+  if (k === "heart" && lives < MAX_LIVES) {
+    lives++; paintLives();
+    popText("ライフ +1", "#ff8f8f", c.x, c.z, true);
+  } else if (k === "weapon" && tierOf(crowd.power) < WMAX) {
+    const nt = tierOf(crowd.power) + 1;
+    setPower(WEAPONS[nt].p);
+    for (const u of crowd.units) u.pop = 0.6;
+    spawnFx("fx_levelup", crowd.x, 1.8, 0.2, 4.2, 1.0, { grow: 0.15 });
+    popText(WEAPONS[nt].n + "！", C.gold, c.x, c.z, true);
+  } else {
+    const before = crowd.count;
+    setCount(before * (k === "big" ? 1.2 : 1.06));
+    popText("+" + fmt(crowd.count - before), k === "big" ? "#b8f5c2" : "#9cc0ff", c.x, c.z, true);
+  }
+  spawnFx("chest_open", c.x, 0.9, c.z, 2.0, 0.9, { grow: 0.15, rise: 1.2 });
+  spawnFx("fx_spark", c.x, 1.4, c.z, 2.4, 0.5);
+  for (let i = 0; i < 22; i++) puff(c.x + rnd(-1, 1), rnd(.2, 1.8), c.z, pick([C.gold, "#fff0cf", C.cream]), 1);
+  Snd.great(); doShake(4);
 }
 
 /* ============================================================
@@ -1355,6 +1412,9 @@ function applyHit(t, b) {
       spawnFx("fx_spark", t.x, 1.4, t.z, 2.2, 0.5);
       Snd.good(); doShake(3);
     }
+  } else if (t.type === "chest") {
+    t.hp -= b.dmg; t.flash = 1;
+    if (t.hp <= 0) openChest(t);
   } else if (t.type === "spike") {
     t.hp -= b.dmg; t.flash = 1;
     if (t.hp <= 0) {
@@ -1645,6 +1705,13 @@ function update(dt) {
       if (it.z <= front + 0.4) onBarricade(it);
     } else if (it.type === "spike") {
       if (it.z <= front + 0.4) { onSpike(it); if (state !== "run") return; }
+    } else if (it.type === "chest") {
+      if (it.z <= front + 0.4) {
+        it.dead = true;
+        for (let i = 0; i < 8; i++) puff(it.x + rnd(-0.8, 0.8), rnd(.2, 1.2), it.z, C.roadD, 1);
+        popText("取り逃し", C.bad, it.x, 1.2, false);
+        Snd.bad();
+      }
     } else if (it.type === "squad") {
       updateSquadUnits(it, dt);
       if (it.z <= front + 0.3) { onSquad(it); if (state !== "run") return; }
@@ -2479,6 +2546,40 @@ function drawEnemyBanner(sq) {
   drawFlag("banner_enemy", sq.x + 0.7, far + 0.4, 2.6);
 }
 
+/* 宝箱：中身の札を上に出す（金の箱は光る） */
+function drawChest(c) {
+  const b = proj(c.x, 0, c.z);
+  if (!b) return;
+  const a = Math.max(0, Math.min(1, (DRAW_Z - c.z) / 30));
+  ctx.globalAlpha = a;
+  const h = 1.5 * b.s, K = BONUS_KINDS[c.kind];
+  if (c.kind !== "army") {                                  // 特別な箱は足元が光る
+    const g = ctx.createRadialGradient(b.x, b.y - h * 0.4, 0, b.x, b.y - h * 0.4, h * 1.1);
+    g.addColorStop(0, K.col + "aa"); g.addColorStop(1, K.col + "00");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(b.x, b.y - h * 0.4, h * (1.0 + 0.08 * Math.sin(time * 6)), 0, 6.2832); ctx.fill();
+  }
+  if (!SK.foot(ctx, "chest_closed", b.x, b.y, h)) {
+    ctx.fillStyle = "#8a5a2b"; ctx.fillRect(b.x - h * 0.6, b.y - h * 0.8, h * 1.2, h * 0.8);
+    ctx.fillStyle = C.gold; ctx.fillRect(b.x - h * 0.6, b.y - h * 0.5, h * 1.2, h * 0.1);
+  }
+  if (c.flash > 0) { ctx.globalAlpha = a * c.flash * 0.4; ctx.globalCompositeOperation = "lighter"; SK.foot(ctx, "chest_closed", b.x, b.y, h); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = a; }
+  // 中身の札
+  const top = b.y - h * 1.05;
+  if (c.kind === "heart" && SK.ok("potion_health")) SK.center(ctx, "potion_health", b.x, top - h * 0.35, h * 0.7);
+  else if (c.kind === "weapon") SK.center(ctx, WEAPON_SPR[Math.min(WMAX, tierOf(crowd.power) + 1)], b.x, top - h * 0.35, h * 0.8);
+  const fs = Math.min(b.s * 0.62, 40);
+  if (fs >= 7) {
+    ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, fs * 0.16); ctx.strokeStyle = "rgba(20,15,12,.85)";
+    const ty = c.kind === "heart" || c.kind === "weapon" ? top - h * 0.85 : top - h * 0.1;
+    ctx.strokeText(K.label, b.x, ty); ctx.fillStyle = K.col; ctx.fillText(K.label, b.x, ty);
+  }
+  ctx.globalAlpha = 1;
+  drawHpLabel(c.hp, b.x, b.y - h * 0.42, h * 0.9, 0.5 * b.s);
+}
+
 /* トゲの柵：鉄のトゲを植えた丸太。素材があればそれを、なければ Canvas で描く */
 function drawSpike(sp) {
   const b = proj(sp.x, 0, sp.z);
@@ -2647,6 +2748,7 @@ function render() {
     else if (it.type === "arm") drawArm(it);
     else if (it.type === "squad") { drawEnemyBanner(it); drawHost(it.units.concat(it.bigs || []), false, time, 0, it.beast, it.gun ? (it.gunT > 0 ? 2 : 1) : 0); drawSquadBanner(it); }
     else if (it.type === "spike") drawSpike(it);
+    else if (it.type === "chest") drawChest(it);
     else if (it.type === "giant") drawGiant(it);
   };
   for (const it of objs) if (it.z > front) drawObj(it);
@@ -2823,7 +2925,29 @@ function resetCrowd(n, p) {
 // ステージ中の記録（クリア時のメッセージに使う）
 const rec = { start: 0, low: 0, giants: 0, kills: 0, arms: 0 };
 
+/** 宝物庫のあとに来るステージ：3・6・9面、エクストラは EX3・EX6… のあと（10面のあとは勝利画面） */
+const bonusAfter = (st) => (st < FINAL_STAGE ? st % 3 === 0 : st > FINAL_STAGE && exOf(st) % 3 === 0);
+
+function beginBonus(army, power) {
+  inBonus = true;
+  flowV = 5.8;
+  resetCrowd(army, power);
+  buildBonus();
+  parts.length = 0; pops.length = 0;
+  battle = null;
+  state = "run";
+  hStage.textContent = "BONUS"; hStage.style.fontSize = "0.7em";   // 枠からはみ出さないよう小さめに
+  hBar.style.width = "0%";
+  ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = true;
+  Snd.intense(false); Snd.music(true);
+  saveProgress(stage + 1, army, power);       // 途中でやめても、続きは次のステージから
+  camKick = 0;
+  flash(elAnn, ["BONUS", "宝物庫", "宝箱を撃ち開けろ！　取り逃しに注意"]);
+  Snd.fanfare();
+}
+
 function beginStage(st, army, power) {
+  inBonus = false;
   stage = st;
   runBest = Math.max(runBest, Math.round(army));
   Object.assign(rec, { start: Math.max(1, army), low: army, giants: 0, kills, arms: 0 });
@@ -2835,7 +2959,7 @@ function beginStage(st, army, power) {
   parts.length = 0; pops.length = 0;
   battle = null;
   state = "run";
-  hStage.textContent = stageChip(st);
+  hStage.textContent = stageChip(st); hStage.style.fontSize = "";
   hBar.style.width = "0%";
   ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = true;
   Snd.intense(false); Snd.music(true);
@@ -2899,6 +3023,22 @@ function stageClear() {
   Snd.music(false);
   bullets.length = 0;
   Snd.win(); saveBest();
+  if (inBonus) {                                    // 宝物庫の終わり
+    const rEl = document.getElementById("clearRank");
+    rEl.textContent = "★"; rEl.className = "rank s";
+    document.getElementById("clearEyebrow").textContent = "Bonus 終了";
+    document.getElementById("clearTitle").textContent = pickOne(["お宝ざくざく！", "宝物庫、制覇！", "ふところも軍勢もホクホク！"]);
+    document.getElementById("clearLede").textContent = "ふくらんだ軍勢で " + stageName(stage + 1) + " へ。";
+    document.getElementById("clearNext").textContent = "";
+    document.getElementById("btnNext").textContent = stageName(stage + 1) + " へ";
+    document.getElementById("cArmy").textContent = fmt(crowd.count);
+    document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
+    document.getElementById("cKills").textContent = fmt(kills);
+    const icon = document.getElementById("clearIcon");
+    requestAnimationFrame(() => SK.paintIcon(icon, "chest_open"));
+    ovClear.hidden = false;
+    return;
+  }
   if (stage === FINAL_STAGE) {
     lives = MAX_LIVES;
     saveProgress(FINAL_STAGE + 1, crowd.count, crowd.power);   // 「続きから」はエクストラから
@@ -2911,6 +3051,7 @@ function stageClear() {
   }
   showClearMessage();
   document.getElementById("clearEyebrow").textContent = stageName(stage) + " 防衛成功";
+  if (bonusAfter(stage)) document.getElementById("btnNext").textContent = "ボーナスステージへ";
   document.getElementById("cArmy").textContent = fmt(crowd.count);
   document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
   document.getElementById("cKills").textContent = fmt(kills);
@@ -2964,7 +3105,9 @@ function setupDemo() {
 const startRun = () => { Snd.kick(); kills = 0; runBest = 0; lives = MAX_LIVES; paintLives(); beginStage(1, 12, 1); };
 document.getElementById("btnStart").addEventListener("click", () => { best = loadBest(); startRun(); });
 document.getElementById("btnNext").addEventListener("click", () => {
-  beginStage(stage + 1, Math.max(10, Math.round(crowd.count)), crowd.power);
+  const army = Math.max(10, Math.round(crowd.count));
+  if (!inBonus && bonusAfter(stage)) beginBonus(army, crowd.power);
+  else beginStage(stage + 1, army, crowd.power);
 });
 document.getElementById("btnRetry").addEventListener("click", startRun);
 document.getElementById("btnRetryStage").addEventListener("click", () => {
