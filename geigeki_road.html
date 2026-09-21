@@ -240,7 +240,84 @@
   }
   .rule b.b{background:#3b6fd1; color:#fff}
   /* 絵の背景の上でも読めるように、進み具合の見出しに下地を敷く */
+  .chip.weap{position:relative; padding-right:46px}
+  .wicon{position:absolute; right:6px; top:50%; width:34px; height:34px; transform:translateY(-50%)}
+  .chip.weap .v{white-space:nowrap}
+  @media (max-width:520px){ .chip.weap .v{font-size:14px} .chip.weap{padding-right:40px} .wicon{width:28px; height:28px} }
   #app .bar-lab{display:table; padding:4px 7px; border-radius:3px; background:rgba(30,38,30,.72); color:#f1e5c6}
+
+  /* ---------- 一時停止ボタン ---------- */
+  .hud{padding-right:64px}
+  .btn-pause{
+    position:absolute; right:14px; top:14px; pointer-events:auto;
+    width:40px; height:40px; border-radius:3px;
+    background:rgba(36,28,24,.72); border:1px solid rgba(224,168,60,.42);
+    color:var(--gold); font:700 15px var(--ui); cursor:pointer; display:grid; place-items:center;
+  }
+  .btn-pause:hover{background:rgba(61,49,41,.85)}
+  .btn-pause:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+
+  /* ---------- 兵力の数字が弾む ---------- */
+  #hArmy{display:inline-block; transform-origin:left center}
+  #hArmy.bump{animation:bump .45s ease-out}
+  @keyframes bump{0%{transform:scale(1)} 35%{transform:scale(1.35); color:#fff3da} 100%{transform:scale(1)}}
+
+  /* ---------- 巨人の接近警告 ---------- */
+  .warn{position:absolute; inset:0; pointer-events:none; display:none}
+  .warn.on{display:block; animation:warnFade 2.4s ease forwards}
+  .warn::after{content:""; position:absolute; inset:0; box-shadow:inset 0 0 90px rgba(178,58,50,.6)}
+  .warn .band{
+    position:absolute; left:0; right:0; height:30px; opacity:.92;
+    background:repeating-linear-gradient(-45deg,#b23a32 0 18px,#1a1210 18px 36px);
+    animation:bandMove .6s linear infinite;
+  }
+  .warn .band.t{top:0} .warn .band.b{bottom:0}
+  .warn .msg{
+    position:absolute; left:50%; top:19%; transform:translate(-50%,-50%); text-align:center;
+    padding:10px 24px 12px; background:rgba(20,12,10,.8); border:1px solid rgba(224,168,60,.7);
+    width:max-content; max-width:calc(100% - 32px);
+  }
+  .warn .msg b{display:block; font-family:var(--disp); font-weight:400; font-size:clamp(30px,8vw,54px);
+               color:#ff5a4a; letter-spacing:.06em; line-height:1.1; animation:blink .4s steps(2) infinite}
+  .warn .msg span{font-weight:700; color:var(--stone-l); font-size:15px; letter-spacing:.14em}
+  @keyframes bandMove{to{background-position:51px 0}}
+  @keyframes warnFade{0%{opacity:0} 8%{opacity:1} 80%{opacity:1} 100%{opacity:0}}
+  @keyframes blink{50%{opacity:.35}}
+
+  /* ---------- ステージ告知・桁の節目 ---------- */
+  .announce{
+    position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); pointer-events:none; display:none;
+    text-align:center; padding:10px 22px 12px; width:max-content; max-width:calc(100% - 32px);
+    background:rgba(20,15,12,.74); border:1px solid rgba(224,168,60,.65);
+  }
+  .announce .a1{white-space:nowrap}
+  .announce.mile{top:52%}
+  .announce.on{display:block; animation:annIn 2.2s ease forwards}
+  .announce .a1{font-family:var(--disp); font-size:clamp(28px,8vw,50px); color:var(--gold); line-height:1.05}
+  .announce .a2{font-weight:700; font-size:16px; color:var(--stone-l); letter-spacing:.14em; margin-top:4px}
+  .announce .a3{font-weight:700; font-size:17px; color:#ff6b5a; margin-top:6px; letter-spacing:.06em}
+  .announce .a2:empty, .announce .a3:empty{display:none}
+  @keyframes annIn{
+    0%{opacity:0; transform:translate(-50%,-50%) scale(.8)}
+    12%{opacity:1; transform:translate(-50%,-50%) scale(1.06)}
+    20%{transform:translate(-50%,-50%) scale(1)}
+    80%{opacity:1} 100%{opacity:0; transform:translate(-50%,-50%) scale(1)}
+  }
+
+  /* ---------- 一時停止パネルの音量 ---------- */
+  .vols{margin:4px auto 20px; max-width:300px}
+  .vol{display:grid; grid-template-columns:64px 1fr 40px; gap:10px; align-items:center; margin-bottom:12px;
+       font-weight:600; font-size:14px; color:var(--stone-l); text-align:left}
+  .vol input{width:100%; accent-color:var(--gold)}
+  .vol output{font-family:var(--disp); font-size:13px; color:var(--gold); text-align:right}
+  .btns{display:flex; flex-wrap:wrap; gap:10px; justify-content:center}
+  .btns .btn.ghost{margin-left:0}
+
+  @media (prefers-reduced-motion:reduce){
+    #hArmy.bump, .warn .band, .warn .msg b{animation:none}
+    .announce.on{animation:annFade 2.2s ease forwards}
+    @keyframes annFade{0%{opacity:0} 10%{opacity:1} 80%{opacity:1} 100%{opacity:0}}
+  }
 </style>
 
 <div id="app">
@@ -249,7 +326,7 @@
   <div class="hud">
     <div class="chip"><span class="k">Stage</span><span class="v" id="hStage">1</span></div>
     <div class="chip army"><span class="k">兵力</span><span class="v" id="hArmy">12</span></div>
-    <div class="chip weap"><span class="k">武器</span><span class="v" id="hWeap">投石</span><span class="s" id="hPow">×1.00</span></div>
+    <div class="chip weap"><canvas class="wicon" id="hWeapIcon" aria-hidden="true"></canvas><span class="k">武器</span><span class="v" id="hWeap">投石</span><span class="s" id="hPow">×1.00</span></div>
     <div class="bar-wrap">
       <div class="bar-lab">防衛戦の進み具合</div>
       <div class="bar"><i id="hBar"></i></div>
@@ -257,6 +334,14 @@
   </div>
 
   <button class="btn-sound" id="btnSound" aria-label="音のオン・オフ">♪</button>
+  <button class="btn-pause" id="btnPause" aria-label="一時停止" hidden>Ⅱ</button>
+
+  <div class="warn" id="warn" aria-live="assertive">
+    <div class="band t"></div><div class="band b"></div>
+    <div class="msg"><b>WARNING</b><span id="warnText">巨人接近</span></div>
+  </div>
+  <div class="announce" id="announce" aria-live="polite"><div class="a1"></div><div class="a2"></div><div class="a3"></div></div>
+  <div class="announce mile" id="mile" aria-live="polite"><div class="a1"></div><div class="a2"></div><div class="a3"></div></div>
 
   <div class="ov" id="ovTitle">
     <div class="tablet">
@@ -270,7 +355,10 @@
         <div class="rule"><b class="r">敵</b><span>赤軍は撃って減らせ。同じレーンで受ければ白兵戦、よそ見をすると<strong>丸ごと突破される</strong></span></div>
         <div class="rule"><b class="r">巨</b><span>巨人はレーンをまたいで迫る。近づく前に削りきれ</span></div>
       </div>
-      <button class="btn" id="btnStart">防衛開始</button>
+      <div class="btns">
+        <button class="btn" id="btnStart">防衛開始</button>
+        <button class="btn ghost" id="btnContinue" hidden>続きから</button>
+      </div>
       <p class="hint">ドラッグ、または ← → キーで隊列を左右に動かす</p>
     </div>
   </div>
@@ -303,6 +391,22 @@
     </div>
   </div>
 
+  <div class="ov" id="ovPause" hidden>
+    <div class="tablet">
+      <div class="eyebrow">Pause</div>
+      <h2>一時停止中</h2>
+      <div class="vols">
+        <label class="vol"><span>BGM</span><input type="range" id="volBgm" min="0" max="100" step="5"><output id="volBgmV">80</output></label>
+        <label class="vol"><span>効果音</span><input type="range" id="volSe" min="0" max="100" step="5"><output id="volSeV">100</output></label>
+      </div>
+      <div class="btns">
+        <button class="btn" id="btnResume">再開する</button>
+        <button class="btn ghost" id="btnQuit">タイトルへ</button>
+      </div>
+      <p class="hint">P または Esc キーでも一時停止・再開できます</p>
+    </div>
+  </div>
+
   <div class="ov" id="ovOver" hidden>
     <div class="tablet">
       <div class="eyebrow">防衛線崩壊</div>
@@ -313,11 +417,18 @@
         <div class="stat"><div class="k">撃破数</div><div class="v" id="oKills">0</div></div>
         <div class="stat hi"><div class="k">最高兵力</div><div class="v" id="oBest">0</div></div>
       </div>
-      <button class="btn" id="btnRetry">最初から</button>
+      <div class="btns">
+        <button class="btn" id="btnRetryStage">このステージから</button>
+        <button class="btn ghost" id="btnRetry">最初から</button>
+      </div>
     </div>
   </div>
 </div>
 
+<script src="assets/backgrounds/backgrounds.js"></script>
+<script src="assets/prepared/catalog.js"></script>
+<script src="assets/sprite_bounds.js"></script>
+<script src="assets/sprite_kit.js"></script>
 <script>
 (() => {
 "use strict";
@@ -410,12 +521,22 @@ function scaleAt(z) {
    ============================================================ */
 const Snd = (() => {
   let ac = null, on = true, sfx = null, mus = null;
+  // BGM と効果音は別々の音量。次回も同じ音量で遊べるよう保存する
+  const vols = (() => {
+    try { const v = JSON.parse(localStorage.getItem("gr.vol") || "{}"); return { bgm: v.bgm ?? 0.8, se: v.se ?? 1 }; }
+    catch (e) { return { bgm: 0.8, se: 1 }; }
+  })();
+  const applyVol = () => {
+    if (mus) mus.gain.value = on ? 0.55 * vols.bgm : 0;
+    if (sfx) sfx.gain.value = vols.se;
+  };
   const ensure = () => {
     if (!ac) {
       try {
         ac = new (window.AudioContext || window.webkitAudioContext)();
         sfx = ac.createGain(); sfx.gain.value = 1; sfx.connect(ac.destination);
         mus = ac.createGain(); mus.gain.value = 0.55; mus.connect(ac.destination);
+        applyVol();
       } catch (e) { on = false; }
     }
     if (ac && ac.state === "suspended") ac.resume();
@@ -508,8 +629,23 @@ const Snd = (() => {
     toggle() {
       on = !on;
       if (on) ensure();
-      if (mus) mus.gain.value = on ? 0.55 : 0;
+      applyVol();
       return on;
+    },
+    get vol() { return { bgm: vols.bgm, se: vols.se }; },
+    setVol(bgm, se) {
+      vols.bgm = bgm; vols.se = se; applyVol();
+      try { localStorage.setItem("gr.vol", JSON.stringify(vols)); } catch (e) {}
+    },
+    siren() {                         // 巨人接近：ウーウー
+      const t = (ensure() || {}).currentTime || 0;
+      for (let i = 0; i < 4; i++) tone(i % 2 ? 620 : 880, 0.34, "sawtooth", 0.05, i % 2 ? 880 : 620, t + i * 0.34);
+    },
+    fanfare() {                       // 難しさが変わるステージ：短調のファンファーレ
+      const t = (ensure() || {}).currentTime || 0;
+      [[69, 0, .12], [69, .14, .12], [72, .28, .12], [76, .42, .5], [74, .96, .14], [72, 1.12, .7]]
+        .forEach(([m, d, l]) => { tone(hz(m), l, "square", 0.06, 0, t + d); tone(hz(m - 12), l, "triangle", 0.08, 0, t + d); });
+      [0, .42, 1.12].forEach((d) => tone(120, 0.3, "sine", 0.3, 45, t + d));
     },
     kick() { ensure(); },
     music(v) {                      // true で行進曲を流す／false で止める
@@ -624,10 +760,49 @@ function setCount(n) {
   if (crowd.count > best) best = Math.round(crowd.count);
   hArmy.textContent = fmt(crowd.count);
 }
+/* --- 素材（assets/prepared）の対応表。読めないときは Canvas 描画に戻る --- */
+const SK = window.SpriteKit || { ok: () => false, foot: () => false, footW: () => false, center: () => false, paintIcon: () => false, onReady() {} };
+const BOUNDS = window.GAME_SPRITE_BOUNDS || {};
+const WEAPON_SPR = ["ranged_0_stone", "ranged_1_sling", "ranged_2_bow", "ranged_3_crossbow", "ranged_4_matchlock",
+                    "ranged_5_pistol", "ranged_6_rifle", "ranged_7_shotgun", "ranged_8_machinegun", "ranged_9_cannon"];
+function paintWeaponIcon() {
+  const el = document.getElementById("hWeapIcon");
+  if (el) SK.paintIcon(el, WEAPON_SPR[tierOf(crowd.power)]);
+}
+SK.onReady(paintWeaponIcon);
+
+/* 素材の演出（土煙・衝撃波・火花・宝箱）。世界座標に置いて、広がりながら消える */
+const fxs = [];
+function spawnFx(id, x, y, z, size, life, opt) {
+  if (!SK.ok(id) || fxs.length > 40) return;
+  fxs.push(Object.assign({ id, x, y, z, size, life, t: 0, grow: 0.5, rise: 0, flat: false }, opt || {}));
+}
+function updateFx(dt) {
+  for (let i = fxs.length - 1; i >= 0; i--) {
+    const f = fxs[i];
+    f.t += dt; f.y += f.rise * dt;
+    if (f.t >= f.life) fxs.splice(i, 1);
+  }
+}
+function drawFx() {
+  for (const f of fxs) {
+    const g = proj(f.x, f.y, f.z);
+    if (!g) continue;
+    const k = f.t / f.life;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - k * k);
+    ctx.translate(g.x, g.y);
+    if (f.flat) ctx.scale(1, 0.42);                       // 地面に寝かせた輪
+    SK.center(ctx, f.id, 0, 0, f.size * g.s * (1 + f.grow * k));
+    ctx.restore();
+  }
+}
+
 function setPower(p) {
   crowd.power = p;
   hWeap.textContent = WEAPONS[tierOf(p)].n;
   hPow.textContent = "×" + p.toFixed(2);
+  paintWeaponIcon();
 }
 
 /* --- 敵軍（レーンに沿って縦長に並ぶ） --- */
@@ -819,7 +994,15 @@ function doShake(v) { if (!REDUCED) shake = Math.min(shake + v, 20); }
    6. 入力
    ============================================================ */
 const keys = Object.create(null);
+let touched = false;                 // 一度も触れていない間は振動を呼ばない（ブラウザが警告を出すため）
+addEventListener("pointerdown", () => { touched = true; }, true);
 addEventListener("keydown", (e) => {
+  touched = true;
+  if (e.key === "p" || e.key === "P" || e.key === "Escape") {
+    if (state === "pause") resumeGame(); else pauseGame();
+    e.preventDefault();
+    return;
+  }
   keys[e.key] = true;
   if (["ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
 });
@@ -856,10 +1039,12 @@ function updateSteer(dt) {
 function updateCrowdUnits(dt) {
   const k = 1 - Math.exp(-dt * 9);
   const lim = ROAD_W - 0.3;
+  // 描く人数を超えた大軍は、桁が増えるごとに隊列を後ろへ伸ばして規模を見せる
+  const stretch = crowd.count > MAX_UNITS ? 1 + 0.45 * Math.log10(crowd.count / MAX_UNITS) : 1;
   for (const p of crowd.units) {
     const tx = Math.max(-lim, Math.min(lim, crowd.x + p.sx));
     p.x += (tx - p.x) * k;
-    p.z += (p.sz - p.z) * k;
+    p.z += (0.4 + (p.sz - 0.4) * stretch - p.z) * k;
     if (p.pop > 0) p.pop = Math.max(0, p.pop - dt * 3.4);
   }
 }
@@ -934,6 +1119,8 @@ function applyHit(t, b) {
       t.dead = true;
       const nt = Math.min(WMAX, tierOf(crowd.power) + 1);
       setPower(WEAPONS[nt].p);
+      spawnFx("fx_spark", crowd.x, 1.6, 0.4, 3.2, 0.7, { grow: 0.8 });
+      spawnFx("fx_spark", t.x, 1.0, t.z, 2.4, 0.5);
       for (let i = 0; i < 26; i++) puff(t.x + rnd(-1, 1), rnd(.2, 2), t.z, pick([C.gold, "#fff0cf", C.cream]), 1);
       popText(WEAPONS[nt].n + "！", C.gold, crowd.x, 1.6, true);
       for (const u of crowd.units) u.pop = 0.6;       // 全員が一斉に持ち替える
@@ -947,6 +1134,8 @@ function applyHit(t, b) {
       t.dead = true;
       for (let i = 0; i < 16; i++) puff(t.x + rnd(-1, 1), rnd(.2, 1.4), t.z, pick([C.wood, C.woodD, C.iron]), 1);
       popText("開門", C.gold, t.x, t.z, true);
+      spawnFx("chest_open", t.x, 0.9, t.z, 1.9, 0.9, { grow: 0.15, rise: 1.2 });
+      spawnFx("fx_spark", t.x, 1.4, t.z, 2.2, 0.5);
       Snd.good(); doShake(3);
     }
   } else if (t.type === "squad") {
@@ -966,6 +1155,8 @@ function applyHit(t, b) {
 }
 
 function killGiant(g) {
+  spawnFx("fx_dust", g.x, 1.2, g.z, 7 * g.scale, 1.1, { grow: 0.6, rise: 0.6 });
+  spawnFx("fx_spark", g.x, 3 * g.scale, g.z, 4, 0.6);
   g.dead = true; g.fall = 0.001;
   kills += 1;
   for (let i = 0; i < 40; i++) puff(g.x + rnd(-2, 2), rnd(.5, 5 * g.scale), g.z, pick([C.gold, C.cream, "#7d8c4f"]), 1);
@@ -1075,7 +1266,9 @@ function updateGiantBattle(dt) {
     hArmy.textContent = fmt(crowd.count);
     for (let i = 0; i < 18; i++) puff(g.x + rnd(-2.2, 2.2), 0.3, rnd(-0.5, 1.5), pick([C.roadD, C.foe, C.cream]), 1);
     popText("−" + fmt(loss), C.bad, g.x, 1.0, true);
-    Snd.boom(); doShake(14 * Math.min(1.4, g.scale));
+    Snd.boom(); doShake(14 * Math.min(1.4, g.scale)); buzz(40);
+    spawnFx("fx_shockwave", g.x, 0.05, 1.2, 6 * g.scale, 0.55, { grow: 0.9, flat: true });
+    spawnFx("fx_dust", g.x + rnd(-0.6, 0.6), 0.6, 1.4, 3.2 * g.scale, 0.7, { grow: 0.7, rise: 0.8 });
   }
   if (crowd.count <= 0.5) { crowd.count = 0; syncCrowd(); gameOver(); return; }
   if (g.hp <= 0) {
@@ -1100,6 +1293,7 @@ function update(dt) {
     if (p.t > p.life) pops.splice(i, 1);
   }
   if (shake > 0) shake = Math.max(0, shake - dt * 42);
+  updateFx(dt);
   for (const it of items) {
     if (it.flash > 0) it.flash = Math.max(0, it.flash - dt * 6);
     if (it.type === "giant") {
@@ -1108,6 +1302,10 @@ function update(dt) {
     }
   }
   cam.x += (crowd.x * 0.22 - cam.x) * (1 - Math.exp(-dt * 5));
+  // 巨人戦は少し引いて頭から足元まで収める。接近警告では一瞬前に寄る
+  camBase += ((battle && battle.giant ? -CAM_BACK * 1.08 : -CAM_BACK) - camBase) * (1 - Math.exp(-dt * 3));
+  if (camKick > 0) camKick = Math.max(0, camKick - dt * 0.9);
+  cam.z = camBase + (camKick > 0 ? Math.sin((1 - camKick) * Math.PI) * 3.2 : 0);
 
   if (state === "title") {
     dist += dt * 3;
@@ -1161,6 +1359,7 @@ function update(dt) {
       updateSquadUnits(it, dt);
       if (it.z <= front + 0.3) { onSquad(it); if (state !== "run") return; }
     } else if (it.type === "giant") {
+      if (!it.warned && it.z < 44) { it.warned = true; giantWarning(it); }
       // 巨人はレーンの壁をまたいで、隊列のいる場所へ寄ってくる
       if (it.z < 22) it.x += (crowd.x - it.x) * (1 - Math.exp(-dt * 1.2));
       if (it.z - 0.9 * it.scale <= front) { it.z = front + 0.9 * it.scale; startGiant(it); return; }
@@ -1180,7 +1379,9 @@ function drawSky() {
   const sky = ctx.createLinearGradient(0, 0, 0, H);
   sky.addColorStop(0, "#70aaa9"); sky.addColorStop(0.4, "#c1d5bf"); sky.addColorStop(1, "#144f50");
   ctx.fillStyle = sky; ctx.fillRect(-40, -40, W + 80, H + 80);
-  if (valleyArt.complete && valleyArt.naturalWidth) {
+  // ステージごとの背景（1–2 遺跡の谷／3–4 砂漠／5–6 雪／7–8 火山／9–10 天空）。読めなければ谷の絵
+  if (window.StageBackgrounds && StageBackgrounds.draw(ctx, stage, W, H)) { /* 描けた */ }
+  else if (valleyArt.complete && valleyArt.naturalWidth) {
     const dh = H + 80, dw = Math.max(W + 100, dh * valleyArt.naturalWidth / valleyArt.naturalHeight);
     ctx.drawImage(valleyArt, (W - dw) / 2 - cam.x * 3, -30, dw, dh);
   }
@@ -1373,6 +1574,22 @@ function soldierSprite(body, bodyD, skin, wt) {
 }
 function drawUnit(u, body, bodyD, skin, t, wt) {
   const p = proj(u.x, 0, u.z); if (!p || p.s < 2.2) return;
+  const ally = body === C.ally;
+  const frame = ((t * 5 + u.ph) | 0) % 2;                      // 2コマで足踏み
+  const sid = ally ? (frame ? "ally_run_2" : "ally_run_1") : (frame ? "enemy_stand_2" : "enemy_stand_1");
+  if (p.s >= 3.2 && SK.ok(sid)) {
+    const hh = 1.25 * p.s * (1 - u.pop * 0.5);
+    ctx.fillStyle = "rgba(21,34,29,.24)";
+    ctx.beginPath(); ctx.ellipse(p.x, p.y, p.s * 0.3, p.s * 0.1, 0, 0, 6.2832); ctx.fill();
+    SK.foot(ctx, sid, p.x, p.y, hh);
+    // 手にした飛び道具：斜め45度の絵を立てて、右手の位置に持たせる
+    if (ally && wt > 0 && p.s >= 7) {
+      const cannon = wt === 9;
+      SK.center(ctx, WEAPON_SPR[wt], p.x + p.s * (cannon ? 0.05 : 0.3), p.y - hh * (cannon ? 0.78 : 0.62),
+                p.s * (cannon ? 0.75 : 0.85), cannon ? 0 : -Math.PI / 4);
+    }
+    return;
+  }
   const bob = Math.sin(t * 12 + u.ph), lift = Math.max(0, bob) * 0.10 * p.s;
   const h = 1.13 * p.s * (1 - u.pop * 0.55), w = 0.75 * p.s * (1 + u.pop * 0.3);
   ctx.fillStyle = "rgba(21,34,29,.24)";
@@ -1391,6 +1608,22 @@ function drawHost(units, ally, t, wt) {
 
 /* --- 宝の板 ------------------------------------------------ */
 function drawTile(t) {
+  if (t.kind === "mul" && SK.ok("supply_crate")) {
+    const b = proj(t.x, 0, t.z + 0.5);
+    if (!b) return;
+    ctx.globalAlpha = Math.max(0, Math.min(1, (DRAW_Z - t.z) / 30));
+    SK.foot(ctx, "supply_crate", b.x, b.y, 1.5 * b.s);
+    const fs = Math.min(b.s * 0.7, 44);
+    if (fs >= 7) {
+      ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+      ctx.lineWidth = Math.max(2, fs * 0.16); ctx.strokeStyle = "rgba(20,15,12,.8)";
+      ctx.strokeText("×" + t.v, b.x, b.y - 1.9 * b.s);
+      ctx.fillStyle = "#b8f5c2"; ctx.fillText("×" + t.v, b.x, b.y - 1.9 * b.s);
+    }
+    ctx.globalAlpha = 1;
+    return;
+  }
   const x0 = t.x - 0.86, x1 = t.x + 0.86, z0 = t.z, z1 = t.z + 1.05, h = 0.22;
   const a = proj(x0, h, z0), b = proj(x1, h, z0);
   if (!a || !b) return;
@@ -1481,11 +1714,13 @@ function drawArm(a) {
     const bob = Math.sin(time * 3 + a.z) * u * 0.05;
     ctx.fillStyle = "rgba(255,226,140,.28)";
     ctx.beginPath(); ctx.arc(top.x, top.y - u * 0.5 + bob, u * 0.5, 0, 6.2832); ctx.fill();
-    ctx.save();
-    ctx.translate(top.x, top.y - u * 0.05 + bob);
-    ctx.rotate(0.4);                                           // drawWeapon の傾きを打ち消して真っすぐ立てる
-    drawWeapon(0, 0, u, Math.max(1, nt), 0);
-    ctx.restore();
+    if (!SK.center(ctx, WEAPON_SPR[nt], top.x, top.y - u * 0.5 + bob, u * 0.95)) {
+      ctx.save();
+      ctx.translate(top.x, top.y - u * 0.05 + bob);
+      ctx.rotate(0.4);                                         // drawWeapon の傾きを打ち消して真っすぐ立てる
+      drawWeapon(0, 0, u, Math.max(1, nt), 0);
+      ctx.restore();
+    }
     const fs2 = Math.max(11, Math.min(u * 0.26, 30));
     ctx.font = "700 " + fs2 + 'px "Barlow Semi Condensed", "Hiragino Sans", sans-serif';
     ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
@@ -1570,6 +1805,46 @@ function drawGiant(g) {
   const U = 6.6 * g.scale * s;                 // 全高(px)。兵の約7倍
   const breath = Math.sin(g.t * 2.1) * 0.012;
   const jitter = g.flash * U * 0.006 * (Math.random() - 0.5);
+
+  // 素材があれば、待機・振りかぶり・叩きつけの3ポーズで描く
+  const pre = g.king ? "giant_king_" : "giant_";
+  const fighting = battle && battle.giant === g && !g.dead;
+  const pose = pre + (!fighting ? "idle" : g.phase < 0.14 ? "slam" : g.phase < 0.42 ? "idle" : "raise");
+  if (fighting && g.phase >= 0.42) {
+    const k = (g.phase - 0.42) / 0.58;
+    const r = proj(g.x, 0, g.z - 1.6 * g.scale);
+    if (r) {
+      const rx = U * (0.16 + 0.32 * k), ry = rx * 0.3;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "rgba(255,80,60," + (0.08 + 0.14 * k) + ")";
+      ctx.beginPath(); ctx.ellipse(r.x, r.y, rx, ry, 0, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = "rgba(255,110,80," + (0.3 + 0.6 * k) + ")";
+      ctx.lineWidth = 2 + 4 * k;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+  if (SK.ok(pose)) {
+    const idleH = (BOUNDS[pre + "idle"] || [0, 0, 1, 1])[3];
+    const hh = U * 1.12 * ((BOUNDS[pose] || [0, 0, 1, idleH])[3] / idleH);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "rgba(0,0,0,.28)";
+    ctx.beginPath(); ctx.ellipse(base.x, base.y, U * 0.34, U * 0.075, 0, 0, 6.2832); ctx.fill();
+    ctx.translate(base.x + jitter, base.y);
+    if (g.fall > 0) { ctx.rotate(g.fall * 0.9); ctx.translate(0, g.fall * U * 0.25); }
+    ctx.scale(1, 1 + breath);
+    SK.foot(ctx, pose, 0, 0, hh);
+    if (g.flash > 0.5 && !REDUCED) {                         // 被弾の白い閃き
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = alpha * 0.22;
+      SK.foot(ctx, pose, 0, 0, hh);
+    }
+    ctx.restore();
+    if (!g.dead) drawGiantBar(g, base, U, alpha);
+    return;
+  }
 
   ctx.save();
   ctx.globalAlpha = alpha;
@@ -1736,6 +2011,42 @@ function drawGiantBar(g, base, U, alpha) {
 }
 
 
+/** 旗。足元を (x, z) に置き、高さ 2.6 で描く */
+function drawFlag(id, x, z, hWorld) {
+  const b = proj(x, 0, z);
+  if (!b || b.s < 3) return;
+  SK.foot(ctx, id, b.x, b.y, hWorld * b.s);
+}
+function drawAllyBanner() {
+  if (!crowd.units.length || crowd.count < 1e4) return;         // 軍旗は兵力1万から
+  let lead = 0;
+  for (const u of crowd.units) lead = Math.max(lead, u.z);
+  const rank = crowd.count >= 1e6 ? 3 : crowd.count >= 1e5 ? 2 : 1;
+  const xs = rank === 1 ? [0.62] : rank === 2 ? [-0.62, 0.62] : [-0.72, 0, 0.72];
+  for (const dx of xs) {
+    if (rank >= 2) {                                           // 10万からは金の光をまとう
+      const g = proj(crowd.x + dx, 1.5, lead + 0.15);
+      if (g) {
+        const r = g.s * 1.3;
+        const grad = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, r);
+        grad.addColorStop(0, "rgba(255,214,120,.55)"); grad.addColorStop(1, "rgba(255,214,120,0)");
+        ctx.fillStyle = grad; ctx.fillRect(g.x - r, g.y - r, r * 2, r * 2);
+      }
+    }
+    drawFlag("banner_ally", crowd.x + dx, lead + 0.15, rank >= 2 ? 2.3 : 2.0);
+  }
+  if (rank === 3) {                                            // 100万：きらめき
+    const g = proj(crowd.x, 2.9, lead + 0.15);
+    if (g) SK.center(ctx, "fx_spark", g.x, g.y, g.s * (1.1 + 0.25 * Math.sin(time * 5)));
+  }
+}
+function drawEnemyBanner(sq) {
+  if (!sq.boss || !sq.units.length) return;
+  let far = sq.z;
+  for (const u of sq.units) far = Math.max(far, u.z);
+  drawFlag("banner_enemy", sq.x + 0.7, far + 0.4, 2.6);
+}
+
 function drawBullets() {
   ctx.lineCap = "round";
   for (const b of bullets) {
@@ -1833,15 +2144,17 @@ function render() {
   const drawObj = (it) => {
     if (it.type === "bar") drawBar(it);
     else if (it.type === "arm") drawArm(it);
-    else if (it.type === "squad") { drawHost(it.units, false, time, 0); drawSquadBanner(it); }
+    else if (it.type === "squad") { drawEnemyBanner(it); drawHost(it.units, false, time, 0); drawSquadBanner(it); }
     else if (it.type === "giant") drawGiant(it);
   };
   for (const it of objs) if (it.z > front) drawObj(it);
   drawBullets();
+  drawAllyBanner();                                          // 旗は隊列の先頭に立て、兵の頭越しに見せる
   drawHost(crowd.units, true, time, tierOf(crowd.power));
   for (const it of objs) if (it.z <= front) drawObj(it);
 
   drawParts();
+  drawFx();
   drawPops();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   drawVignette();
@@ -1861,6 +2174,114 @@ const ovClear = document.getElementById("ovClear");
 const ovOver  = document.getElementById("ovOver");
 const ovWin   = document.getElementById("ovWin");
 
+/* --- 画面の演出（告知・警告・兵力の数字） --- */
+const hPause = document.getElementById("btnPause");
+const ovPause = document.getElementById("ovPause");
+const elWarn = document.getElementById("warn");
+const elAnn = document.getElementById("announce");
+const elMile = document.getElementById("mile");
+let camBase = -CAM_BACK, camKick = 0;
+
+function buzz(pattern) {
+  if (!touched || !navigator.vibrate) return;
+  try { navigator.vibrate(pattern); } catch (e) {}
+}
+function flash(el, lines) {
+  const d = el.querySelectorAll("div");
+  lines.forEach((t, i) => { if (d[i]) d[i].textContent = t || ""; });
+  el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
+}
+function giantWarning(g) {
+  document.getElementById("warnText").textContent = g.king ? "巨人王 接近" : "巨人接近";
+  elWarn.classList.remove("on"); void elWarn.offsetWidth; elWarn.classList.add("on");
+  Snd.siren(); buzz([60, 60, 60]);
+  if (!REDUCED) camKick = 1;
+}
+// 難しさが変わるステージ
+const HARD = { 4: "ここからが本番　敵が左右からも来る", 6: "巨人が2体に増える", 10: "最終決戦" };
+function announceStage(st) {
+  const theme = window.StageBackgrounds ? StageBackgrounds.themeFor(st).name : "";
+  flash(elAnn, ["STAGE " + st, theme, HARD[st] || ""]);
+  if (HARD[st]) Snd.fanfare(); else Snd.good();
+}
+
+/* 兵力の数字は本当の数へ毎フレーム近づける。増えるときはゆっくり回し、減るときは素早く */
+let shownArmy = 0, lastArmy = 0, mileIdx = 0;
+const MILES = [1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12];
+function mileLabel(n) {
+  if (n >= 1e8) return n / 1e8 + "億";
+  if (n >= 1e4) return n / 1e4 + "万";
+  return n / 1e3 + "千";
+}
+function syncArmy() {
+  shownArmy = lastArmy = crowd.count;
+  mileIdx = 0;
+  while (mileIdx < MILES.length && crowd.count >= MILES[mileIdx]) mileIdx++;
+  hArmy.textContent = fmt(crowd.count);
+}
+function tickHud(dt) {
+  const target = crowd.count;
+  if (target > lastArmy * 1.2 + 2) { hArmy.classList.remove("bump"); void hArmy.offsetWidth; hArmy.classList.add("bump"); }
+  lastArmy = target;
+  const k = target > shownArmy ? 1 - Math.exp(-dt * 5) : 1 - Math.exp(-dt * 16);
+  shownArmy += (target - shownArmy) * k;
+  if (Math.abs(target - shownArmy) < 0.5) shownArmy = target;
+  hArmy.textContent = fmt(shownArmy);
+  if (state === "run" || state === "battle") {
+    while (mileIdx < MILES.length && target >= MILES[mileIdx]) {   // 桁の節目を祝う
+      flash(elMile, [mileLabel(MILES[mileIdx]) + " 突破!", "兵力", ""]);
+      Snd.great(); buzz([40, 40, 80]);
+      mileIdx++;
+    }
+  }
+  hPause.hidden = !(state === "run" || state === "battle");
+}
+
+/* --- 一時停止 --- */
+let pausedFrom = null;
+function pauseGame() {
+  if (state !== "run" && state !== "battle") return;
+  pausedFrom = state; state = "pause";
+  keys.ArrowLeft = keys.ArrowRight = false; dragging = false;
+  Snd.music(false);
+  const v = Snd.vol;
+  volBgm.value = Math.round(v.bgm * 100); volSe.value = Math.round(v.se * 100);
+  volBgmV.textContent = volBgm.value; volSeV.textContent = volSe.value;
+  ovPause.hidden = false;
+}
+function resumeGame() {
+  if (state !== "pause") return;
+  state = pausedFrom; pausedFrom = null;
+  ovPause.hidden = true;
+  Snd.music(true);
+}
+const volBgm = document.getElementById("volBgm"), volSe = document.getElementById("volSe");
+const volBgmV = document.getElementById("volBgmV"), volSeV = document.getElementById("volSeV");
+function onVol() {
+  volBgmV.textContent = volBgm.value; volSeV.textContent = volSe.value;
+  Snd.setVol(volBgm.value / 100, volSe.value / 100);
+}
+volBgm.addEventListener("input", onVol);
+volSe.addEventListener("input", onVol);
+volSe.addEventListener("change", () => Snd.good());               // 効果音は離したときに試し鳴らし
+hPause.addEventListener("click", pauseGame);
+document.getElementById("btnResume").addEventListener("click", resumeGame);
+document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });
+
+/* --- 続きから：ステージ開始時に自動保存 --- */
+function saveProgress(st, army, power) {
+  try { localStorage.setItem("gr.save", JSON.stringify({ stage: st, army: Math.round(army), power })); } catch (e) {}
+}
+function loadProgress() {
+  try { const v = JSON.parse(localStorage.getItem("gr.save") || "null"); return v && v.stage >= 1 ? v : null; } catch (e) { return null; }
+}
+function clearProgress() { try { localStorage.removeItem("gr.save"); } catch (e) {} }
+function refreshContinue() {
+  const sv = loadProgress(), b = document.getElementById("btnContinue");
+  b.hidden = !(sv && sv.stage > 1);
+  if (sv) b.textContent = "続きから（Stage " + sv.stage + "）";
+}
+
 function loadBest() { try { return parseInt(localStorage.getItem("gr.best") || "0", 10) || 0; } catch (e) { return 0; } }
 function saveBest() { try { localStorage.setItem("gr.best", String(best)); } catch (e) {} }
 
@@ -1869,7 +2290,7 @@ function resetCrowd(n, p) {
   crowd.units.length = 0;
   crowd.count = Math.max(0, n);
   syncCrowd();
-  hArmy.textContent = fmt(crowd.count);
+  syncArmy();
   setPower(p);
 }
 
@@ -1883,8 +2304,11 @@ function beginStage(st, army, power) {
   state = "run";
   hStage.textContent = st + "/" + FINAL_STAGE;
   hBar.style.width = "0%";
-  ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = true;
+  ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = true;
   Snd.intense(false); Snd.music(true);
+  saveProgress(st, army, power);
+  camKick = 0;
+  announceStage(st);
 }
 
 function stageClear() {
@@ -1893,6 +2317,7 @@ function stageClear() {
   bullets.length = 0;
   Snd.win(); saveBest();
   if (stage >= FINAL_STAGE) {
+    clearProgress();                  // 完全制覇したら「続きから」は消す
     document.getElementById("wArmy").textContent = fmt(crowd.count);
     document.getElementById("wWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
     document.getElementById("wKills").textContent = fmt(kills);
@@ -1924,6 +2349,7 @@ function setupDemo() {
   resetCrowd(24, 2.6);
   hStage.textContent = "1/" + FINAL_STAGE;
   state = "title";
+  refreshContinue();
 }
 
 const startRun = () => { Snd.kick(); kills = 0; beginStage(1, 12, 1); };
@@ -1932,6 +2358,23 @@ document.getElementById("btnNext").addEventListener("click", () => {
   beginStage(stage + 1, Math.max(10, Math.round(crowd.count)), crowd.power);
 });
 document.getElementById("btnRetry").addEventListener("click", startRun);
+document.getElementById("btnRetryStage").addEventListener("click", () => {
+  const sv = loadProgress();
+  Snd.kick();
+  if (sv) beginStage(sv.stage, sv.army, sv.power); else startRun();
+});
+document.getElementById("btnContinue").addEventListener("click", () => {
+  const sv = loadProgress();
+  if (!sv) return;
+  best = loadBest(); Snd.kick(); kills = 0;
+  beginStage(sv.stage, sv.army, sv.power);
+});
+document.getElementById("btnQuit").addEventListener("click", () => {
+  ovPause.hidden = true; pausedFrom = null;
+  Snd.music(false);
+  setupDemo();
+  ovTitle.hidden = false;
+});
 document.getElementById("btnAgain").addEventListener("click", startRun);
 document.getElementById("btnSound").addEventListener("click", (e) => {
   const on = Snd.toggle();
@@ -1949,6 +2392,7 @@ function frame(t) {
   last = now;
   if (dt > 0.05) dt = 0.05;
   update(dt);
+  tickHud(dt);
   render();
   requestAnimationFrame(frame);
 }
