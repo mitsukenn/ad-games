@@ -541,6 +541,7 @@
 <script src="assets/prepared/catalog.js"></script>
 <script src="assets/level-units/catalog.js"></script>
 <script src="assets/v2/catalog.js"></script>
+<script src="assets/v2g/catalog.js"></script>
 <script src="assets/sprite_bounds.js"></script>
 <script src="assets/sprite_kit.js"></script>
 <script>
@@ -2095,6 +2096,13 @@ function giantArm(g) {
   return -2.75 + (0.55 + 2.75) * e * e;
 }
 
+/** 素材の見えている部分の高さ（ポーズごとの背の違いを出すのに使う） */
+const V2G = (window.GEIGEKI_V2G_CATALOG || {}).sprites || {};
+function spriteH(id) {
+  if (BOUNDS[id]) return BOUNDS[id][3];
+  return V2G[id] ? V2G[id].h : 1;
+}
+
 function drawGiant(g) {
   if (g.dead && g.fall >= 1) return;
   const base = proj(g.x, 0, g.z);
@@ -2108,13 +2116,17 @@ function drawGiant(g) {
   const jitter = g.flash * U * 0.006 * (Math.random() - 0.5);
 
   // 素材があれば、待機・振りかぶり・叩きつけの3ポーズで描く
-  const pre = g.king ? "giant_king_" : "giant_";
+  // 砂漠から先は、そのステージの巨人（サイクロプス・イエティ・溶岩・嵐の巨神）。絵がまだ届いていなければ遺跡の巨人
+  const lv = stageLv();
+  const own = !g.king && lv >= 2 && SK.ok("giant_" + lv + "_idle");
+  const pre = g.king ? "giant_king_" : own ? "giant_" + lv + "_" : "giant_";
   const fighting = battle && battle.giant === g && !g.dead;
   let pose = pre + (!fighting ? "idle" : g.phase < 0.14 ? "slam" : g.phase < 0.42 ? "idle" : "raise");
+  let walking = false;
   // ふつうの巨人は、戦う前は5コマで歩いて近づいてくる
   if (!fighting && !g.dead && !g.king && state === "run") {
-    const wid = "giant_walk_" + (1 + (((g.t * 5) | 0) % 5));
-    if (SK.ok(wid)) pose = wid;
+    const wid = (own ? "giant_" + lv + "_walk_" : "giant_walk_") + (1 + (((g.t * 5) | 0) % 5));
+    if (SK.ok(wid)) { pose = wid; walking = true; }
   }
   if (fighting && g.phase >= 0.42) {
     const k = (g.phase - 0.42) / 0.58;
@@ -2132,8 +2144,8 @@ function drawGiant(g) {
     }
   }
   if (SK.ok(pose)) {
-    const idleH = (BOUNDS[pre + "idle"] || [0, 0, 1, 1])[3];
-    const hh = U * 1.12 * ((BOUNDS[pose] || [0, 0, 1, idleH])[3] / idleH);
+    const idleH = spriteH(pre + "idle");
+    const hh = U * 1.12 * (walking ? 1 : spriteH(pose) / idleH);
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = "rgba(0,0,0,.28)";
@@ -2649,6 +2661,7 @@ function beginStage(st, army, power) {
   flowV = 4.6 + Math.min(st - 1, 9) * 0.28;
   resetCrowd(army, power);
   buildStage(st);
+  SK.ok("giant_" + stageLv() + "_idle");        // このステージの巨人の絵を、出てくる前に読み始めておく
   parts.length = 0; pops.length = 0;
   battle = null;
   state = "run";
