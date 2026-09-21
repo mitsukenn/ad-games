@@ -121,6 +121,7 @@
   .ov[hidden]{display:none}
 
   .tablet{
+    box-sizing:border-box;               /* 内側の余白込みで画面幅に収める（スマホではみ出さない） */
     width:min(460px, 100%);
     background:linear-gradient(180deg,#332a23,#241c18);
     border:1px solid rgba(224,168,60,.5);
@@ -356,6 +357,32 @@
          padding:9px 16px; font-weight:700; font-size:14px; pointer-events:none; opacity:0; transition:opacity .25s;
          width:max-content; max-width:calc(100% - 32px); z-index:5}
   .toast.on{opacity:1}
+  /* ---------- 遊び方・指のお手本・初見のひとこと ---------- */
+  .howto-link{display:inline-block; margin-top:14px; background:none; border:0; padding:4px 8px; cursor:pointer;
+              font:600 13px var(--ui); letter-spacing:.06em; color:rgba(228,219,198,.6); text-decoration:underline; text-underline-offset:3px}
+  .howto-link:hover{color:var(--stone-l)}
+  .howto-link:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+  .tag-line{font-size:17px; font-weight:700; color:#fff3da; margin:0 auto 22px; line-height:1.5}
+  .finger{position:absolute; left:50%; bottom:calc(max(18px, env(safe-area-inset-bottom)) + 12%); transform:translateX(-50%);
+          width:210px; text-align:center; pointer-events:none; opacity:0; transition:opacity .3s; z-index:4}
+  .finger.on{opacity:1}
+  .finger .trk{position:relative; height:54px}
+  .finger .trk::before{content:""; position:absolute; left:12px; right:12px; top:26px; height:4px; border-radius:2px;
+                       background:linear-gradient(90deg,transparent,rgba(255,243,218,.75) 20%,rgba(255,243,218,.75) 80%,transparent)}
+  .finger .trk::after{content:"◀　　　　　　　　▶"; position:absolute; left:0; right:0; top:17px; font-size:14px; color:#fff3da; white-space:pre}
+  .finger .hand{position:absolute; left:50%; top:10px; font-size:42px; line-height:1; margin-left:-21px;
+                filter:drop-shadow(0 3px 3px rgba(0,0,0,.6)); animation:fingerSwipe 1.6s ease-in-out infinite}
+  .finger .lbl{display:inline-block; margin-top:4px; padding:4px 12px 5px; background:rgba(20,15,12,.78); border:1px solid rgba(224,168,60,.6);
+               font-weight:700; font-size:14px; color:#fff3da; letter-spacing:.04em}
+  @keyframes fingerSwipe{0%,100%{transform:translateX(-62px)} 50%{transform:translateX(62px)}}
+  .tip{position:absolute; left:50%; top:calc(max(14px, env(safe-area-inset-top)) + 74px); transform:translate(-50%,-8px);
+       width:max-content; max-width:calc(100% - 32px); box-sizing:border-box; padding:9px 16px 10px; text-align:center;
+       background:rgba(20,15,12,.86); border:1px solid rgba(224,168,60,.75); border-left:5px solid var(--gold);
+       font-weight:700; font-size:15px; line-height:1.45; color:#fff3da; pointer-events:none; opacity:0;
+       transition:opacity .25s, transform .25s; z-index:4}
+  .tip b{color:var(--gold); margin-right:6px}
+  .tip.on{opacity:1; transform:translate(-50%,0)}
+  @media (prefers-reduced-motion:reduce){ .finger .hand{animation:none} .tip{transition:none} }
 
 </style>
 
@@ -383,23 +410,14 @@
     <div class="tablet">
       <div class="eyebrow">数で巨人を倒せ</div>
       <h1>Million March</h1>
-      <p class="lede">ゲートをくぐって軍勢を鍛え、立ちはだかる赤軍を薙ぎ倒せ。兵力に上限はない。全10ステージ、道の途中と神殿の前には巨人が待つ。</p>
-      <div class="rules">
-        <div class="rule"><b class="g">+</b><span>緑は兵が増える。<em>+40</em> と <em>×2</em>、今の兵力ではどちらが得か毎回考えること</span></div>
-        <div class="rule"><b class="r">−</b><span>赤は減る。両方赤なら、被害の少ないほうを選ぶ</span></div>
-        <div class="rule"><b>剣</b><span>金は武器が上がる。<strong>戦闘力 = 兵力 × 武器倍率</strong>。数を取るか、質を取るか</span></div>
-        <div class="rule"><b class="n">刃</b><span>ステージ4からは回転する刃が出る。当たった兵だけを削る。隙間を抜けろ</span></div>
-        <div class="rule"><b>隊</b><span>兵が増えると10人で<strong>隊長</strong>、100人で<strong>巨大騎士</strong>にまとまる。景色が変わるたびに装備も敵も強くなる</span></div>
-        <div class="rule"><b>宝</b><span>3ステージごとにボーナス。赤ゲートも敵もいない道で宝箱を拾い集める</span></div>
-        <div class="rule"><b class="r">巨</b><span>巨人は一体で道を塞ぐ。棍棒の一撃で兵がまとめて消える。<strong>戦闘力が高いほど早く倒せて、被害も少ない</strong></span></div>
-      </div>
+      <p class="tag-line">ゲートをくぐって、<br>軍勢を100万へ。</p>
       <div class="records" id="records" hidden></div>
       <div class="btn-row">
         <button class="btn" id="btnStart">出撃する</button>
         <button class="btn ghost" id="btnContinue" hidden>続きから</button>
         <button class="btn ghost" id="btnRankTitle" hidden>🏆 ランキング</button>
       </div>
-      <p class="hint">ドラッグ、または ← → キーで隊列を動かす。P キーで一時停止</p>
+      <button class="howto-link" id="btnHowto">遊び方</button>
     </div>
   </div>
 
@@ -508,6 +526,30 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
+
+  <!-- 遊び方（知りたい人だけが開く） -->
+  <div class="ov" id="ovHowto" hidden>
+    <div class="tablet">
+      <div class="eyebrow">How to play</div>
+      <h2>遊び方</h2>
+      <p class="lede">ゲートをくぐって軍勢を鍛え、立ちはだかる赤軍を薙ぎ倒せ。兵力に上限はない。全10ステージ、道の途中と神殿の前には巨人が待つ。</p>
+      <div class="rules">
+        <div class="rule"><b class="g">+</b><span>緑は兵が増える。<em>+40</em> と <em>×2</em>、今の兵力ではどちらが得か毎回考えること</span></div>
+        <div class="rule"><b class="r">−</b><span>赤は減る。両方赤なら、被害の少ないほうを選ぶ</span></div>
+        <div class="rule"><b>剣</b><span>金は武器が上がる。<strong>戦闘力 = 兵力 × 武器倍率</strong>。数を取るか、質を取るか</span></div>
+        <div class="rule"><b class="n">刃</b><span>ステージ4からは回転する刃が出る。当たった兵だけを削る。隙間を抜けろ</span></div>
+        <div class="rule"><b>隊</b><span>兵が増えると10人で<strong>隊長</strong>、100人で<strong>巨大騎士</strong>にまとまる。景色が変わるたびに装備も敵も強くなる</span></div>
+        <div class="rule"><b>宝</b><span>3ステージごとにボーナス。赤ゲートも敵もいない道で宝箱を拾い集める</span></div>
+        <div class="rule"><b class="r">巨</b><span>巨人は一体で道を塞ぐ。棍棒の一撃で兵がまとめて消える。<strong>戦闘力が高いほど早く倒せて、被害も少ない</strong></span></div>
+      </div>
+      <p class="hint" style="margin:0 0 16px">ドラッグ、または ← → キーで隊列を動かす。P / Esc で一時停止</p>
+      <button class="btn" id="btnHowtoClose">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 指のお手本と、初めて出たものへのひとこと -->
+  <div class="finger" id="finger" aria-hidden="true"><div class="trk"><span class="hand">👆</span></div><span class="lbl">ドラッグで左右に動かす</span></div>
+  <div class="tip" id="tip" role="status" aria-live="polite"></div>
 </div>
 
 <script>
@@ -3285,6 +3327,7 @@ function beginStage(st, army, weapon) {
   if (st === 5) { showBanner("STAGE 5", place + " ─ ここからが本番", "hard"); Snd.fanfare5(); }
   else if (st > FINAL_STAGE) showBanner("STAGE " + st, place + " ─ エンドレス遠征");
   else showBanner("STAGE " + st, st === 1 ? place + " ─ 進め、進め！" : place);
+  tutStage();
 }
 
 /** ボーナスステージを始める。ステージ番号は進めず、終わったら次のステージへ */
@@ -3301,6 +3344,7 @@ function beginBonus(army, weapon) {
   hBar.style.width = "0%";
   ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = true;
   showBanner("BONUS", "宝箱を拾い集めろ", "bonus");
+  tutStage();
 }
 const bonusAfter = (st) => st % 3 === 0;    // 3・6・9…の後にご褒美ステージ
 
@@ -3732,6 +3776,67 @@ btnRegister.addEventListener("click", register);
 recName.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); register(); } });
 
 /* ============================================================
+   8.6 遊び方・指のお手本・初見のひとこと
+   ============================================================ */
+/* 説明は始める前に読ませず、遊びながら「出てきたときに1回だけ」伝える。
+   見たひとことは端末に覚えて（mm.tips）、次からは出さない */
+const ovHowto = document.getElementById("ovHowto");
+const fingerEl = document.getElementById("finger"), tipEl = document.getElementById("tip");
+document.getElementById("btnHowto").addEventListener("click", () => { ovHowto.hidden = false; });
+document.getElementById("btnHowtoClose").addEventListener("click", () => { ovHowto.hidden = true; });
+addEventListener("keydown", (e) => { if (e.key === "Escape" && !ovHowto.hidden) ovHowto.hidden = true; });
+
+const tipsSeen = store.get("mm.tips", {}) || {};
+const saveTips = () => store.set("mm.tips", tipsSeen);
+const tipQueue = [];
+let tipT = 0, tipHold = 0, stageDragX = 0;
+
+// 何が近づいたら、何を言うか（z は隊列からの距離）
+const TIP_NEAR = 24;
+function tipFor(it) {
+  if (it.type === "gate") return it.ops.some(isWeaponOp)
+    ? ["wgate", "金のゲート", "武器が上がる。戦闘力 = 兵力 × 武器"]
+    : ["gate", "ゲート", "左右どちらかをくぐる。緑は増える、赤は減る"];
+  if (it.type === "blade") return ["blade", "回転する刃", "当たった兵だけ削られる。隙間を抜けろ"];
+  if (it.type === "squad") return ["squad", "赤軍", "ぶつかると戦闘力の大きいほうが勝つ"];
+  if (it.type === "giant") return it.king ? ["king", "巨人王", "巨人よりずっと強い。数と武器を貯めて挑め"]
+    : ["giant", "巨人", "戦闘力が高いほど早く倒せて、被害も少ない"];
+  return null;
+}
+function queueTip(t) {
+  if (!t || tipsSeen[t[0]] || tipQueue.some((q) => q[0] === t[0])) return;
+  tipQueue.push(t);
+}
+function hideTut() { fingerEl.classList.remove("on"); tipEl.classList.remove("on"); tipT = 0; }
+function tutTick(dt) {
+  const playing = state === "run" || state === "battle";
+  if (!playing) { if (tipT || fingerEl.classList.contains("on")) hideTut(); tipQueue.length = 0; return; }
+  // 指のお手本：一度でも隊列を動かしたら、もう出さない
+  if (!tipsSeen.drag) {
+    if (Math.abs(crowd.tx - stageDragX) > 0.35) { tipsSeen.drag = 1; saveTips(); fingerEl.classList.remove("on"); }
+    else fingerEl.classList.toggle("on", state === "run");
+  }
+  if (state === "run" && !inBonus) {          // ボーナスは告知の「宝箱を拾い集めろ」で足りる
+    for (const it of items) {
+      if (it.done || it.dead) continue;
+      const d = it.z - crowd.z;
+      if (d > 0 && d < TIP_NEAR) queueTip(tipFor(it));
+    }
+  }
+  if (tipT > 0) { tipT -= dt; if (tipT <= 0) tipEl.classList.remove("on"); return; }
+  if (warnT > 0) { tipHold = Math.max(tipHold, 0.4); return; }   // 巨人の WARNING が消えてから説明する
+  if (tipHold > 0) { tipHold -= dt; return; }
+  const t = tipQueue.shift();
+  if (!t) return;
+  tipsSeen[t[0]] = 1; saveTips();
+  tipEl.innerHTML = "<b>" + t[1] + "</b>" + t[2];
+  tipEl.classList.add("on");
+  tipT = 3.4;
+  tipHold = 0.5;
+}
+function tutStage() { stageDragX = crowd.tx; tipQueue.length = 0; tipHold = 1.2; }   // ステージ告知と重ならないよう少し待つ
+
+/* ============================================================
    9. メインループ
    ============================================================ */
 const ART_PREVIEW=new URLSearchParams(location.search).has('art-preview');
@@ -3762,7 +3867,7 @@ function frame(t) {
   if (dt > 0.05) dt = 0.05;      // タブ復帰時の飛びを抑制
   if(ART_PREVIEW){
     time=now;renderArtPreview(now);
-  }else{update(dt);tickHud(dt);render();}
+  }else{update(dt);tickHud(dt);tutTick(dt);render();}
   requestAnimationFrame(frame);
 }
 
