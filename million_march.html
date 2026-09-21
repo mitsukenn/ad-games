@@ -345,6 +345,7 @@
         <div class="rule"><b class="r">−</b><span>赤は減る。両方赤なら、被害の少ないほうを選ぶ</span></div>
         <div class="rule"><b>剣</b><span>金は武器が上がる。<strong>戦闘力 = 兵力 × 武器倍率</strong>。数を取るか、質を取るか</span></div>
         <div class="rule"><b class="n">刃</b><span>ステージ4からは回転する刃が出る。当たった兵だけを削る。隙間を抜けろ</span></div>
+        <div class="rule"><b>隊</b><span>兵が増えると10人で<strong>隊長</strong>、100人で<strong>巨大騎士</strong>にまとまる。景色が変わるたびに装備も敵も強くなる</span></div>
         <div class="rule"><b>宝</b><span>3ステージごとにボーナス。赤ゲートも敵もいない道で宝箱を拾い集める</span></div>
         <div class="rule"><b class="r">巨</b><span>巨人は一体で道を塞ぐ。棍棒の一撃で兵がまとめて消える。<strong>戦闘力が高いほど早く倒せて、被害も少ない</strong></span></div>
       </div>
@@ -1045,6 +1046,68 @@ window.GAME_SPRITE_BOUNDS = {"weapon_1_club": [40, 27, 233, 274], "weapon_2_dagg
 
   window.SpriteKit = { ok, foot, footW, center, aspect, paintIcon, onReady };
 })();
+
+/* ===== 追加素材（39_広告ゲーム の v2・v2g・level-units の写し。WebP版を読む） =====
+   v2：苔の巨人・隊長・巨大騎士・ステージ別の敵兵 / v2g：ステージ別の巨人と巨人王 / level-units：ステージ別の味方兵 */
+/* 迎撃ロード v2 素材（ChatGPTで制作・_asset_work/build_v2.py で生成）。余白は削ってあるので、見えている部分＝セル全体 */
+window.GEIGEKI_V2_CATALOG = {"sheets": {"atlas": {"file": "atlas.png", "width": 2048, "height": 2088}}, "sprites": {"giant_1_raise": {"sheet": "atlas", "x": 0, "y": 0, "w": 352, "h": 420}, "giant_walk_3": {"sheet": "atlas", "x": 356, "y": 0, "w": 329, "h": 420}, "giant_walk_1": {"sheet": "atlas", "x": 689, "y": 0, "w": 342, "h": 383}, "ally_titan_2": {"sheet": "atlas", "x": 1035, "y": 0, "w": 268, "h": 380}, "giant_walk_4": {"sheet": "atlas", "x": 1307, "y": 0, "w": 329, "h": 380}, "ally_titan_1": {"sheet": "atlas", "x": 1640, "y": 0, "w": 297, "h": 379}, "giant_walk_2": {"sheet": "atlas", "x": 0, "y": 424, "w": 343, "h": 377}, "giant_walk_5": {"sheet": "atlas", "x": 347, "y": 424, "w": 320, "h": 377}, "giant_1_idle": {"sheet": "atlas", "x": 671, "y": 424, "w": 438, "h": 364}, "giant_1_slam": {"sheet": "atlas", "x": 1113, "y": 424, "w": 440, "h": 333}, "enemy_captain_1": {"sheet": "atlas", "x": 1557, "y": 424, "w": 252, "h": 300}, "enemy_captain_2": {"sheet": "atlas", "x": 0, "y": 805, "w": 243, "h": 300}, "ally_captain_2": {"sheet": "atlas", "x": 247, "y": 805, "w": 226, "h": 300}, "ally_captain_1": {"sheet": "atlas", "x": 477, "y": 805, "w": 221, "h": 291}, "weapon_rocket": {"sheet": "atlas", "x": 702, "y": 805, "w": 300, "h": 278}, "barricade_1": {"sheet": "atlas", "x": 1006, "y": 805, "w": 480, "h": 273}, "barricade_4": {"sheet": "atlas", "x": 1490, "y": 805, "w": 480, "h": 272}, "weapon_tank": {"sheet": "atlas", "x": 0, "y": 1109, "w": 300, "h": 272}, "barricade_5": {"sheet": "atlas", "x": 304, "y": 1109, "w": 480, "h": 270}, "barricade_3": {"sheet": "atlas", "x": 788, "y": 1109, "w": 480, "h": 265}, "fx_hit": {"sheet": "atlas", "x": 1272, "y": 1109, "w": 236, "h": 256}, "fx_boom_1": {"sheet": "atlas", "x": 1512, "y": 1109, "w": 214, "h": 256}, "fx_boom_2": {"sheet": "atlas", "x": 1730, "y": 1109, "w": 253, "h": 256}, "fx_boom_3": {"sheet": "atlas", "x": 0, "y": 1385, "w": 237, "h": 256}, "fx_muzzle": {"sheet": "atlas", "x": 241, "y": 1385, "w": 119, "h": 256}, "fx_levelup": {"sheet": "atlas", "x": 364, "y": 1385, "w": 171, "h": 256}, "barricade_2": {"sheet": "atlas", "x": 539, "y": 1385, "w": 480, "h": 254}, "enemy_1_1": {"sheet": "atlas", "x": 1023, "y": 1385, "w": 149, "h": 240}, "enemy_2_2": {"sheet": "atlas", "x": 1176, "y": 1385, "w": 162, "h": 240}, "enemy_3_1": {"sheet": "atlas", "x": 1342, "y": 1385, "w": 156, "h": 240}, "enemy_3_2": {"sheet": "atlas", "x": 1502, "y": 1385, "w": 157, "h": 240}, "enemy_4_1": {"sheet": "atlas", "x": 1663, "y": 1385, "w": 185, "h": 240}, "enemy_4_2": {"sheet": "atlas", "x": 1852, "y": 1385, "w": 185, "h": 240}, "enemy_5_1": {"sheet": "atlas", "x": 0, "y": 1645, "w": 183, "h": 240}, "enemy_5_2": {"sheet": "atlas", "x": 187, "y": 1645, "w": 183, "h": 240}, "enemy_1_2": {"sheet": "atlas", "x": 374, "y": 1645, "w": 151, "h": 239}, "enemy_2_1": {"sheet": "atlas", "x": 529, "y": 1645, "w": 161, "h": 239}, "wolf_1": {"sheet": "atlas", "x": 694, "y": 1645, "w": 221, "h": 220}, "wolf_2": {"sheet": "atlas", "x": 919, "y": 1645, "w": 221, "h": 220}, "proj_stone": {"sheet": "atlas", "x": 1144, "y": 1645, "w": 73, "h": 200}, "proj_arrow": {"sheet": "atlas", "x": 1221, "y": 1645, "w": 80, "h": 200}, "proj_bolt": {"sheet": "atlas", "x": 1305, "y": 1645, "w": 97, "h": 200}, "proj_bullet": {"sheet": "atlas", "x": 1406, "y": 1645, "w": 72, "h": 200}, "proj_shot": {"sheet": "atlas", "x": 1482, "y": 1645, "w": 134, "h": 200}, "proj_ball": {"sheet": "atlas", "x": 1620, "y": 1645, "w": 96, "h": 200}, "proj_shell": {"sheet": "atlas", "x": 1720, "y": 1645, "w": 104, "h": 200}, "proj_rocket": {"sheet": "atlas", "x": 1828, "y": 1645, "w": 97, "h": 200}, "pedestal": {"sheet": "atlas", "x": 0, "y": 1889, "w": 420, "h": 199}}};
+/* 迎撃ロード ステージ別の巨人（ChatGPTで制作・_asset_work/build_v2.py で生成）。余白は削ってあるので、見えている部分＝セル全体 */
+window.GEIGEKI_V2G_CATALOG = {"sheets": {"giant_2": {"file": "giant_2.png", "width": 2048, "height": 848}, "giant_3": {"file": "giant_3.png", "width": 2048, "height": 1204}, "giant_4": {"file": "giant_4.png", "width": 2048, "height": 849}, "giant_5": {"file": "giant_5.png", "width": 2048, "height": 1199}}, "sprites": {"giant_2_king_raise": {"sheet": "giant_2", "x": 0, "y": 0, "w": 347, "h": 460}, "giant_2_raise": {"sheet": "giant_2", "x": 351, "y": 0, "w": 257, "h": 420}, "giant_2_walk_3": {"sheet": "giant_2", "x": 612, "y": 0, "w": 318, "h": 420}, "giant_2_king_idle": {"sheet": "giant_2", "x": 934, "y": 0, "w": 418, "h": 393}, "giant_2_walk_1": {"sheet": "giant_2", "x": 1356, "y": 0, "w": 321, "h": 385}, "giant_2_walk_5": {"sheet": "giant_2", "x": 1681, "y": 0, "w": 307, "h": 385}, "giant_2_walk_2": {"sheet": "giant_2", "x": 0, "y": 464, "w": 327, "h": 384}, "giant_2_walk_4": {"sheet": "giant_2", "x": 331, "y": 464, "w": 337, "h": 384}, "giant_2_king_slam": {"sheet": "giant_2", "x": 672, "y": 464, "w": 430, "h": 337}, "giant_2_idle": {"sheet": "giant_2", "x": 1106, "y": 464, "w": 288, "h": 329}, "giant_2_slam": {"sheet": "giant_2", "x": 1398, "y": 464, "w": 347, "h": 288}, "giant_3_king_raise": {"sheet": "giant_3", "x": 0, "y": 0, "w": 421, "h": 460}, "giant_3_raise": {"sheet": "giant_3", "x": 425, "y": 0, "w": 316, "h": 420}, "giant_3_walk_3": {"sheet": "giant_3", "x": 745, "y": 0, "w": 333, "h": 420}, "giant_3_king_idle": {"sheet": "giant_3", "x": 1082, "y": 0, "w": 467, "h": 408}, "giant_3_walk_4": {"sheet": "giant_3", "x": 1553, "y": 0, "w": 330, "h": 390}, "giant_3_walk_2": {"sheet": "giant_3", "x": 0, "y": 464, "w": 333, "h": 384}, "giant_3_walk_5": {"sheet": "giant_3", "x": 337, "y": 464, "w": 331, "h": 382}, "giant_3_walk_1": {"sheet": "giant_3", "x": 672, "y": 464, "w": 332, "h": 379}, "giant_3_king_slam": {"sheet": "giant_3", "x": 1008, "y": 464, "w": 471, "h": 374}, "giant_3_idle": {"sheet": "giant_3", "x": 1483, "y": 464, "w": 394, "h": 361}, "giant_3_slam": {"sheet": "giant_3", "x": 0, "y": 852, "w": 408, "h": 352}, "giant_4_king_raise": {"sheet": "giant_4", "x": 0, "y": 0, "w": 299, "h": 460}, "giant_4_raise": {"sheet": "giant_4", "x": 303, "y": 0, "w": 286, "h": 420}, "giant_4_walk_3": {"sheet": "giant_4", "x": 593, "y": 0, "w": 353, "h": 420}, "giant_4_walk_1": {"sheet": "giant_4", "x": 950, "y": 0, "w": 339, "h": 399}, "giant_4_walk_4": {"sheet": "giant_4", "x": 1293, "y": 0, "w": 343, "h": 391}, "giant_4_walk_2": {"sheet": "giant_4", "x": 1640, "y": 0, "w": 324, "h": 388}, "giant_4_walk_5": {"sheet": "giant_4", "x": 0, "y": 464, "w": 336, "h": 385}, "giant_4_idle": {"sheet": "giant_4", "x": 340, "y": 464, "w": 364, "h": 378}, "giant_4_slam": {"sheet": "giant_4", "x": 708, "y": 464, "w": 392, "h": 362}, "giant_4_king_idle": {"sheet": "giant_4", "x": 1104, "y": 464, "w": 292, "h": 350}, "giant_4_king_slam": {"sheet": "giant_4", "x": 1400, "y": 464, "w": 295, "h": 348}, "giant_5_king_raise": {"sheet": "giant_5", "x": 0, "y": 0, "w": 413, "h": 460}, "giant_5_king_idle": {"sheet": "giant_5", "x": 417, "y": 0, "w": 465, "h": 453}, "giant_5_king_slam": {"sheet": "giant_5", "x": 886, "y": 0, "w": 474, "h": 430}, "giant_5_raise": {"sheet": "giant_5", "x": 1364, "y": 0, "w": 293, "h": 420}, "giant_5_walk_3": {"sheet": "giant_5", "x": 1661, "y": 0, "w": 332, "h": 420}, "giant_5_walk_4": {"sheet": "giant_5", "x": 0, "y": 464, "w": 331, "h": 396}, "giant_5_walk_5": {"sheet": "giant_5", "x": 335, "y": 464, "w": 324, "h": 388}, "giant_5_walk_1": {"sheet": "giant_5", "x": 663, "y": 464, "w": 336, "h": 384}, "giant_5_walk_2": {"sheet": "giant_5", "x": 1003, "y": 464, "w": 330, "h": 378}, "giant_5_idle": {"sheet": "giant_5", "x": 1337, "y": 464, "w": 361, "h": 346}, "giant_5_slam": {"sheet": "giant_5", "x": 0, "y": 864, "w": 429, "h": 335}}};
+window.LEVEL_UNITS_CATALOG = {"sheets": {"soldiers": {"file": "soldiers.png", "width": 1254, "height": 1254}}, "sprites": {"soldier_1_1": {"sheet": "soldiers", "x": 0, "y": 140, "w": 251, "h": 460, "name": "遺跡の歩兵"}, "soldier_1_2": {"sheet": "soldiers", "x": 0, "y": 640, "w": 251, "h": 460, "name": "遺跡の歩兵"}, "soldier_2_1": {"sheet": "soldiers", "x": 251, "y": 140, "w": 251, "h": 460, "name": "砂漠の銅鎧兵"}, "soldier_2_2": {"sheet": "soldiers", "x": 251, "y": 640, "w": 251, "h": 460, "name": "砂漠の銅鎧兵"}, "soldier_3_1": {"sheet": "soldiers", "x": 502, "y": 140, "w": 250, "h": 460, "name": "氷雪の銀鎧兵"}, "soldier_3_2": {"sheet": "soldiers", "x": 502, "y": 640, "w": 250, "h": 460, "name": "氷雪の銀鎧兵"}, "soldier_4_1": {"sheet": "soldiers", "x": 752, "y": 140, "w": 251, "h": 460, "name": "火山の重装兵"}, "soldier_4_2": {"sheet": "soldiers", "x": 752, "y": 640, "w": 251, "h": 460, "name": "火山の重装兵"}, "soldier_5_1": {"sheet": "soldiers", "x": 1003, "y": 140, "w": 251, "h": 460, "name": "天空の聖騎士"}, "soldier_5_2": {"sheet": "soldiers", "x": 1003, "y": 640, "w": 251, "h": 460, "name": "天空の聖騎士"}}};
+window.LEVEL_UNITS_BOUNDS = {"soldier_1_1": [19, 33, 232, 417], "soldier_1_2": [21, 32, 230, 415], "soldier_2_1": [0, 31, 251, 420], "soldier_2_2": [16, 30, 235, 418], "soldier_3_1": [0, 30, 247, 421], "soldier_3_2": [0, 29, 246, 422], "soldier_4_1": [2, 31, 249, 420], "soldier_4_2": [1, 29, 241, 422], "soldier_5_1": [0, 9, 234, 442], "soldier_5_2": [0, 6, 238, 445]};
+
+window.XSprites = (() => {
+  const imgs = {}, spr = {};
+  function add(cat, base, bounds, pre) {
+    if (!cat) return;
+    for (const [k, sh] of Object.entries(cat.sheets)) {
+      const img = new Image();
+      img.src = base + sh.file.replace(/\.png$/, ".webp");
+      imgs[pre + k] = img;
+    }
+    for (const [id, c] of Object.entries(cat.sprites)) {
+      const b = bounds && bounds[id];
+      spr[id] = { img: pre + c.sheet, x: c.x + (b ? b[0] : 0), y: c.y + (b ? b[1] : 0), w: b ? b[2] : c.w, h: b ? b[3] : c.h };
+    }
+  }
+  add(window.GEIGEKI_V2_CATALOG, "assets/v2/", null, "v2:");
+  add(window.GEIGEKI_V2G_CATALOG, "assets/v2g/", null, "v2g:");
+  add(window.LEVEL_UNITS_CATALOG, "assets/level-units/", window.LEVEL_UNITS_BOUNDS, "lu:");
+  const ok = (id) => { const r = spr[id]; if (!r) return false; const im = imgs[r.img]; return !!(im && im.complete && im.naturalWidth); };
+  // 何十体も描く兵士用に、縮小済みの画像を高さ 40/80/160/320px で作って使い回す
+  const cache = new Map(), BUCKETS = [40, 80, 160, 320];
+  function scaled(id, needH) {
+    const hB = BUCKETS.find((b) => b >= needH);
+    if (!hB) return null;
+    const key = id + "@" + hB;
+    if (cache.has(key)) return cache.get(key);
+    const r = spr[id];
+    let src = imgs[r.img], sx = r.x, sy = r.y, sw = r.w, sh = r.h;
+    while (sh / 2 >= hB) {
+      const t = document.createElement("canvas");
+      t.width = Math.max(1, Math.round(sw / 2)); t.height = Math.max(1, Math.round(sh / 2));
+      const tc = t.getContext("2d"); tc.imageSmoothingQuality = "high";
+      tc.drawImage(src, sx, sy, sw, sh, 0, 0, t.width, t.height);
+      src = t; sx = 0; sy = 0; sw = t.width; sh = t.height;
+    }
+    const c = document.createElement("canvas");
+    c.height = hB; c.width = Math.max(1, Math.round(sw * hB / sh));
+    const cc = c.getContext("2d"); cc.imageSmoothingQuality = "high";
+    cc.drawImage(src, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    cache.set(key, c);
+    return c;
+  }
+  function foot(ctx, id, x, y, h, flip) {
+    if (!ok(id) || h <= 0) return false;
+    const r = spr[id], w = h * r.w / r.h;
+    const c = scaled(id, h * Math.min(window.devicePixelRatio || 1, 2));
+    ctx.save(); ctx.translate(x, y); if (flip) ctx.scale(-1, 1);
+    if (c) ctx.drawImage(c, -w / 2, -h, w, h); else ctx.drawImage(imgs[r.img], r.x, r.y, r.w, r.h, -w / 2, -h, w, h);
+    ctx.restore();
+    return true;
+  }
+  return { ok, foot, h: (id) => (spr[id] ? spr[id].h : 0) };
+})();
 </script>
 
 <script>
@@ -1352,15 +1415,27 @@ function newUnit(i, host) {
   };
 }
 
-/** count に合わせて units を増減。減った分は粒子に */
+/** count に合わせて units を増減し、隊のまとまり（rank）を割り当てる。減った分は粒子に */
 function syncUnits(host, palDeath) {
-  const target = Math.max(0, Math.min(MAX_UNITS, Math.round(host.count)));
-  while (host.units.length > target) {
+  const ranks = composition(host.count);
+  while (host.units.length > ranks.length) {
     const u = host.units.pop();
     if (u) puff(u.x, 0.5, u.z, palDeath, 5);
   }
-  while (host.units.length < target) {
-    host.units.push(newUnit(host.units.length, host));
+  for (let i = 0; i < ranks.length; i++) {
+    let u = host.units[i];
+    if (!u) { u = newUnit(i, host); host.units.push(u); }
+    if (u.rank !== ranks[i]) { if (u.rank !== undefined) u.pop = 0.8; u.rank = ranks[i]; }
+  }
+  const top = ranks.length ? ranks[0] : 0;
+  host.spacing = Math.max(1, rankScale(top) * 0.85);
+  if (host === crowd) {
+    if (top > (crowd.topRank | 0) && (state === "run" || state === "battle") && RANK_NAME[top]) {
+      popText(RANK_NAME[top] + " 結成!", C.gold, crowd.z + 4, true);
+      addFx("fx_spark", crowd.x, 2, crowd.z + 1, 3, 0.6, 1.6);
+      Snd.great();
+    }
+    crowd.topRank = top;
   }
 }
 
@@ -1369,6 +1444,36 @@ function setCount(n) {
   syncUnits(crowd, C.ally);
   if (crowd.count > best) best = Math.round(crowd.count);
   hArmy.textContent = fmt(crowd.count);
+}
+
+/** 追加素材（XSprites）→ 既存素材（SpriteKit）の順で描く */
+const SP = {
+  ok: (id) => XSprites.ok(id) || SpriteKit.ok(id),
+  h: (id) => XSprites.ok(id) ? XSprites.h(id) : ((window.GAME_SPRITE_BOUNDS || {})[id] || [0, 0, 0, 300])[3],
+  foot: (c, id, x, y, h, f) => XSprites.ok(id) ? XSprites.foot(c, id, x, y, h, f) : SpriteKit.foot(c, id, x, y, h, f),
+  first: (ids) => ids.find((id) => XSprites.ok(id) || SpriteKit.ok(id)),
+};
+
+/* --- 隊（まとまり）--------------------------------------------
+   兵が増えすぎて画面が埋まらないよう、60体を超えたら10人を1体の「隊長」、
+   さらに増えたら100人を1体の「巨大騎士」…とまとめて描く。数字の兵力は変わらない */
+const RANK_SCALE = [1, 1.45, 2.0, 2.4, 2.75, 3.0, 3.2];
+const RANK_NAME = ["", "十人隊", "百人隊", "千人隊", "万人隊", "十万隊", "百万隊", "千万隊"];
+const rankScale = (r) => RANK_SCALE[Math.min(r | 0, RANK_SCALE.length - 1)];
+const RANK_CAP = 60;
+function composition(n) {
+  n = Math.max(0, Math.round(n));
+  const out = [];
+  if (!n) return out;
+  let R = 0;
+  while (n / Math.pow(10, R) > RANK_CAP) R++;
+  const unit = Math.pow(10, R), top = Math.floor(n / unit);
+  for (let i = 0; i < top; i++) out.push(R);
+  if (R > 0) {
+    const sub = Math.pow(10, R - 1), rem = Math.min(9, Math.floor((n - top * unit) / sub));
+    for (let i = 0; i < rem; i++) out.push(R - 1);
+  }
+  return out;
 }
 
 const WEAPON_IDS = [null, "weapon_1_club", "weapon_2_dagger", "weapon_3_longsword",
@@ -1697,11 +1802,11 @@ function crowdSpread() {
 function updateCrowdUnits(dt) {
   const k = 1 - Math.exp(-dt * 9);
   const u = crowd.units;
-  const sp = crowdSpread();
+  const sp = crowd.spacing || 1, lim = ROAD_W - 0.3;
   for (let i = 0; i < u.length; i++) {
     const p = u[i];
     p.pz = p.z;
-    p.x += (crowd.x + p.sx - p.x) * k;
+    p.x += (crowd.x + Math.max(-lim, Math.min(lim, p.sx * sp)) - p.x) * k;
     p.z += (crowd.z + p.sz * sp - p.z) * k;
     if (p.pop > 0) p.pop = Math.max(0, p.pop - dt * 3.4);
   }
@@ -1709,10 +1814,11 @@ function updateCrowdUnits(dt) {
 
 function updateSquadUnits(sq, dt) {
   const k = 1 - Math.exp(-dt * 8);
+  const sp = sq.spacing || 1, lim = ROAD_W - 0.3;
   for (let i = 0; i < sq.units.length; i++) {
     const p = sq.units[i];
-    p.x += (sq.x + p.sx - p.x) * k;
-    p.z += (sq.z + p.sz - p.z) * k;
+    p.x += (sq.x + Math.max(-lim, Math.min(lim, p.sx * sp)) - p.x) * k;
+    p.z += (sq.z + p.sz * sp - p.z) * k;
     if (p.pop > 0) p.pop = Math.max(0, p.pop - dt * 3.4);
   }
 }
@@ -1773,21 +1879,19 @@ function updateBlade(b, dt) {
 
   // 隊列がこの z を通過中なら、刃の範囲にいる兵を削る
   if (crowd.z < b.z - 4 || crowd.z > b.z + 4) return;
-  let hit = 0;
-  // 描いている兵より実兵力が多いとき、1体の被弾は実際には何人分か
-  const per = crowd.units.length ? Math.max(1, crowd.count / crowd.units.length) : 1;
+  let hit = 0, loss = 0;
   for (let i = crowd.units.length - 1; i >= 0; i--) {
     const u = crowd.units[i];
-    if (u.pz < b.z && u.z >= b.z && Math.abs(u.x - b.x) < b.hw) {
+    if (u.pz < b.z && u.z >= b.z && Math.abs(u.x - b.x) < b.hw + 0.25 * rankScale(u.rank)) {
       puff(u.x, 0.6, u.z, C.foe, 6);
       crowd.units.splice(i, 1);
-      hit++;
+      hit++; loss += Math.pow(10, u.rank | 0);     // 隊長1体＝10人、巨大騎士1体＝100人…
     }
   }
   if (hit) {
-    const loss = Math.round(hit * per);
+    loss = Math.min(loss, Math.round(crowd.count));
     crowd.count = Math.max(0, crowd.count - loss);
-    if (crowd.count > crowd.units.length) syncUnits(crowd, C.ally);
+    syncUnits(crowd, C.ally);
     hArmy.textContent = fmt(crowd.count);
     Snd.hit(); doShake(4 + hit * 0.4); vib(15);
     popText("−" + fmt(loss), C.bad, b.z, false);
@@ -1973,6 +2077,12 @@ function update(dt) {
       }
     } else if (it.type === "giant" && !it.dead) {
       if (!it.warned && it.z - crowd.z < 44) { it.warned = true; showWarn(it.king); }
+      if (it.warned) {
+        it.walking = true;
+        it.z -= (it.king ? 1.0 : 1.6) * dt;
+        const step = Math.floor(it.t * 3.5);
+        if (step !== it.lastStep) { it.lastStep = step; doShake(2.2 * it.scale); if (step % 2 === 0) Snd.clash(); }
+      }
       const stop = it.z - 3.0 * it.scale;
       if (crowd.z >= stop) { crowd.z = stop; startGiant(it); break; }
     }
@@ -2236,15 +2346,26 @@ function drawFlag(x, feetY, h, tier, t, ph) {
 function drawUnit(u, body, bodyD, skin, t, wt) {
   const p = proj(u.x, 0, u.z); if(!p || p.s<2.2)return;
   const bob = Math.sin(t*12+u.ph), lift=Math.max(0,bob)*.10*p.s;
-  const h=1.13*p.s*(1-u.pop*.55), w=.75*p.s*(1+u.pop*.3);
+  const r = u.rank | 0, rs = rankScale(r), ally = body === C.ally;
+  const h=1.13*p.s*rs*(1-u.pop*.55), w=.75*p.s*rs*(1+u.pop*.3);
   if (flagTier && u.flag) drawFlag(p.x + w * 0.1, p.y - lift, h, flagTier, t, u.ph);
-  ctx.fillStyle='rgba(21,34,29,.24)';ctx.beginPath();ctx.ellipse(p.x+p.s*.08,p.y,p.s*.28,p.s*.095,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(21,34,29,.24)';ctx.beginPath();ctx.ellipse(p.x+p.s*.08,p.y,p.s*.28*rs,p.s*.095*rs,0,0,Math.PI*2);ctx.fill();
+  if (r >= 2) {                                    // 大きな隊は足元に光の輪
+    ctx.strokeStyle = ally ? "rgba(255,214,120,.75)" : "rgba(255,110,80,.75)";
+    ctx.lineWidth = Math.max(1, p.s * 0.05 * rs);
+    ctx.beginPath(); ctx.ellipse(p.x, p.y, p.s * .42 * rs, p.s * .13 * rs, 0, 0, Math.PI * 2); ctx.stroke();
+    if (r >= 4) { ctx.beginPath(); ctx.ellipse(p.x, p.y, p.s * .55 * rs, p.s * .17 * rs, 0, 0, Math.PI * 2); ctx.stroke(); }
+  }
   if(p.s<7){ctx.fillStyle=body;ctx.fillRect(p.x-w*.3,p.y-h*.8,w*.6,h*.8);return;}
   const feet=p.y-lift;
   const frame = bob > 0 ? 1 : 2;
-  const sid = (body === C.ally ? "ally_run_" : "enemy_stand_") + frame;
-  if (SpriteKit.foot(ctx, sid, p.x, feet, h * 1.08)) {
-    if (wt > 0 && p.s >= 8 && !SpriteKit.center(ctx, WEAPON_IDS[wt], p.x + w * 0.42, feet - h * 0.58, h * 0.66, -0.2 + bob * 0.14))
+  const ti = themeIndex(stage) + 1;               // 景色（2ステージごと）に合わせて装備が変わる
+  const ids = ally
+    ? (r === 0 ? ["soldier_" + ti + "_" + frame, "ally_run_" + frame] : r === 1 ? ["ally_captain_" + frame, "ally_run_" + frame] : ["ally_titan_" + frame, "ally_run_" + frame])
+    : (r === 0 ? ["enemy_" + ti + "_" + frame, "enemy_stand_" + frame] : ["enemy_captain_" + frame, "enemy_stand_" + frame]);
+  const sid = SP.first(ids);
+  if (sid && SP.foot(ctx, sid, p.x, feet, h * 1.08)) {
+    if (r !== 1 && wt > 0 && p.s >= 8 && !SpriteKit.center(ctx, WEAPON_IDS[wt], p.x + w * 0.42, feet - h * 0.58, h * 0.66, -0.2 + bob * 0.14))
       drawWeapon(p.x + w * .42, feet - h * .43, h * .88, wt, bob);
     return;
   }
@@ -2261,7 +2382,7 @@ function drawHost(host, ally, t) {
   const bodyD = ally ? C.allyD : C.foeD;
   const skin = ally ? C.skin : C.skinF;
   const wt = host.weapon | 0;
-  flagTier = !ally ? 0 : crowd.count >= 1e6 ? 3 : crowd.count >= 1e5 ? 2 : crowd.count >= 1e4 ? 1 : 0;
+  flagTier = 0;   // 旗は隊長の絵が持っている
   for (let i = 0; i < order.length; i++) drawUnit(order[i], body, bodyD, skin, t, wt);
   flagTier = 0;
 }
@@ -2540,11 +2661,17 @@ function drawGiant(g) {
   // 画像があれば、振り下ろしの段階に合わせて 立ち→振りかぶり→叩きつけ を切り替える
   const fighting = battle && battle.giant === g && !g.dead;
   const pose = !fighting ? "idle" : g.phase < 0.14 ? "slam" : g.phase < 0.42 ? "idle" : "raise";
-  const gid = (g.king ? "giant_king_" : "giant_") + pose;
-  if (SpriteKit.ok(gid)) {
-    const B = window.GAME_SPRITE_BOUNDS || {};
-    const idleH = (B[(g.king ? "giant_king_" : "giant_") + "idle"] || [0, 0, 0, 300])[3];
-    const poseH = (B[gid] || [0, 0, 0, idleH])[3];
+  // 景色ごとに違う巨人（苔→砂漠→氷→溶岩→雷）。王は同じ系統の王。無ければ最初の素材に戻る
+  const ti = themeIndex(stage) + 1;
+  const pre = g.king ? (ti === 1 ? "giant_king_" : "giant_" + ti + "_king_") : "giant_" + ti + "_";
+  const walkId = !g.king && g.walking && !fighting && !g.dead
+    ? (ti === 1 ? "giant_walk_" : pre + "walk_") + (1 + (Math.floor(g.t * 7) % 5)) : null;
+  const base0 = g.king ? "giant_king_" : "giant_";
+  const gid = SP.first([walkId, pre + pose, base0 + pose].filter(Boolean));
+  if (gid) {
+    const refId = SP.first([pre + "idle", base0 + "idle"]) || gid;
+    const idleH = SP.h(refId) || 300;
+    const poseH = SP.h(gid) || idleH;
     ctx.save();
     ctx.globalAlpha = alpha;
     if (fighting) {                              // 一撃の予告（足元の輪が広がる）
@@ -2559,11 +2686,11 @@ function drawGiant(g) {
     if (g.fall > 0) { ctx.rotate(g.fall * 0.9); ctx.translate(0, g.fall * U * 0.25); }
     ctx.scale(1, 1 + breath);
     const hPx = U * 1.05 * (poseH / idleH);
-    SpriteKit.foot(ctx, gid, 0, 0, hPx);
+    SP.foot(ctx, gid, 0, 0, hPx);
     if (g.flash > 0.5 && !REDUCED) {             // 被弾の白い閃き
       ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha = alpha * 0.22;
-      SpriteKit.foot(ctx, gid, 0, 0, hPx);
+      SP.foot(ctx, gid, 0, 0, hPx);
       ctx.globalCompositeOperation = "source-over";
     }
     ctx.restore();
@@ -3047,6 +3174,7 @@ function resetCrowd(n, w) {
   crowd.z = crowd.pz = 0;
   crowd.units.length = 0;
   crowd.count = Math.max(0, n);
+  crowd.topRank = 99;              // 開始時は「結成!」を出さない
   syncUnits(crowd, C.ally);
   shownArmy = crowd.count;
   milestone = MILESTONES.findIndex((m) => m > crowd.count);
@@ -3288,6 +3416,7 @@ function boot() {
   setupDemo();
   refreshTitle();
   requestAnimationFrame(frame);
+  setTimeout(() => STAGE_THEMES.forEach(bgImage), 3000);   // 景色5枚を少し遅れて先読み（ステージを飛んでも絵が間に合う）
 }
 
 if (document.fonts && document.fonts.load) {
