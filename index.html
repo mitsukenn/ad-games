@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>広告ゲーム工房</title>
+<meta name="description" content="スマホ広告でよく見るゲームを再現したブラウザゲーム集。増殖ゲートと迎撃ロード。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chango&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --ink:#241c18; --panel:#2f2620; --stone:#e4dbc6; --soft:rgba(228,219,198,.72);
+    --gold:#e0a83c; --jade:#2e7d6e; --blue:#3b6fd1; --red:#b23a32;
+    --disp:"Chango","Arial Black",system-ui,sans-serif;
+    --ui:"Barlow Semi Condensed","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; font-family:var(--ui); color:var(--stone);
+    background:
+      linear-gradient(180deg,rgba(36,28,24,.35),rgba(36,28,24,.92) 55%),
+      url("assets/ancient-valley.png") center top/cover no-repeat, var(--ink);
+  }
+  main{max-width:880px; margin:0 auto; padding:56px 16px 48px}
+  .eyebrow{font-size:12px; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); font-weight:600}
+  h1{font-family:var(--disp); font-weight:400; color:var(--gold); font-size:clamp(34px,7vw,56px);
+     line-height:1; margin:10px 0 12px; text-shadow:0 3px 0 rgba(0,0,0,.45)}
+  .lede{font-size:16px; line-height:1.7; color:var(--soft); max-width:40ch; margin:0 0 36px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px}
+  a.card{
+    display:flex; flex-direction:column; gap:10px; text-decoration:none; color:inherit;
+    background:linear-gradient(180deg,#352b24,var(--ink));
+    border:1px solid rgba(224,168,60,.45); padding:24px 22px 22px; position:relative;
+    box-shadow:0 18px 40px rgba(0,0,0,.4); transition:transform .15s ease, border-color .15s ease;
+  }
+  a.card::before{content:""; position:absolute; inset:6px; border:1px solid rgba(224,168,60,.16); pointer-events:none}
+  a.card:hover{transform:translateY(-3px); border-color:var(--gold)}
+  a.card:focus-visible{outline:2px solid var(--stone); outline-offset:3px}
+  .tag{font-size:11px; letter-spacing:.18em; text-transform:uppercase; font-weight:700}
+  .card h2{font-family:var(--disp); font-weight:400; font-size:28px; margin:0; color:var(--stone)}
+  .card p{margin:0; font-size:15px; line-height:1.6; color:var(--soft)}
+  .card .go{margin-top:auto; padding-top:10px; font-family:var(--disp); color:var(--gold); font-size:16px}
+  .t1 .tag{color:#7ede8e} .t2 .tag{color:#9cc0ff}
+  footer{margin-top:40px; font-size:13px; color:rgba(228,219,198,.5)}
+  @media (prefers-reduced-motion:reduce){ a.card{transition:none} a.card:hover{transform:none} }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Ad Game Workshop</div>
+  <h1>広告ゲーム工房</h1>
+  <p class="lede">スマホ広告でよく見る「あのゲーム」を、ブラウザで遊べるように再現しました。どちらも全10ステージ、スマホでもパソコンでも遊べます。</p>
+  <div class="grid">
+    <a class="card t1" href="zoushoku_gate.html">
+      <span class="tag">Gate Runner ／ 走る</span>
+      <h2>増殖ゲート</h2>
+      <p>軍勢を率いて道を進む。+40 と ×2、どちらのゲートをくぐるかで兵が増えたり減ったり。敵軍と巨人を数で押し切れ。</p>
+      <span class="go">遊ぶ →</span>
+    </a>
+    <a class="card t2" href="geigeki_road.html">
+      <span class="tag">Lane Defense ／ 迎え撃つ</span>
+      <h2>迎撃ロード</h2>
+      <p>その場で撃ち続け、流れてくる門を開けて宝を取り込む。武器は投石から大砲まで。3本のレーンを見て、敵と巨人を迎え撃て。</p>
+      <span class="go">遊ぶ →</span>
+    </a>
+  </div>
+  <footer>ドラッグ、または ← → キーで操作します。</footer>
+</main>
+</body>
+</html>

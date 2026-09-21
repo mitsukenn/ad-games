@@ -1,0 +1,1962 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>迎撃ロード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chango&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --stone:#c9bca1;
+    --stone-d:#a2937a;
+    --stone-l:#e4dbc6;
+    --jade:#2e7d6e;
+    --ally:#2b4c8c;
+    --gold:#e0a83c;
+    --foe:#b23a32;
+    --ink:#241c18;
+    --ink-soft:#3d3129;
+    --panel:#2a231d;
+    --good:#4bad5e;
+    --bad:#c0453c;
+    --disp:"Chango", "Arial Black", system-ui, sans-serif;
+    --ui:"Barlow Semi Condensed", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  }
+
+  html,body{height:100%}
+  body{
+    background:var(--ink);
+    color:var(--stone-l);
+    font-family:var(--ui);
+    overflow:hidden;
+    -webkit-text-size-adjust:100%;
+  }
+
+  #app{
+    position:fixed; inset:0;
+    display:block;
+    background:var(--ink);
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+    cursor:default;
+  }
+  #game{display:block; width:100%; height:100%;}
+
+  /* ---------- HUD ---------- */
+  .hud{
+    position:absolute; inset:0 0 auto 0;
+    display:flex; align-items:flex-start; gap:14px;
+    padding:14px 16px;
+    pointer-events:none;
+  }
+  .chip{
+    background:rgba(36,28,24,.72);
+    border:1px solid rgba(224,168,60,.42);
+    border-radius:3px;
+    padding:6px 12px 7px;
+    backdrop-filter:blur(3px);
+    display:flex; flex-direction:column; gap:1px;
+    min-width:64px;
+  }
+  .chip .k{
+    font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+    color:rgba(224,168,60,.85); font-weight:600; line-height:1;
+  }
+  .chip .v{
+    font-family:var(--disp); font-size:22px; line-height:1.05;
+    color:var(--stone-l); font-variant-numeric:tabular-nums;
+  }
+  .chip.army .v{color:var(--gold)}
+  .chip.weap .v{
+    font-family:var(--ui); font-weight:700; font-size:17px;
+    letter-spacing:.02em; line-height:1.2;
+  }
+  .chip .s{
+    font-family:var(--disp); font-size:11px; line-height:1.1; margin-top:1px;
+    color:rgba(224,168,60,.9); font-variant-numeric:tabular-nums;
+  }
+
+  .bar-wrap{flex:1; margin-top:6px; max-width:420px}
+  .bar-lab{
+    font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+    color:rgba(228,219,198,.6); font-weight:600; margin-bottom:5px;
+  }
+  .bar{
+    height:7px; background:rgba(36,28,24,.72);
+    border:1px solid rgba(224,168,60,.35); border-radius:2px; overflow:hidden;
+  }
+  .bar i{
+    display:block; height:100%; width:0%;
+    background:linear-gradient(90deg,var(--jade),var(--gold));
+    transition:width .18s linear;
+  }
+
+  .btn-sound{
+    position:absolute; right:14px; bottom:14px;
+    pointer-events:auto;
+    width:40px; height:40px; border-radius:3px;
+    background:rgba(36,28,24,.72);
+    border:1px solid rgba(224,168,60,.42);
+    color:var(--gold); font-size:17px; cursor:pointer;
+    display:grid; place-items:center;
+    font-family:var(--ui);
+  }
+  .btn-sound:hover{background:rgba(61,49,41,.85)}
+  .btn-sound:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+
+  /* ---------- Overlay panels ---------- */
+  .ov{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    background:radial-gradient(ellipse at 50% 45%, rgba(36,28,24,.55), rgba(20,15,12,.9));
+    padding:20px;
+    /* 画面が低いとき（iPad の埋め込み表示など）はパネルごとスクロールできるように */
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+  }
+  .ov > .tablet{margin:auto}          /* 収まるときは中央、はみ出すときは上から */
+  .ov[hidden]{display:none}
+
+  .tablet{
+    width:min(460px, 100%);
+    background:linear-gradient(180deg,#332a23,#241c18);
+    border:1px solid rgba(224,168,60,.5);
+    box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 26px 60px rgba(0,0,0,.55);
+    padding:30px 30px 26px;
+    text-align:center;
+    position:relative;
+  }
+  .tablet::before{
+    content:""; position:absolute; inset:7px;
+    border:1px solid rgba(224,168,60,.18);
+    pointer-events:none;
+  }
+
+  .eyebrow{
+    font-size:11px; letter-spacing:.3em; text-transform:uppercase;
+    color:rgba(224,168,60,.8); font-weight:600; margin-bottom:12px;
+  }
+  h1{
+    font-family:var(--disp);
+    font-size:clamp(34px,7vw,52px);
+    line-height:.98; color:var(--gold);
+    text-wrap:balance; margin-bottom:14px;
+    text-shadow:0 3px 0 rgba(0,0,0,.45);
+  }
+  h2{
+    font-family:var(--disp);
+    font-size:clamp(26px,5.5vw,36px);
+    line-height:1.05; color:var(--stone-l);
+    text-wrap:balance; margin-bottom:6px;
+  }
+  h2.win{color:var(--gold)}
+  h2.lose{color:#d9756c}
+
+  .lede{
+    font-size:15px; line-height:1.65;
+    color:rgba(228,219,198,.78);
+    max-width:34ch; margin:0 auto 20px;
+  }
+
+  .rules{
+    display:flex; flex-direction:column; gap:9px;
+    text-align:left; margin:0 auto 22px; max-width:32ch;
+  }
+  .rule{display:flex; gap:11px; align-items:baseline; font-size:14px; line-height:1.45;
+        color:rgba(228,219,198,.82)}
+  .rule b{
+    font-family:var(--disp); font-size:13px;
+    color:var(--ink); background:var(--gold);
+    padding:2px 7px 3px; flex:none; min-width:20px; text-align:center;
+  }
+  .rule b.g{background:var(--good); color:#0e2712}
+  .rule b.r{background:var(--bad); color:#2a0d0b}
+  .rule b.n{background:var(--stone-d); color:var(--ink)}
+  .rule em{font-family:var(--disp); font-style:normal; color:var(--stone-l)}
+  .rule strong{color:var(--gold); font-weight:700}
+
+  .stats{
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:1px; background:rgba(224,168,60,.22);
+    border:1px solid rgba(224,168,60,.22);
+    margin:0 0 22px;
+  }
+  .stat{background:#241c18; padding:12px 8px 13px}
+  .stat .k{
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:rgba(224,168,60,.8); font-weight:600; margin-bottom:4px;
+  }
+  .stat .v{
+    font-family:var(--disp); font-size:26px; line-height:1;
+    color:var(--stone-l); font-variant-numeric:tabular-nums;
+  }
+  .stat.hi .v{color:var(--gold)}
+  .stat.w .v{font-family:var(--ui); font-weight:700; font-size:21px; line-height:1.2}
+
+  .btn{
+    font-family:var(--disp); font-size:19px;
+    background:var(--gold); color:var(--ink);
+    border:none; border-bottom:4px solid #a3752096;
+    padding:13px 34px 12px; cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .btn:hover{background:#eeb748}
+  .btn:active{transform:translateY(2px); border-bottom-width:2px}
+  .btn:focus-visible{outline:2px solid var(--stone-l); outline-offset:3px}
+  .btn.ghost{
+    background:transparent; color:rgba(228,219,198,.75);
+    border:1px solid rgba(224,168,60,.4); border-bottom-width:1px;
+    font-family:var(--ui); font-weight:600; font-size:14px;
+    padding:10px 20px; margin-left:10px;
+  }
+  .btn.ghost:hover{background:rgba(224,168,60,.1); color:var(--stone-l)}
+  .btn.ghost:active{transform:none}
+
+  .hint{
+    margin-top:16px; font-size:12px; letter-spacing:.05em;
+    color:rgba(228,219,198,.45);
+  }
+
+  @media (max-width:520px){
+    .tablet{padding:24px 20px 22px}
+    .chip{padding:5px 9px 6px; min-width:52px}
+    .chip .v{font-size:18px}
+    .bar-wrap{display:none}
+  }
+  /* 背の低い画面ではパネルを詰めて、出撃ボタンまで一画面に収める */
+  @media (max-height:900px){
+    .ov{padding:12px}
+    .tablet{padding:18px 22px 16px}
+    .eyebrow{margin-bottom:6px}
+    h1{font-size:clamp(28px,5vw,40px); margin-bottom:8px}
+    .lede{font-size:13.5px; line-height:1.5; margin-bottom:12px; max-width:40ch}
+    .rules{gap:5px; margin-bottom:14px; max-width:40ch}
+    .rule{font-size:12.5px; line-height:1.4}
+    .stats{margin-bottom:14px}
+    .btn{padding:11px 30px 10px}
+    .hint{margin-top:8px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .bar i{transition:none}
+  }
+  .rule b.b{background:#3b6fd1; color:#fff}
+  /* 絵の背景の上でも読めるように、進み具合の見出しに下地を敷く */
+  #app .bar-lab{display:table; padding:4px 7px; border-radius:3px; background:rgba(30,38,30,.72); color:#f1e5c6}
+</style>
+
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <div class="hud">
+    <div class="chip"><span class="k">Stage</span><span class="v" id="hStage">1</span></div>
+    <div class="chip army"><span class="k">兵力</span><span class="v" id="hArmy">12</span></div>
+    <div class="chip weap"><span class="k">武器</span><span class="v" id="hWeap">投石</span><span class="s" id="hPow">×1.00</span></div>
+    <div class="bar-wrap">
+      <div class="bar-lab">防衛戦の進み具合</div>
+      <div class="bar"><i id="hBar"></i></div>
+    </div>
+  </div>
+
+  <button class="btn-sound" id="btnSound" aria-label="音のオン・オフ">♪</button>
+
+  <div class="ov" id="ovTitle">
+    <div class="tablet">
+      <div class="eyebrow">Lane Defense</div>
+      <h1>迎撃ロード</h1>
+      <p class="lede">兵は動かず撃ち続ける。流れてくる宝を取り込み、敵軍と巨人を撃ち落とせ。全10ステージ。</p>
+      <div class="rules">
+        <div class="rule"><b class="n">3</b><span>木の門は数字の回数ぶん撃てば開く。<strong>開けないまま届くと、奥の宝ごと砕ける</strong></span></div>
+        <div class="rule"><b class="b">+1</b><span>青い板は兵が増える。そのレーンに立って受け止めろ</span></div>
+        <div class="rule"><b>銃</b><span>武器の台座は撃ち壊すと、<strong>全員の武器が一段上がる</strong>。投石→弓→火縄銃→ライフル→マシンガン→大砲と、持ち替えるほど攻撃が重くなる</span></div>
+        <div class="rule"><b class="r">敵</b><span>赤軍は撃って減らせ。同じレーンで受ければ白兵戦、よそ見をすると<strong>丸ごと突破される</strong></span></div>
+        <div class="rule"><b class="r">巨</b><span>巨人はレーンをまたいで迫る。近づく前に削りきれ</span></div>
+      </div>
+      <button class="btn" id="btnStart">防衛開始</button>
+      <p class="hint">ドラッグ、または ← → キーで隊列を左右に動かす</p>
+    </div>
+  </div>
+
+  <div class="ov" id="ovClear" hidden>
+    <div class="tablet">
+      <div class="eyebrow" id="clearEyebrow">Stage 1 防衛成功</div>
+      <h2 class="win">持ちこたえた</h2>
+      <p class="lede" id="clearLede">残った兵と火力を引き継いで次の波へ。</p>
+      <div class="stats">
+        <div class="stat"><div class="k">残存兵力</div><div class="v" id="cArmy">0</div></div>
+        <div class="stat w hi"><div class="k">武器</div><div class="v" id="cWeap">投石</div></div>
+        <div class="stat"><div class="k">撃破数</div><div class="v" id="cKills">0</div></div>
+      </div>
+      <button class="btn" id="btnNext">次の波へ</button>
+    </div>
+  </div>
+
+  <div class="ov" id="ovWin" hidden>
+    <div class="tablet">
+      <div class="eyebrow">Stage 10 — 完全防衛</div>
+      <h1 style="font-size:clamp(28px,6vw,42px)">道は守られた</h1>
+      <p class="lede">10の波をすべて退けた。</p>
+      <div class="stats">
+        <div class="stat"><div class="k">最終兵力</div><div class="v" id="wArmy">0</div></div>
+        <div class="stat w hi"><div class="k">武器</div><div class="v" id="wWeap">投石</div></div>
+        <div class="stat"><div class="k">総撃破数</div><div class="v" id="wKills">0</div></div>
+      </div>
+      <button class="btn" id="btnAgain">もう一度</button>
+    </div>
+  </div>
+
+  <div class="ov" id="ovOver" hidden>
+    <div class="tablet">
+      <div class="eyebrow">防衛線崩壊</div>
+      <h2 class="lose">軍勢は尽きた</h2>
+      <p class="lede">どの門を開け、どのレーンで受けるか。順番を変えてみよう。</p>
+      <div class="stats">
+        <div class="stat"><div class="k">到達</div><div class="v" id="oStage">1</div></div>
+        <div class="stat"><div class="k">撃破数</div><div class="v" id="oKills">0</div></div>
+        <div class="stat hi"><div class="k">最高兵力</div><div class="v" id="oBest">0</div></div>
+      </div>
+      <button class="btn" id="btnRetry">最初から</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================
+   0. 基本セットアップ
+   ============================================================ */
+const cvs = document.getElementById("game");
+const ctx = cvs.getContext("2d", { alpha: false });
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = cvs.clientWidth; H = cvs.clientHeight;
+  // 焦点距離は画面の高さと幅の両方に合わせる（背の低い画面・細い画面でも道全体が収まる）
+  FOCAL = Math.max(300, Math.min(H * 1.18, W * 2.2));   // 望遠気味にして、奥の物も大きめに見せる
+  cvs.width = Math.round(W * DPR);
+  cvs.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+addEventListener("resize", resize);
+
+if (!ctx.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+  };
+}
+
+const C = {
+  skyHi:  "#3f8592",
+  haze:   "#e8dcbf",
+  ground: "#2e7d6e",
+  groundF:"#4f9482",
+  road:   "#c9bca1",
+  roadD:  "#a2937a",
+  roadL:  "#ded3ba",
+  ink:    "#241c18",
+  gold:   "#e0a83c",
+  ally:   "#2b4c8c",
+  allyD:  "#1d3563",
+  foe:    "#b23a32",
+  foeD:   "#7d2620",
+  skin:   "#e8b48c",
+  skinF:  "#d09a76",
+  good:   "#4bad5e",
+  bad:    "#c0453c",
+  cream:  "#e4dbc6",
+  blue:   "#3b6fd1", blueD: "#284c93",
+  wood:   "#8a6238", woodD: "#5e4126", iron: "#4a4f57",
+};
+
+/* ============================================================
+   1. 疑似3D投影（カメラは固定。世界のほうが手前へ流れてくる）
+   ============================================================ */
+let   FOCAL    = 700;
+const ROAD_W   = 3.6;               // 道の半幅
+const LANES    = [-2.4, 0, 2.4];    // 3本のレーンの中心
+const LANE_HW  = 1.05;              // レーンの半幅
+const WALL_X   = 1.2;               // レーンを仕切る低い石壁
+const DRAW_Z   = 95;
+const CAM_BACK = 22;
+const CAM_Y    = 13;    // 高い位置から見下ろす
+const RANGE    = 34;                // 弾の届く距離（弓の射程。遠くの敵は近づくまで撃てない）
+
+const cam = { x: 0, y: CAM_Y, z: -CAM_BACK };
+let horizon = 0;
+
+function proj(x, y, z) {
+  const d = z - cam.z;
+  if (d < 0.55) return null;
+  const s = FOCAL / d;
+  return { x: W / 2 + (x - cam.x) * s, y: horizon + (cam.y - y) * s, s };
+}
+function scaleAt(z) {
+  const d = z - cam.z;
+  return d < 0.55 ? 0 : FOCAL / d;
+}
+
+/* ============================================================
+   2. サウンド
+   ============================================================ */
+const Snd = (() => {
+  let ac = null, on = true, sfx = null, mus = null;
+  const ensure = () => {
+    if (!ac) {
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        sfx = ac.createGain(); sfx.gain.value = 1; sfx.connect(ac.destination);
+        mus = ac.createGain(); mus.gain.value = 0.55; mus.connect(ac.destination);
+      } catch (e) { on = false; }
+    }
+    if (ac && ac.state === "suspended") ac.resume();
+    return ac;
+  };
+  /** at = 鳴らす時刻（省略で今）。dest = 効果音か音楽か */
+  function tone(freq, dur, type, vol, slideTo, at, dest) {
+    if (!on) return; const a = ensure(); if (!a) return;
+    const t = at || a.currentTime;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || "square";
+    o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.08, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || sfx);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  let noiseBuf = null;
+  function noise(dur, vol, freq, at, dest, type) {
+    if (!on) return; const a = ensure(); if (!a) return;
+    const t = at || a.currentTime;
+    if (!noiseBuf) {
+      noiseBuf = a.createBuffer(1, a.sampleRate, a.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = a.createBufferSource(); src.buffer = noiseBuf;
+    const f = a.createBiquadFilter(); f.type = type || "lowpass"; f.frequency.value = freq || 900;
+    const g = a.createGain();
+    g.gain.setValueAtTime(vol || 0.14, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(dest || sfx);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+
+  /* --- 行進曲 --------------------------------------------------
+     4小節ループ、16分音符刻み。スネアは「タッタ・タン」の付点リズム、
+     ベースは「ブン・チャッ」の二拍子、メロディは明るいハ長調。 */
+  const C4 = 60;
+  const BASS = [[48, 55], [41, 48], [43, 50], [48, 43]];          // 小節ごとの 根音・5度
+  const CHORD = [[64, 67], [65, 69], [62, 67], [64, 67]];         // 裏拍の「チャッ」
+  const MEL = [                                                   // [小節, 16分位置, 音, 長さ]
+    [0, 0, 76, 3], [0, 3, 76, 1], [0, 4, 79, 4], [0, 8, 76, 3], [0, 11, 74, 1], [0, 12, 72, 4],
+    [1, 0, 77, 3], [1, 3, 77, 1], [1, 4, 81, 4], [1, 8, 79, 3], [1, 11, 77, 1], [1, 12, 76, 4],
+    [2, 0, 74, 3], [2, 3, 76, 1], [2, 4, 77, 4], [2, 8, 79, 3], [2, 11, 81, 1], [2, 12, 83, 4],
+    [3, 0, 84, 6], [3, 8, 79, 3], [3, 11, 76, 1], [3, 12, 72, 4],
+  ];
+  let playing = false, bpm = 132, nextT = 0, step = 0, timer = null, hot = false;
+
+  function playStep(i, t) {
+    const bar = (i >> 4) & 3, s16 = i & 15;
+    const d16 = 60 / bpm / 4;
+    // 大太鼓：1・3拍
+    if (s16 === 0 || s16 === 8) { tone(120, 0.16, "sine", 0.34, 45, t, mus); }
+    // 小太鼓「タッタ・タン」＋最終小節の締めロール
+    const snare = [0, 3, 4, 8, 11, 12];
+    if (snare.includes(s16) || (bar === 3 && s16 >= 12) || (hot && s16 % 2 === 1)) {
+      const acc = (s16 === 4 || s16 === 12) ? 0.20 : 0.11;
+      noise(0.09, acc, 3200, t, mus, "highpass");
+      tone(220, 0.05, "triangle", acc * 0.5, 160, t, mus);
+    }
+    // シンバル的な刻み
+    if (s16 % 4 === 2) noise(0.04, 0.04, 7000, t, mus, "highpass");
+    // ベース「ブン」とコード「チャッ」
+    const bs = BASS[bar];
+    if (s16 === 0 || s16 === 8) tone(hz(bs[s16 === 0 ? 0 : 1]), d16 * 3, "triangle", 0.22, 0, t, mus);
+    if (s16 === 4 || s16 === 12) for (const m of CHORD[bar]) tone(hz(m), d16 * 1.6, "square", 0.028, 0, t, mus);
+    // メロディ
+    for (const [b, p, m, l] of MEL) {
+      if (b === bar && p === s16) {
+        tone(hz(m), d16 * l * 0.92, "square", 0.05, 0, t, mus);
+        tone(hz(m + 12), d16 * l * 0.6, "triangle", 0.025, 0, t, mus);   // 1オクターブ上で明るく
+      }
+    }
+  }
+  function scheduler() {
+    if (!playing || !ac) return;
+    while (nextT < ac.currentTime + 0.14) {
+      playStep(step, nextT);
+      nextT += 60 / bpm / 4;
+      step = (step + 1) % 64;
+    }
+  }
+
+  return {
+    get on() { return on; },
+    toggle() {
+      on = !on;
+      if (on) ensure();
+      if (mus) mus.gain.value = on ? 0.55 : 0;
+      return on;
+    },
+    kick() { ensure(); },
+    music(v) {                      // true で行進曲を流す／false で止める
+      if (v && on && ensure()) {
+        if (playing) return;
+        playing = true; step = 0; nextT = ac.currentTime + 0.05;
+        clearInterval(timer); timer = setInterval(scheduler, 25);
+      } else { playing = false; clearInterval(timer); }
+    },
+    intense(v) { hot = !!v; bpm = v ? 150 : 132; },   // 戦闘中はテンポを上げて太鼓を細かく
+    // 武器ごとの発射音。呼ぶ側で鳴らす回数を間引く
+    shot(t) {
+      if (t <= 1) noise(0.06, 0.05, 1400, 0, undefined, "bandpass");                          // 石・スリング：ヒュッ
+      else if (t <= 3) { tone(t === 2 ? 520 : 380, 0.07, "triangle", 0.035, 170); noise(0.03, 0.03, 2600, 0, undefined, "highpass"); } // 弦：ビン
+      else if (t <= 7) { noise(t === 7 ? 0.09 : 0.06, t === 7 ? 0.13 : 0.09, t === 4 ? 1200 : 2400); tone(140, 0.05, "square", 0.03, 60); } // 銃：パン
+      else if (t === 8) noise(0.035, 0.07, 3200);                                               // マシンガン：タタタ
+      else { tone(90, 0.38, "sine", 0.24, 34); noise(0.26, 0.17, 520); }                        // 大砲：ドン
+    },
+    good() { const t = (ensure() || {}).currentTime || 0; [72, 76, 79].forEach((m, i) => tone(hz(m + 12), 0.10, "square", 0.06, 0, t + i * 0.05)); },
+    great(){ const t = (ensure() || {}).currentTime || 0; [72, 76, 79, 84, 88].forEach((m, i) => tone(hz(m + 12), 0.12, "square", 0.06, 0, t + i * 0.045));
+             tone(hz(96), 0.3, "triangle", 0.05, 0, t + 0.24); },
+    bad()  { tone(300, 0.16, "square", 0.05, 150); },
+    hit()  { noise(0.10, 0.10, 1400); },
+    clash(){ noise(0.06, 0.07, 700); },
+    boom() { tone(110, 0.40, "sine", 0.26, 38); noise(0.30, 0.20, 380); },
+    roar() { tone(150, 0.55, "sawtooth", 0.07, 70); },
+    win()  {                          // 「パパパ・パーン！」
+      const t = (ensure() || {}).currentTime || 0;
+      [[72, 0, .1], [72, .12, .1], [72, .24, .1], [79, .36, .5], [76, .9, .12], [79, 1.02, .12], [84, 1.14, .7]]
+        .forEach(([m, d, l]) => { tone(hz(m), l, "square", 0.07, 0, t + d); tone(hz(m + 12), l, "triangle", 0.04, 0, t + d); });
+      [0, .36, 1.14].forEach((d) => tone(hz(48), 0.3, "triangle", 0.16, 0, t + d));
+    },
+    lose() {                          // しんみりさせず、ずっこけ系の「ぽよよ〜ん」
+      const t = (ensure() || {}).currentTime || 0;
+      [[67, 0], [66, .16], [65, .32]].forEach(([m, d]) => tone(hz(m), 0.14, "square", 0.06, 0, t + d));
+      tone(hz(64), 0.7, "triangle", 0.08, hz(52), t + 0.5);
+      noise(0.08, 0.10, 3000, t + 1.2, undefined, "highpass");
+    },
+  };
+})();
+
+/* ============================================================
+   3. ゲーム状態
+   ============================================================ */
+/* 兵力に上限はない。MAX_UNITS は画面に描く兵の数の上限。 */
+const MAX_UNITS = 90;     // 描く兵の上限（隊列が画面の下まで伸びすぎないように）
+const SQUAD_DRAW = 150;
+const fmt = (n) => Math.round(n).toLocaleString("ja-JP");
+
+/* 見た目の武器。火力の値で持ち替える */
+const WEAPONS = [
+  { n: "投石",         p: 1.00, rate: 1.0 },
+  { n: "スリング",     p: 1.40, rate: 1.0 },
+  { n: "弓",           p: 1.90, rate: 1.0 },
+  { n: "クロスボウ",   p: 2.55, rate: 0.85 },
+  { n: "火縄銃",       p: 3.40, rate: 0.75 },
+  { n: "拳銃",         p: 4.50, rate: 1.1 },
+  { n: "ライフル",     p: 6.00, rate: 0.95 },
+  { n: "ショットガン", p: 8.00, rate: 0.8 },
+  { n: "マシンガン",   p: 10.5, rate: 2.0 },   // 弾数が多い
+  { n: "大砲",         p: 14.0, rate: 0.3 },   // 少ない弾が重い
+];
+const WMAX = WEAPONS.length - 1;
+function tierOf(p) { let t = 0; for (let i = 0; i < WEAPONS.length; i++) if (p >= WEAPONS[i].p) t = i; return t; }
+
+const FIRE_K  = 0.55;    // 射撃：兵1人×火力1が毎秒与えるダメージ
+const MELEE_K = 0.34;    // 白兵戦（ランチェスターの二乗則）
+const GIANT_K = MELEE_K;
+const giantRamp = (t) => 1 + Math.max(0, t - 1.8) * 1.6;
+const FLOOR = 10;
+
+let state = "title";     // title | run | battle | clear | over | win
+let stage = 1, kills = 0, best = 0, shake = 0, time = 0;
+let dist = 0;            // 流れた距離（路面の模様を動かす）
+let flowV = 5;           // 世界が流れてくる速さ
+
+const crowd = { x: 0, tx: 0, count: 12, power: 1, units: [], fireAcc: 0 };
+let items = [];
+let bullets = [];
+let battle = null;
+let totalZ = 1;
+const parts = [], pops = [];
+
+function rnd(a, b) { return a + Math.random() * (b - a); }
+function pick(arr) { return arr[(Math.random() * arr.length) | 0]; }
+
+/* --- 味方の隊列（ひまわり配置） --- */
+/* 隊列の横幅は兵がどれだけ増えても「1レーンぶん」で固定し、増えた分は後ろへ伸ばす。
+   横に広がると3レーンを同時に撃てて、動かなくても全部取れてしまうため。 */
+const COLS = 6, COL_GAP = 0.33, ROW_GAP = 0.34;
+const crowdHalfW = () => ((Math.min(COLS, Math.max(1, crowd.units.length)) - 1) * COL_GAP) / 2 + 0.2;
+const crowdFront = () => 0.6;
+
+function allySlot(i) {
+  const col = i % COLS, row = (i / COLS) | 0;
+  return { sx: (col - (COLS - 1) / 2) * COL_GAP + (row % 2 ? 0.08 : -0.08), sz: 0.4 - row * ROW_GAP };
+}
+function syncCrowd() {
+  const target = Math.max(0, Math.min(MAX_UNITS, Math.round(crowd.count)));
+  while (crowd.units.length > target) {
+    const u = crowd.units.pop();
+    if (u) puff(u.x, 0.5, u.z, C.ally, 3);
+  }
+  while (crowd.units.length < target) {
+    const s = allySlot(crowd.units.length);
+    crowd.units.push({ sx: s.sx, sz: s.sz, x: crowd.x + s.sx, z: s.sz, ph: Math.random() * 6.28, pop: 1 });
+  }
+}
+function setCount(n) {
+  crowd.count = Math.max(0, n);
+  syncCrowd();
+  if (crowd.count > best) best = Math.round(crowd.count);
+  hArmy.textContent = fmt(crowd.count);
+}
+function setPower(p) {
+  crowd.power = p;
+  hWeap.textContent = WEAPONS[tierOf(p)].n;
+  hPow.textContent = "×" + p.toFixed(2);
+}
+
+/* --- 敵軍（レーンに沿って縦長に並ぶ） --- */
+function squadSlot(i) {
+  const col = i % 5, row = (i / 5) | 0;
+  return { sx: (col - 2) * 0.4 + rnd(-0.06, 0.06), sz: row * 0.46 };
+}
+function syncSquad(sq) {
+  const target = Math.max(0, Math.min(SQUAD_DRAW, Math.round(sq.count)));
+  while (sq.units.length > target) {
+    const u = sq.units.pop();
+    if (u) puff(u.x, 0.5, u.z, C.foe, 3);
+  }
+  while (sq.units.length < target) {
+    const s = squadSlot(sq.units.length);
+    sq.units.push({ sx: s.sx, sz: s.sz, x: sq.x + s.sx, z: sq.z + s.sz, ph: Math.random() * 6.28, pop: 0 });
+  }
+}
+
+/* ============================================================
+   4. ステージ生成
+   見込み兵力 n と見込み火力 p を追いかけながら、
+   「上手く立ち回れば勝てるが、よそ見をすると崩れる」規模に寄せる。
+   ============================================================ */
+let colSeq = 0;
+
+/** 宝の列：手前に木の門、その奥に板が並ぶ */
+function makeColumn(lane, z, st, n, p, kind) {
+  const col = ++colSeq;
+  const x = LANES[lane];
+  const hp = Math.max(3, Math.round(FIRE_K * n * p * rnd(0.8, 1.35)));
+  items.push({ type: "bar", lane, x, z, hp, max: hp, col, flash: 0, dead: false });
+  const T = 6 + ((Math.random() * 6) | 0);
+  let gainN = 0, gainP = 0, mul = false;
+  for (let i = 0; i < T; i++) {
+    const tz = z + 1.5 + i * 1.25;
+    let t;
+    if (kind === "pow") {
+      t = { kind: "pow", v: 0.04 };
+      gainP += 0.04;
+    } else if (i === T - 1 && Math.random() < 0.12) {
+      t = { kind: "mul", v: 2 }; mul = true;
+    } else {
+      t = { kind: "add", v: Math.max(1, Math.round(n * rnd(0.013, 0.022))) };
+      gainN += t.v;
+    }
+    items.push({ type: "tile", lane, x, z: tz, col, kind: t.kind, v: t.v, gone: false });
+  }
+  return { gainN, gainP, mul, len: 1.5 + T * 1.25 };
+}
+
+function makeSquad(lane, z, st, n, p, boss) {
+  const pw = 1 + (st - 1) * 0.32 + (boss ? 0.4 : 0);
+  const pre = (FIRE_K * n * p * 1.6) / pw;                 // 届くまでに撃ち減らせる見込み（門にも弾を割くので控えめ）
+  const grow = Math.min(st, 10) * 0.012;
+  const m = n * Math.sqrt(p / pw) * (boss ? rnd(0.55, 0.66 + grow) : rnd(0.33, 0.46 + grow * 1.5));
+  const count = Math.max(5, Math.round(pre * 0.85 + m));
+  const sq = { type: "squad", lane, x: LANES[lane], z, count, max: count, pw, boss: !!boss, units: [], dead: false };
+  syncSquad(sq);
+  return { sq, m, pw };
+}
+
+function survivors(n, p, en, pe) {
+  const v = n * n - (en * en * pe) / p;
+  return v <= 0 ? 0 : Math.sqrt(v);
+}
+
+function makeGiant(lane, z, st, n, p, king) {
+  n = Math.max(FLOOR, n);
+  const k = Math.min(st, 10);
+  const T = king ? rnd(3.3, 3.9) : rnd(2.5, 3.1);
+  const f = king ? Math.min(0.68, 0.46 + k * 0.022) : Math.min(0.58, 0.30 + k * 0.028);
+  const atk = (f * n) / T;
+  let hp = 0;
+  for (let t = 0; t < T; t += 0.01) hp += GIANT_K * giantRamp(t) * (n - atk * t) * p * 0.01;
+  hp += FIRE_K * n * p * 2.2 * 0.85;                        // 近づくまでに削られる分を上乗せ
+  return {
+    g: {
+      type: "giant", lane, x: LANES[lane], z, king: !!king,
+      hp, max: hp, atk,
+      scale: (king ? 1.4 : 0.95) + k * 0.02,
+      period: king ? 0.78 : 0.92,
+      phase: 0, t: rnd(0, 6), flash: 0, dead: false, fall: 0,
+    },
+    f,
+  };
+}
+
+/* 数値の確定は「画面に見えてきた瞬間」に、その時点の兵力と火力で行う。
+   ステージ開始時の見込みで全部決めると、取り込み具合の差が複利で開いて
+   「楽勝すぎる」か「理不尽に負ける」のどちらかに振れてしまうため。 */
+const READY_Z = 80;
+function finalize(it) {
+  it.ready = true;
+  const n = Math.max(FLOOR, crowd.count), p = crowd.power;
+  if (it.type === "arm") {
+    if (tierOf(crowd.power) >= WMAX) { it.dead = true; return; }   // もう最上位なら出さない
+    it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * rnd(1.6, 2.3)));
+  } else if (it.type === "bar") {
+    it.hp = it.max = Math.max(3, Math.round(FIRE_K * n * p * rnd(0.8, 1.35)));
+  } else if (it.type === "tile") {
+    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022)));
+  } else if (it.type === "squad") {
+    const { sq } = makeSquad(it.lane, it.z, stage, n, p, it.boss);
+    it.count = it.max = sq.count; it.pw = sq.pw;
+    it.units.length = 0; syncSquad(it);
+  } else if (it.type === "giant") {
+    const { g } = makeGiant(it.lane, it.z, stage, n, p, it.king);
+    it.hp = it.max = g.hp; it.atk = g.atk;
+  }
+}
+
+function buildStage(st) {
+  items = []; bullets = [];
+  let n = crowd.count, p = crowd.power;
+  let z = 30;
+  const waves = 5 + Math.min(st, 6);
+  const mid = Math.floor(waves / 2);
+  const armWaves = st >= 3 && Math.random() < 0.5 ? [1, waves - 2] : [1 + ((Math.random() * (waves - 2)) | 0)];
+
+  for (let i = 0; i < waves; i++) {
+    // 敵はふだん中央。後半は左右のレーンからも来る
+    const eLane = (st >= 4 && Math.random() < 0.4) ? pick([0, 2]) : 1;
+    const free = [0, 1, 2].filter((l) => l !== eLane);
+    const two = i % 2 === 0;
+    let gN = 0, gP = 0, gMul = false, len = 0;
+    const lanesForBonus = two ? free : [pick(free)];
+    let armed = false;
+    lanesForBonus.forEach((l, k) => {
+      // 台座は1ステージに1〜2個。全10ステージかけて最上位まで届く配分
+      const wantArm = armWaves.includes(i) && k === lanesForBonus.length - 1;
+      if (wantArm && tierOf(p) < WMAX) {
+        // 武器の台座：撃ち壊せば、その場で武器が一段上がる
+        items.push({ type: "arm", lane: l, x: LANES[l], z: z + k * rnd(2, 6) + 2, hp: 10, max: 10, flash: 0, dead: false });
+        armed = true;
+        return;
+      }
+      const r = makeColumn(l, z + k * rnd(2, 6), st, n, p, "add");
+      gN += r.gainN; gMul = gMul || r.mul;
+      len = Math.max(len, r.len);
+    });
+    // 2本が同時に流れてくるので、実際に取れるのはおよそ片方ぶん
+    const take = st <= 2 ? 0.55 : 0.75;       // 序盤はやさしく、慣れた頃から取り込み前提で組む
+    n = (n + gN * take) * (gMul ? 1.4 : 1);
+    if (armed) p += (WEAPONS[Math.min(WMAX, tierOf(p) + 1)].p - p) * take;
+
+    const ez = z + rnd(5, 8);
+    if (i === mid || (st >= 6 && i === waves - 2)) {
+      const { g, f } = makeGiant(eLane, ez + 4, st, n, p, false);
+      items.push(g);
+      n = Math.max(FLOOR, n * (1 - f));
+    } else {
+      const { sq, m, pw } = makeSquad(eLane, ez, st, n, p, false);
+      items.push(sq);
+      n = Math.max(FLOOR, survivors(n, p, m, pw));
+    }
+    z += Math.max(len, 10) + rnd(12, 17) - Math.min(st, 8) * 0.4;
+  }
+
+  // 最後の波：守護軍、3・6・9・10 は巨人王も
+  const { sq, m, pw } = makeSquad(1, z + 4, st, n, p, true);
+  items.push(sq);
+  n = Math.max(FLOOR, survivors(n, p, m, pw));
+  let endZ = z + 4 + Math.min(sq.count, SQUAD_DRAW) / 5 * 0.46;   // 隊列の奥行きは描く人数で決まる
+  if (st % 3 === 0 || st === FINAL_STAGE) {
+    const { g } = makeGiant(1, endZ + 12, st, n, p, true);
+    items.push(g);
+    endZ += 12;
+  }
+  totalZ = endZ + 4;
+  items.sort((a, b) => a.z - b.z);
+}
+
+/* ============================================================
+   5. エフェクト
+   ============================================================ */
+function puff(x, y, z, color, n) {
+  if (parts.length > 280) return;
+  for (let i = 0; i < n; i++) {
+    parts.push({ x, y, z, color, vx: rnd(-2.2, 2.2), vy: rnd(1.4, 4.6), vz: rnd(-2.2, 2.2), t: 0, life: rnd(0.35, 0.7) });
+  }
+}
+function popText(text, color, x, z, big) {
+  pops.push({ text, color, z, y: 2.0, t: 0, life: 1.1, big: !!big, x });
+}
+function doShake(v) { if (!REDUCED) shake = Math.min(shake + v, 20); }
+
+/* ============================================================
+   6. 入力
+   ============================================================ */
+const keys = Object.create(null);
+addEventListener("keydown", (e) => {
+  keys[e.key] = true;
+  if (["ArrowLeft", "ArrowRight", " "].includes(e.key)) e.preventDefault();
+});
+addEventListener("keyup", (e) => { keys[e.key] = false; });
+
+let dragging = false, lastPX = 0;
+const app = document.getElementById("app");
+app.addEventListener("pointerdown", (e) => {
+  if (e.target.closest("button, .ov")) return;
+  dragging = true; lastPX = e.clientX;
+  app.setPointerCapture && app.setPointerCapture(e.pointerId);
+});
+app.addEventListener("pointermove", (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - lastPX; lastPX = e.clientX;
+  crowd.tx += dx * (ROAD_W * 2.2 / Math.max(W * 0.5, 1));
+});
+const endDrag = () => { dragging = false; };
+app.addEventListener("pointerup", endDrag);
+app.addEventListener("pointercancel", endDrag);
+app.addEventListener("pointerleave", endDrag);
+
+/* ============================================================
+   7. 更新
+   ============================================================ */
+function updateSteer(dt) {
+  const kb = (keys.ArrowRight || keys.d || keys.D ? 1 : 0) - (keys.ArrowLeft || keys.a || keys.A ? 1 : 0);
+  if (kb) crowd.tx += kb * 7.5 * dt;
+  const lim = ROAD_W - 0.7;
+  crowd.tx = Math.max(-lim, Math.min(lim, crowd.tx));
+  crowd.x += (crowd.tx - crowd.x) * (1 - Math.exp(-dt * 11));
+}
+
+function updateCrowdUnits(dt) {
+  const k = 1 - Math.exp(-dt * 9);
+  const lim = ROAD_W - 0.3;
+  for (const p of crowd.units) {
+    const tx = Math.max(-lim, Math.min(lim, crowd.x + p.sx));
+    p.x += (tx - p.x) * k;
+    p.z += (p.sz - p.z) * k;
+    if (p.pop > 0) p.pop = Math.max(0, p.pop - dt * 3.4);
+  }
+}
+
+function updateSquadUnits(sq, dt) {
+  const k = 1 - Math.exp(-dt * 8);
+  for (const p of sq.units) {
+    p.x += (sq.x + p.sx - p.x) * k;
+    p.z += (sq.z + p.sz - p.z) * k;
+  }
+}
+
+const SHOT_GAP = [0.16, 0.16, 0.2, 0.24, 0.26, 0.16, 0.24, 0.32, 0.075, 0.7];   // 発射音の最短間隔（秒）
+let lastShot = 0;
+
+/* --- 射撃 ---------------------------------------------------
+   撃つ弾の数は見た目のために上限を設け、1発の重さで総火力を合わせる。 */
+function fire(dt) {
+  if (!crowd.units.length || crowd.count <= 0) return;
+  const wt = tierOf(crowd.power);
+  const rate = Math.min(40, 4 + crowd.count * 0.45) * WEAPONS[wt].rate;
+  const dps = FIRE_K * crowd.count * crowd.power;
+  crowd.fireAcc += rate * dt;
+  while (crowd.fireAcc >= 1) {
+    crowd.fireAcc -= 1;
+    const u = crowd.units[(Math.random() * crowd.units.length) | 0];
+    bullets.push({ x: u.x, z: u.z + 0.3, pz: u.z, dmg: dps / rate, t: wt });
+    if (state !== "title" && time - lastShot > SHOT_GAP[wt]) { lastShot = time; Snd.shot(wt); }
+  }
+}
+
+/** 弾の進路にある、いちばん手前の標的 */
+function frontOf(it) {
+  if (it.type === "giant") return it.z - 0.5 * it.scale;
+  return it.z;
+}
+function hitTarget(b) {
+  let best = null, bz = Infinity;
+  for (const it of items) {
+    if (it.dead || it.type === "tile") continue;
+    const hw = it.type === "giant" ? 1.4 * it.scale : LANE_HW;
+    if (Math.abs(b.x - it.x) > hw) continue;
+    const zf = frontOf(it);
+    if (zf > b.z || zf < b.pz - 2.6) continue;
+    if (zf < bz) { bz = zf; best = it; }
+  }
+  return best;
+}
+
+function updateBullets(dt) {
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.pz = b.z;
+    b.z += 48 * dt;
+    if (b.z > RANGE) { bullets.splice(i, 1); continue; }
+    if (state === "title") continue;
+    const t = hitTarget(b);
+    if (!t) continue;
+    bullets.splice(i, 1);
+    applyHit(t, b);
+  }
+}
+
+function applyHit(t, b) {
+  if (b.t === 9) {                                   // 砲丸は着弾で爆ぜる
+    puff(b.x, 0.9, frontOf(t), pick(["#3a3a3a", "#f08a3c", C.gold]), 6);
+    if (Math.random() < 0.3) { Snd.hit(); doShake(1.5); }
+  } else if (Math.random() < 0.25) puff(b.x, 0.9, frontOf(t), pick([C.gold, C.cream]), 1);
+  if (t.type === "arm") {
+    t.hp -= b.dmg; t.flash = 1;
+    if (t.hp <= 0) {
+      t.dead = true;
+      const nt = Math.min(WMAX, tierOf(crowd.power) + 1);
+      setPower(WEAPONS[nt].p);
+      for (let i = 0; i < 26; i++) puff(t.x + rnd(-1, 1), rnd(.2, 2), t.z, pick([C.gold, "#fff0cf", C.cream]), 1);
+      popText(WEAPONS[nt].n + "！", C.gold, crowd.x, 1.6, true);
+      for (const u of crowd.units) u.pop = 0.6;       // 全員が一斉に持ち替える
+      Snd.great(); doShake(6);
+    }
+    return;
+  }
+  if (t.type === "bar") {
+    t.hp -= b.dmg; t.flash = 1;
+    if (t.hp <= 0) {
+      t.dead = true;
+      for (let i = 0; i < 16; i++) puff(t.x + rnd(-1, 1), rnd(.2, 1.4), t.z, pick([C.wood, C.woodD, C.iron]), 1);
+      popText("開門", C.gold, t.x, t.z, true);
+      Snd.good(); doShake(3);
+    }
+  } else if (t.type === "squad") {
+    const before = t.count;
+    t.count = Math.max(0, t.count - b.dmg / t.pw);
+    kills += before - t.count;
+    syncSquad(t);
+    if (t.count <= 0.5) {
+      t.dead = true; t.count = 0; t.units.length = 0;
+      popText("撃退", C.gold, t.x, t.z, true);
+      Snd.good();
+    }
+  } else if (t.type === "giant") {
+    t.hp = Math.max(0, t.hp - b.dmg); t.flash = 1;
+    if (t.hp <= 0 && !(battle && battle.giant === t)) killGiant(t);
+  }
+}
+
+function killGiant(g) {
+  g.dead = true; g.fall = 0.001;
+  kills += 1;
+  for (let i = 0; i < 40; i++) puff(g.x + rnd(-2, 2), rnd(.5, 5 * g.scale), g.z, pick([C.gold, C.cream, "#7d8c4f"]), 1);
+  popText(g.king ? "巨人王 撃破" : "巨人 撃破", C.gold, g.x, g.z, true);
+  Snd.win(); doShake(16);
+}
+
+/* --- 流れてきたものが防衛線に届いたとき ------------------------ */
+function onTile(t) {
+  t.gone = true;
+  const inLane = Math.abs(t.x - crowd.x) <= crowdHalfW() + 0.1;   // レーンの境目に立っても両取りはできない
+  if (!inLane) return;
+  if (t.kind === "pow") {
+    setPower(crowd.power + t.v);
+    popText("+" + Math.round(t.v * 100) + "%", C.gold, t.x, 0.8, false);
+    Snd.good();
+  } else if (t.kind === "mul") {
+    setCount(crowd.count * t.v);
+    popText("×" + t.v, C.good, t.x, 0.8, true);
+    Snd.great();
+  } else {
+    setCount(crowd.count + t.v);
+    popText("+" + fmt(t.v), "#9cc0ff", t.x, 0.8, false);
+    if (Math.random() < 0.4) Snd.good();
+  }
+}
+
+function onBarricade(bar) {
+  // 開けないまま届いた門は砕け、奥の板も一緒に失われる
+  bar.dead = true;
+  let lost = 0;
+  for (const it of items) if (it.type === "tile" && it.col === bar.col && !it.gone) { it.gone = true; lost++; puff(it.x, 0.3, it.z, C.roadD, 2); }
+  for (let i = 0; i < 12; i++) puff(bar.x + rnd(-1, 1), rnd(.2, 1.4), bar.z, pick([C.wood, C.woodD]), 1);
+  popText("取り逃し", C.bad, bar.x, 1.2, false);
+  Snd.bad();
+}
+
+function onSquad(sq) {
+  const overlap = Math.abs(crowd.x - sq.x) <= crowdHalfW() + LANE_HW * 0.5;
+  if (overlap) { startBattle(sq); return; }
+  // 受け止めなかった敵は防衛線を抜けて、そのまま兵を削っていく
+  const loss = (sq.count * sq.pw) / crowd.power;
+  sq.dead = true; sq.units.length = 0;
+  setCount(crowd.count - loss);
+  popText("突破された −" + fmt(loss), C.bad, sq.x, 1.2, true);
+  Snd.bad(); doShake(12);
+  if (crowd.count <= 0.5) gameOver();
+}
+
+function startBattle(sq) {
+  battle = { sq, t: 0 };
+  Snd.intense(true);
+  state = "battle";
+  Snd.clash(); doShake(8);
+}
+function startGiant(g) {
+  battle = { giant: g, t: 0 };
+  Snd.intense(true);
+  g.phase = 0.15;
+  state = "battle";
+  Snd.roar(); doShake(12);
+}
+
+function updateSquadBattle(dt) {
+  const sq = battle.sq;
+  battle.t += dt;
+  sq.x += (crowd.x - sq.x) * (1 - Math.exp(-dt * 3));
+  const K = MELEE_K * (1 + Math.max(0, battle.t - 1.8) * 1.6);
+  const dEnemy  = K * crowd.count * crowd.power * dt / sq.pw;
+  const dPlayer = K * sq.count * sq.pw * dt / crowd.power;
+  const before = sq.count;
+  crowd.count = Math.max(0, crowd.count - dPlayer);
+  sq.count = Math.max(0, sq.count - dEnemy);
+  kills += before - sq.count;
+  syncCrowd(); syncSquad(sq);
+  hArmy.textContent = fmt(crowd.count);
+  if (Math.random() < dt * 30) puff(crowd.x + rnd(-1.4, 1.4), rnd(.4, 1.6), sq.z - rnd(0, 1), pick([C.gold, C.foe, C.cream]), 2);
+  if (Math.random() < dt * 9) Snd.clash();
+  doShake(dt * 22);
+  if (crowd.count <= 0.5) { crowd.count = 0; syncCrowd(); gameOver(); return; }
+  if (sq.count <= 0.5) {
+    sq.dead = true; sq.count = 0; sq.units.length = 0;
+    battle = null; state = "run"; Snd.intense(false);
+    setCount(Math.round(crowd.count));
+    popText("撃退", C.gold, sq.x, sq.z, true);
+    Snd.good();
+  }
+}
+
+function updateGiantBattle(dt) {
+  const g = battle.giant;
+  battle.t += dt;
+  g.t += dt;
+  g.x += (crowd.x - g.x) * (1 - Math.exp(-dt * 2));
+  const dmg = GIANT_K * giantRamp(battle.t) * crowd.count * crowd.power * dt;
+  g.hp = Math.max(0, g.hp - dmg);
+  if (Math.random() < dt * 14) g.flash = 1;
+  if (Math.random() < dt * 24) puff(crowd.x + rnd(-1.6, 1.6), rnd(.6, 3 * g.scale), g.z - rnd(0.4, 1.4), pick([C.gold, C.cream]), 2);
+  if (Math.random() < dt * 7) Snd.clash();
+
+  g.phase += dt / g.period;
+  if (g.phase >= 1) {
+    g.phase -= 1;
+    const loss = g.atk * g.period;
+    crowd.count = Math.max(0, crowd.count - loss);
+    syncCrowd();
+    hArmy.textContent = fmt(crowd.count);
+    for (let i = 0; i < 18; i++) puff(g.x + rnd(-2.2, 2.2), 0.3, rnd(-0.5, 1.5), pick([C.roadD, C.foe, C.cream]), 1);
+    popText("−" + fmt(loss), C.bad, g.x, 1.0, true);
+    Snd.boom(); doShake(14 * Math.min(1.4, g.scale));
+  }
+  if (crowd.count <= 0.5) { crowd.count = 0; syncCrowd(); gameOver(); return; }
+  if (g.hp <= 0) {
+    battle = null; state = "run"; Snd.intense(false);
+    setCount(Math.round(crowd.count));
+    killGiant(g);
+  }
+}
+
+function update(dt) {
+  time += dt;
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.t += dt;
+    if (p.t > p.life) { parts.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.z += p.vz * dt;
+    p.y += p.vy * dt; p.vy -= 11 * dt;
+    if (p.y < 0) { p.y = 0; p.vy *= -0.32; }
+  }
+  for (let i = pops.length - 1; i >= 0; i--) {
+    const p = pops[i]; p.t += dt; p.y += dt * 1.5;
+    if (p.t > p.life) pops.splice(i, 1);
+  }
+  if (shake > 0) shake = Math.max(0, shake - dt * 42);
+  for (const it of items) {
+    if (it.flash > 0) it.flash = Math.max(0, it.flash - dt * 6);
+    if (it.type === "giant") {
+      if (!battle || battle.giant !== it) it.t += dt;
+      if (it.dead && it.fall > 0 && it.fall < 1) it.fall = Math.min(1, it.fall + dt * 0.9);
+    }
+  }
+  cam.x += (crowd.x * 0.22 - cam.x) * (1 - Math.exp(-dt * 5));
+
+  if (state === "title") {
+    dist += dt * 3;
+    crowd.tx = Math.sin(time * 0.6) * 1.8;
+    updateSteer(dt); updateCrowdUnits(dt);
+    fire(dt); updateBullets(dt);
+    return;
+  }
+  if (state === "battle") {
+    updateSteer(dt); updateCrowdUnits(dt);
+    fire(dt); updateBullets(dt);
+    if (state !== "battle") return;
+    if (battle.giant) updateGiantBattle(dt);
+    else { updateSquadUnits(battle.sq, dt); updateSquadBattle(dt); }
+    return;
+  }
+  if (state !== "run") return;
+
+  updateSteer(dt); updateCrowdUnits(dt);
+  fire(dt); updateBullets(dt);
+  if (state !== "run") return;
+
+  const step = flowV * dt;
+  dist += step;
+  const front = crowdFront();
+  let remaining = 0;
+
+  for (const it of items) {
+    if (!it.ready && it.z < READY_Z) finalize(it);
+    if (it.type === "tile") {
+      if (it.gone) continue;
+      it.z -= step;
+      if (it.z <= 0.3) onTile(it);
+      else remaining = Math.max(remaining, it.z);
+      continue;
+    }
+    if (it.dead) { if (it.type === "giant" && it.fall < 1) it.z -= step * 0.3; continue; }
+    it.z -= step;
+    remaining = Math.max(remaining, it.z);
+
+    if (it.type === "arm") {
+      if (it.z <= front + 0.4) {
+        it.dead = true;
+        for (let i = 0; i < 10; i++) puff(it.x + rnd(-0.8, 0.8), rnd(.2, 1.2), it.z, C.roadD, 1);
+        popText("取り逃し", C.bad, it.x, 1.2, false);
+        Snd.bad();
+      }
+    } else if (it.type === "bar") {
+      if (it.z <= front + 0.4) onBarricade(it);
+    } else if (it.type === "squad") {
+      updateSquadUnits(it, dt);
+      if (it.z <= front + 0.3) { onSquad(it); if (state !== "run") return; }
+    } else if (it.type === "giant") {
+      // 巨人はレーンの壁をまたいで、隊列のいる場所へ寄ってくる
+      if (it.z < 22) it.x += (crowd.x - it.x) * (1 - Math.exp(-dt * 1.2));
+      if (it.z - 0.9 * it.scale <= front) { it.z = front + 0.9 * it.scale; startGiant(it); return; }
+    }
+  }
+  hBar.style.width = Math.min(100, (1 - remaining / totalZ) * 100) + "%";
+  if (remaining <= 0 && !items.some((it) => it.type === "giant" && it.dead && it.fall < 1)) stageClear();
+}
+
+/* ============================================================
+   8. 描画
+   ============================================================ */
+// 背景は描き込んだ一枚絵。読み込めなかったときはグラデーションだけで遊べる
+const valleyArt = new Image();
+valleyArt.src = "assets/ancient-valley.png";
+function drawSky() {
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, "#70aaa9"); sky.addColorStop(0.4, "#c1d5bf"); sky.addColorStop(1, "#144f50");
+  ctx.fillStyle = sky; ctx.fillRect(-40, -40, W + 80, H + 80);
+  if (valleyArt.complete && valleyArt.naturalWidth) {
+    const dh = H + 80, dw = Math.max(W + 100, dh * valleyArt.naturalWidth / valleyArt.naturalHeight);
+    ctx.drawImage(valleyArt, (W - dw) / 2 - cam.x * 3, -30, dw, dh);
+  }
+  const mist = ctx.createLinearGradient(0, horizon - 30, 0, H);
+  mist.addColorStop(0, "rgba(185,216,195,0)");
+  mist.addColorStop(0.5, "rgba(22,91,84,.06)");
+  mist.addColorStop(1, "rgba(8,43,44,.32)");
+  ctx.fillStyle = mist; ctx.fillRect(0, 0, W, H);
+}
+function drawGround() { /* 谷の絵が地面を兼ねる */ }
+
+function quad(a, b, c, d, fill) {
+  if (!a || !b || !c || !d) return;
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+  ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y);
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+}
+
+
+function drawRoad() {
+  const zN = cam.z + 0.9, zF = DRAW_Z;
+  quad(proj(-ROAD_W, 0, zN), proj(ROAD_W, 0, zN), proj(ROAD_W, 0, zF), proj(-ROAD_W, 0, zF), "#99886c");
+
+  // 石畳。敷石の色は「世界での行番号」で決めるので、流れても模様がちらつかない
+  const step = 2.5, cols = 6, cw = ROAD_W * 2 / cols;
+  const shades = ["#cbbc98", "#d2c4a2", "#c5b590", "#d9cba9", "#cabb98"];
+  const off = dist % step, base = Math.floor(dist / step);
+  for (let r = Math.floor((zN + off) / step); r * step - off < zF; r++) {
+    const z0 = r * step - off;
+    const za = Math.max(zN, z0 + 0.035), zb = Math.min(zF, z0 + step - 0.035);
+    if (zb <= za) continue;
+    const row = r + base;
+    for (let col = 0; col < cols; col++) {
+      const x0 = -ROAD_W + col * cw + 0.035, x1 = x0 + cw - 0.07;
+      const shade = ((row * 17 + col * 7) % shades.length + shades.length) % shades.length;
+      quad(proj(x0, 0.008, za), proj(x1, 0.008, za), proj(x1, 0.008, zb), proj(x0, 0.008, zb), shades[shade]);
+      quad(proj(x0, 0.01, za), proj(x1, 0.01, za), proj(x1, 0.01, Math.min(zb, za + 0.055)), proj(x0, 0.01, Math.min(zb, za + 0.055)), "#e8ddbd");
+      if ((row + col * 3) % 9 === 0) {
+        const a = proj(x0 + cw * 0.3, 0.015, za + 0.3), b = proj(x0 + cw * 0.48, 0.015, za + 0.7), c = proj(x0 + cw * 0.42, 0.015, za + 1.0);
+        if (a && b && c) {
+          ctx.strokeStyle = "rgba(105,91,63,.26)"; ctx.lineWidth = Math.max(0.5, a.s * 0.016);
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // 路肩の縁石と金の帯
+  for (const side of [-1, 1]) {
+    const a = side * ROAD_W, b = side * (ROAD_W + 0.42);
+    quad(proj(a, 0.4, zN), proj(b, 0.4, zN), proj(b, 0.4, zF), proj(a, 0.4, zF), "#eadbb6");
+    quad(proj(a, 0, zN), proj(a, 0.4, zN), proj(a, 0.4, zF), proj(a, 0, zF), "#8c7c5b");
+    quad(proj(side * (ROAD_W - 0.18), 0.018, zN), proj(side * (ROAD_W - 0.27), 0.018, zN),
+         proj(side * (ROAD_W - 0.27), 0.018, zF), proj(side * (ROAD_W - 0.18), 0.018, zF), "#ad8c48");
+  }
+
+  // レーンを仕切る低い石壁（隊列より奥だけ。手前は兵が行き来できる広場）
+  for (const sgn of [-1, 1]) {
+    const xc = sgn * WALL_X, hw = 0.12, h = 0.42, z0 = 2.2;
+    const inner = xc - sgn * hw;
+    quad(proj(inner, 0, z0), proj(inner, h, z0), proj(inner, h, zF), proj(inner, 0, zF), "#8c7c5b");
+    quad(proj(xc - hw, h, z0), proj(xc + hw, h, z0), proj(xc + hw, h, zF), proj(xc - hw, h, zF), "#eadbb6");
+  }
+
+  // 蔦の絡む石柱（奥から手前へ）
+  const pstep = 13, poff = dist % pstep;
+  for (let z = Math.floor(zF / pstep) * pstep - poff; z > zN; z -= pstep) {
+    for (const side of [-1, 1]) {
+      const x = side * (ROAD_W + 1.5), top = proj(x, 3.4, z), bot = proj(x, 0, z);
+      if (!top || !bot) continue;
+      const w = 0.85 * bot.s, hh = bot.y - top.y;
+      ctx.globalAlpha = 0.35 + 0.65 * Math.max(0, 1 - (z - zN) / DRAW_Z);
+      ctx.fillStyle = "#716d53"; ctx.fillRect(bot.x - w * 0.46, top.y, w, hh);
+      ctx.fillStyle = "#cfbf95"; ctx.fillRect(bot.x - w * 0.46, top.y, w * 0.7, hh);
+      ctx.fillStyle = "#ead9ad"; ctx.fillRect(bot.x - w * 0.46, top.y, w * 0.13, hh);
+      ctx.fillStyle = "rgba(103,89,61,.3)";
+      for (let f = 0; f < 3; f++) ctx.fillRect(bot.x - w * 0.25 + f * w * 0.18, top.y + w * 0.2, w * 0.045, Math.max(0, hh - w * 0.4));
+      ctx.fillStyle = "#a49672"; ctx.fillRect(bot.x - w * 0.68, bot.y - w * 0.2, w * 1.36, w * 0.22);
+      ctx.fillStyle = "#f0ddb1"; ctx.fillRect(bot.x - w * 0.67, top.y - w * 0.18, w * 1.34, w * 0.22);
+      ctx.fillStyle = "#a58b52"; ctx.fillRect(bot.x - w * 0.56, top.y + w * 0.12, w * 1.12, w * 0.08);
+      ctx.fillStyle = "#517b54";
+      const seed = Math.round((z + dist) / pstep);
+      for (let j = 0; j < 4; j++) {
+        ctx.beginPath();
+        ctx.ellipse(bot.x + w * (0.18 + Math.sin(j * 2 + seed) * 0.15), top.y + w * (0.22 + j * 0.28), w * 0.13, w * 0.2, -0.5, 0, 6.2832);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+/* --- 武器 --------------------------------------------------
+   遠距離武器。手元を原点に、真上（＝前方）へ向けて構える。u は兵の身長(px)基準。 */
+function drawWeapon(hx, hy, u, tier, swing) {
+  if (tier <= 0) return;
+  ctx.save();
+  ctx.translate(hx, hy);
+  ctx.rotate(-0.22 + swing * 0.05);            // 飛び道具なので構えはほとんど揺らさない
+  const R = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(u * x, u * y, u * w, u * h); };
+  const wood = "#7a5230", woodL = "#a0703f", metal = "#353a41", metalL = "#6b737c", gold = C.gold;
+
+  if (tier === 1) {                            // スリング：革ひもと石
+    ctx.strokeStyle = "#6b4a2e"; ctx.lineWidth = Math.max(1, u * 0.035);
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(u * 0.14, -u * 0.2, 0, -u * 0.36); ctx.stroke();
+    ctx.fillStyle = "#8d8f93"; ctx.beginPath(); ctx.arc(0, -u * 0.39, u * 0.065, 0, 6.2832); ctx.fill();
+  } else if (tier === 2) {                     // 弓：弓なりの木と弦、つがえた矢
+    ctx.strokeStyle = woodL; ctx.lineWidth = Math.max(1.2, u * 0.055);
+    ctx.beginPath(); ctx.arc(-u * 0.2, -u * 0.3, u * 0.36, -1.1, 1.1); ctx.stroke();
+    ctx.strokeStyle = "#efe6d0"; ctx.lineWidth = Math.max(0.6, u * 0.015);
+    ctx.beginPath(); ctx.moveTo(-u * 0.037, -u * 0.62); ctx.lineTo(-u * 0.037, u * 0.02); ctx.stroke();
+    R(0.0, -0.6, 0.025, 0.58, "#caa46a");
+    ctx.fillStyle = metalL;
+    ctx.beginPath(); ctx.moveTo(-u * 0.03, -u * 0.6); ctx.lineTo(u * 0.055, -u * 0.6); ctx.lineTo(u * 0.012, -u * 0.7); ctx.fill();
+  } else if (tier === 3) {                     // クロスボウ：銃床に横向きの弓
+    R(-0.04, -0.52, 0.08, 0.52, wood);
+    ctx.strokeStyle = woodL; ctx.lineWidth = Math.max(1.2, u * 0.05);
+    ctx.beginPath(); ctx.arc(0, -u * 0.26, u * 0.26, Math.PI + 0.55, Math.PI * 2 - 0.55); ctx.stroke();
+    ctx.strokeStyle = "#efe6d0"; ctx.lineWidth = Math.max(0.6, u * 0.015);
+    ctx.beginPath(); ctx.moveTo(-u * 0.22, -u * 0.39); ctx.lineTo(u * 0.22, -u * 0.39); ctx.stroke();
+    R(-0.015, -0.66, 0.03, 0.2, metalL);
+  } else if (tier === 4) {                     // 火縄銃：長い木の台と細い銃身、火縄
+    R(-0.045, -0.46, 0.09, 0.46, wood);
+    R(-0.022, -0.92, 0.044, 0.48, metal);
+    ctx.fillStyle = "#e0643a"; ctx.beginPath(); ctx.arc(u * 0.06, -u * 0.3, u * 0.025, 0, 6.2832); ctx.fill();
+  } else if (tier === 5) {                     // 拳銃
+    R(-0.04, -0.16, 0.08, 0.16, "#4a3a2e");
+    R(-0.05, -0.4, 0.1, 0.25, metal);
+    R(-0.05, -0.4, 0.1, 0.04, metalL);
+  } else if (tier === 6) {                     // ライフル：スコープ付き
+    R(-0.05, -0.34, 0.1, 0.34, wood);
+    R(-0.045, -0.6, 0.09, 0.27, metal);
+    R(-0.02, -1.0, 0.04, 0.42, metal);
+    R(0.05, -0.58, 0.05, 0.2, "#1f2328");
+  } else if (tier === 7) {                     // ショットガン：二連の銃身
+    R(-0.05, -0.4, 0.1, 0.4, woodL);
+    R(-0.055, -0.9, 0.05, 0.5, metal);
+    R(0.005, -0.9, 0.05, 0.5, metal);
+    R(-0.06, -0.62, 0.12, 0.08, wood);
+  } else if (tier === 8) {                     // マシンガン：太い機関部と放熱筒、弾帯
+    R(-0.08, -0.56, 0.16, 0.48, metal);
+    R(-0.05, -0.98, 0.1, 0.44, metalL);
+    ctx.fillStyle = "#1f2328";
+    for (let i = 0; i < 4; i++) ctx.fillRect(-u * 0.03, -u * (0.62 + i * 0.09), u * 0.06, u * 0.03);
+    ctx.fillStyle = gold;
+    for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-u * (0.12 + i * 0.03), -u * (0.34 - i * 0.07), u * 0.025, 0, 6.2832); ctx.fill(); }
+  } else {                                     // 大砲：肩に担ぐ太い砲身
+    R(-0.11, -0.86, 0.22, 0.96, metal);
+    R(-0.11, -0.86, 0.22, 0.06, gold);
+    R(-0.11, -0.2, 0.22, 0.05, gold);
+    ctx.fillStyle = "#101214";
+    ctx.beginPath(); ctx.ellipse(0, -u * 0.86, u * 0.08, u * 0.035, 0, 0, 6.2832); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* --- 兵士 ------------------------------------------------- */
+// 兵の絵は色と武器段階ごとに一度だけ描いて使い回す（数百人でも軽い）
+const soldierCache = new Map();
+function soldierSprite(body, bodyD, skin, wt) {
+  const key = body + ":" + (wt >= 4 ? 1 : 0);
+  if (soldierCache.has(key)) return soldierCache.get(key);
+  const sprite = document.createElement("canvas"); sprite.width = 96; sprite.height = 144;
+  const c = sprite.getContext("2d"), advanced = wt >= 4;       // 銃を持つ段階から装備が上等になる
+  const round = (x, y, w, h, r, color) => { c.fillStyle = color; c.beginPath(); c.roundRect(x, y, w, h, r); c.fill(); };
+  round(27, 105, 16, 30, 5, "#303b43"); round(53, 105, 16, 30, 5, "#303b43");
+  round(23, 128, 22, 10, 4, "#24303a"); round(52, 128, 23, 10, 4, "#24303a");
+  round(16, 53, 64, 63, 15, "#23313c");
+  const armor = c.createLinearGradient(20, 0, 78, 0);
+  armor.addColorStop(0, "#8fbbcf"); armor.addColorStop(0.2, body); armor.addColorStop(1, bodyD);
+  round(20, 55, 56, 56, 12, armor);
+  round(25, 63, 46, 26, 6, advanced ? "#a9b8b5" : body);
+  round(25, 66, 5, 22, 2, "rgba(255,255,255,.25)");
+  round(20, 98, 56, 9, 2, "#654c31"); round(42, 96, 12, 12, 2, "#efd283");
+  round(11, 57, 21, 15, 6, advanced ? "#e3c67b" : "#c4c8b7");
+  round(64, 57, 21, 15, 6, advanced ? "#b39a56" : "#8d9b98");
+  round(10, 71, 14, 26, 5, bodyD); round(72, 71, 14, 26, 5, bodyD);
+  round(11, 92, 12, 12, 5, skin); round(73, 92, 12, 12, 5, skin);
+  round(28, 19, 40, 39, 13, "#26323b"); round(32, 28, 32, 29, 9, skin);
+  const helmet = c.createLinearGradient(27, 0, 68, 0);
+  helmet.addColorStop(0, "#f1dfa3"); helmet.addColorStop(0.45, "#bcaa70"); helmet.addColorStop(1, "#6e735e");
+  round(26, 14, 44, 23, 13, helmet); round(25, 30, 46, 7, 2, "#e2cb86");
+  round(27, 33, 7, 19, 3, "#9a946a"); round(62, 33, 7, 19, 3, "#77795e");
+  round(38, 40, 5, 4, 1, "#343638"); round(53, 40, 5, 4, 1, "#343638");
+  round(43, 5, 10, 23, 4, advanced ? "#e5bd58" : body);
+  soldierCache.set(key, sprite);
+  return sprite;
+}
+function drawUnit(u, body, bodyD, skin, t, wt) {
+  const p = proj(u.x, 0, u.z); if (!p || p.s < 2.2) return;
+  const bob = Math.sin(t * 12 + u.ph), lift = Math.max(0, bob) * 0.10 * p.s;
+  const h = 1.13 * p.s * (1 - u.pop * 0.55), w = 0.75 * p.s * (1 + u.pop * 0.3);
+  ctx.fillStyle = "rgba(21,34,29,.24)";
+  ctx.beginPath(); ctx.ellipse(p.x + p.s * 0.08, p.y, p.s * 0.28, p.s * 0.095, 0, 0, 6.2832); ctx.fill();
+  if (p.s < 7) { ctx.fillStyle = body; ctx.fillRect(p.x - w * 0.3, p.y - h * 0.8, w * 0.6, h * 0.8); return; }
+  const feet = p.y - lift;
+  ctx.drawImage(soldierSprite(body, bodyD, skin, wt), p.x - w / 2, feet - h, w, h);
+  if (wt > 0 && p.s >= 8) drawWeapon(p.x + w * 0.42, feet - h * 0.43, h * 0.88, wt, bob);
+}
+
+function drawHost(units, ally, t, wt) {
+  const order = units.slice().sort((a, b) => b.z - a.z);
+  const body = ally ? C.ally : C.foe, bodyD = ally ? C.allyD : C.foeD, skin = ally ? C.skin : C.skinF;
+  for (const u of order) drawUnit(u, body, bodyD, skin, t, wt);
+}
+
+/* --- 宝の板 ------------------------------------------------ */
+function drawTile(t) {
+  const x0 = t.x - 0.86, x1 = t.x + 0.86, z0 = t.z, z1 = t.z + 1.05, h = 0.22;
+  const a = proj(x0, h, z0), b = proj(x1, h, z0);
+  if (!a || !b) return;
+  const fade = Math.max(0, Math.min(1, (DRAW_Z - t.z) / 30));
+  ctx.globalAlpha = fade;
+  let top, side, txt;
+  if (t.kind === "pow")      { top = "#f0bd4f"; side = "#a87a25"; txt = "#4a300a"; }
+  else if (t.kind === "mul") { top = "#5cc06e"; side = "#2f7a3d"; txt = "#0e2712"; }
+  else                       { top = C.blue;    side = C.blueD;   txt = "#ffffff"; }
+  quad(proj(x0, 0, z0), proj(x1, 0, z0), b, a, side);
+  quad(a, b, proj(x1, h, z1), proj(x0, h, z1), top);
+  const c = proj(t.x, h, z0 + 0.52);
+  if (c) {
+    const label = t.kind === "pow" ? "+" + Math.round(t.v * 100) + "%" : (t.kind === "mul" ? "×" : "+") + fmt(t.v);
+    let fs = Math.min(c.s * 0.62, 40);
+    if (fs >= 6) {
+      ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+      const mw = ctx.measureText(label).width;
+      if (mw > c.s * 1.5) { fs *= (c.s * 1.5) / mw; ctx.font = fs + 'px Chango, "Arial Black", sans-serif'; }
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = txt;
+      ctx.fillText(label, c.x, c.y);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* --- 木の門 ------------------------------------------------ */
+function drawBar(bar) {
+  const x0 = bar.x - 1.0, x1 = bar.x + 1.0, h = 1.5, d = 0.45;
+  const tl = proj(x0, h, bar.z), br = proj(x1, 0, bar.z);
+  if (!tl || !br) return;
+  const fade = Math.max(0, Math.min(1, (DRAW_Z - bar.z) / 30));
+  ctx.globalAlpha = fade;
+  // 天面
+  quad(tl, proj(x1, h, bar.z), proj(x1, h, bar.z + d), proj(x0, h, bar.z + d), C.woodD);
+  const w = br.x - tl.x, hh = br.y - tl.y;
+  ctx.fillStyle = C.wood;
+  ctx.fillRect(tl.x, tl.y, w, hh);
+  ctx.strokeStyle = "rgba(60,40,22,.55)";
+  ctx.lineWidth = Math.max(1, w * 0.012);
+  for (let i = 1; i < 5; i++) { const x = tl.x + (w * i) / 5; ctx.beginPath(); ctx.moveTo(x, tl.y); ctx.lineTo(x, br.y); ctx.stroke(); }
+  ctx.fillStyle = C.iron;
+  ctx.fillRect(tl.x, tl.y + hh * 0.08, w, hh * 0.1);
+  ctx.fillRect(tl.x, tl.y + hh * 0.78, w, hh * 0.1);
+  if (bar.flash > 0.4) { ctx.fillStyle = "rgba(255,240,210,.28)"; ctx.fillRect(tl.x, tl.y, w, hh); }
+  // 残り回数
+  const fs = Math.min(hh * 0.6, w * 0.42);
+  if (fs > 7) {
+    const label = fmt(Math.ceil(bar.hp));
+    ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+    let f2 = fs; const mw = ctx.measureText(label).width;
+    if (mw > w * 0.9) { f2 = fs * (w * 0.9) / mw; ctx.font = f2 + 'px Chango, "Arial Black", sans-serif'; }
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, f2 * 0.16);
+    ctx.strokeStyle = "rgba(20,15,12,.8)";
+    ctx.strokeText(label, tl.x + w / 2, tl.y + hh * 0.48);
+    ctx.fillStyle = "#fff3da";
+    ctx.fillText(label, tl.x + w / 2, tl.y + hh * 0.48);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* --- 武器の台座 ---------------------------------------------
+   次に手に入る武器を掲げた石の台座。撃ち壊すと全員がその武器に持ち替える */
+function drawArm(a) {
+  const x0 = a.x - 0.85, x1 = a.x + 0.85, h = 1.1, d = 0.9;
+  const tl = proj(x0, h, a.z), br = proj(x1, 0, a.z);
+  if (!tl || !br) return;
+  const fade = Math.max(0, Math.min(1, (DRAW_Z - a.z) / 30));
+  ctx.globalAlpha = fade;
+  quad(tl, proj(x1, h, a.z), proj(x1, h, a.z + d), proj(x0, h, a.z + d), "#efe3c4");   // 天面
+  const w = br.x - tl.x, hh = br.y - tl.y;
+  const g = ctx.createLinearGradient(0, tl.y, 0, br.y);
+  g.addColorStop(0, "#d9c9a3"); g.addColorStop(1, "#a8946c");
+  ctx.fillStyle = g;
+  ctx.fillRect(tl.x, tl.y, w, hh);
+  ctx.fillStyle = C.gold;                                      // 金の縁取り
+  ctx.fillRect(tl.x, tl.y, w, hh * 0.1);
+  ctx.fillRect(tl.x, br.y - hh * 0.1, w, hh * 0.1);
+  if (a.flash > 0.4) { ctx.fillStyle = "rgba(255,240,210,.35)"; ctx.fillRect(tl.x, tl.y, w, hh); }
+
+  // 台座の上に浮かぶ、次の武器
+  const nt = Math.min(WMAX, tierOf(crowd.power) + 1);
+  const top = proj(a.x, h, a.z + d / 2);
+  if (top && top.s > 3) {
+    const u = top.s * 2.4;
+    const bob = Math.sin(time * 3 + a.z) * u * 0.05;
+    ctx.fillStyle = "rgba(255,226,140,.28)";
+    ctx.beginPath(); ctx.arc(top.x, top.y - u * 0.5 + bob, u * 0.5, 0, 6.2832); ctx.fill();
+    ctx.save();
+    ctx.translate(top.x, top.y - u * 0.05 + bob);
+    ctx.rotate(0.4);                                           // drawWeapon の傾きを打ち消して真っすぐ立てる
+    drawWeapon(0, 0, u, Math.max(1, nt), 0);
+    ctx.restore();
+    const fs2 = Math.max(11, Math.min(u * 0.26, 30));
+    ctx.font = "700 " + fs2 + 'px "Barlow Semi Condensed", "Hiragino Sans", sans-serif';
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, fs2 * 0.3);
+    ctx.strokeStyle = "rgba(20,15,12,.8)";
+    ctx.strokeText(WEAPONS[nt].n, top.x, top.y - u * 1.15 + bob);
+    ctx.fillStyle = C.gold;
+    ctx.fillText(WEAPONS[nt].n, top.x, top.y - u * 1.15 + bob);
+  }
+
+  // 残り耐久
+  const fs = Math.min(hh * 0.6, w * 0.4);
+  if (fs > 7) {
+    const label = fmt(Math.ceil(a.hp));
+    ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+    let f2 = fs; const mw = ctx.measureText(label).width;
+    if (mw > w * 0.9) { f2 = fs * (w * 0.9) / mw; ctx.font = f2 + 'px Chango, "Arial Black", sans-serif'; }
+    ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, f2 * 0.16);
+    ctx.strokeStyle = "rgba(20,15,12,.8)";
+    ctx.strokeText(label, tl.x + w / 2, tl.y + hh * 0.52);
+    ctx.fillStyle = "#fff3da";
+    ctx.fillText(label, tl.x + w / 2, tl.y + hh * 0.52);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawSquadBanner(sq) {
+  const p = proj(sq.x, 2.3, sq.z);
+  if (!p) return;
+  const fs = Math.min(0.85 * p.s, 56);
+  if (fs < 8) return;
+  ctx.globalAlpha = Math.max(0, Math.min(1, (DRAW_Z - sq.z) / 30));
+  ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  const label = fmt(Math.ceil(sq.count));
+  ctx.lineWidth = Math.max(2, fs * 0.16);
+  ctx.strokeStyle = "rgba(20,15,12,.75)";
+  ctx.strokeText(label, p.x, p.y);
+  ctx.fillStyle = sq.boss ? "#ffd9a0" : "#ffd2cd";
+  ctx.fillText(label, p.x, p.y);
+  if (sq.boss) {
+    const fs2 = fs * 0.36;
+    ctx.font = "700 " + fs2 + 'px "Barlow Semi Condensed", "Hiragino Sans", sans-serif';
+    ctx.lineWidth = Math.max(2, fs2 * 0.3);
+    ctx.strokeText("守護軍", p.x, p.y - fs * 0.72);
+    ctx.fillStyle = C.gold;
+    ctx.fillText("守護軍", p.x, p.y - fs * 0.72);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* --- 巨人 -------------------------------------------------- */
+const GI = {
+  skin: "#7d8c4f", skinD: "#5f6d3a", skinL: "#98a866",
+  cloth: "#6b4a32", clothD: "#4d3322",
+  club: "#7a5230", clubD: "#5a3b22",
+  horn: "#e8dcbf",
+};
+
+/** 腕の角度。0 = 真下、負 = 外側から頭上へ振り上げ */
+function giantArm(g) {
+  const fighting = battle && battle.giant === g;
+  if (!fighting) return 0.25 + Math.sin(g.t * 1.3) * 0.12;
+  const p = g.phase;
+  if (p < 0.72) {                              // ゆっくり振りかぶる
+    const e = p / 0.72;
+    return 0.25 + (-2.75 - 0.25) * (1 - (1 - e) * (1 - e));
+  }
+  const e = (p - 0.72) / 0.28;                 // 一気に振り下ろす
+  return -2.75 + (0.55 + 2.75) * e * e;
+}
+
+function drawGiant(g) {
+  if (g.dead && g.fall >= 1) return;
+  const base = proj(g.x, 0, g.z);
+  if (!base) return;
+  const s = base.s;
+  const alpha = Math.max(0, Math.min(1, (DRAW_Z - (g.z - cam.z)) / 34)) * (1 - g.fall);
+  if (alpha <= 0) return;
+
+  const U = 6.6 * g.scale * s;                 // 全高(px)。兵の約7倍
+  const breath = Math.sin(g.t * 2.1) * 0.012;
+  const jitter = g.flash * U * 0.006 * (Math.random() - 0.5);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // 影
+  ctx.fillStyle = "rgba(0,0,0,.28)";
+  ctx.beginPath();
+  ctx.ellipse(base.x, base.y, U * 0.30, U * 0.07, 0, 0, 6.2832);
+  ctx.fill();
+
+  ctx.translate(base.x + jitter, base.y);
+  if (g.fall > 0) {                            // 後ろへ倒れて沈む
+    ctx.rotate(g.fall * 0.9);
+    ctx.translate(0, g.fall * U * 0.25);
+  }
+  ctx.scale(1, 1 + breath);
+
+  const leg = (dx) => {
+    ctx.fillStyle = GI.skinD;
+    ctx.beginPath(); ctx.roundRect(dx - U * 0.075, -U * 0.36, U * 0.15, U * 0.36, U * 0.04); ctx.fill();
+    ctx.fillStyle = GI.clothD;                 // 足首の布
+    ctx.fillRect(dx - U * 0.085, -U * 0.07, U * 0.17, U * 0.05);
+  };
+  leg(-U * 0.10); leg(U * 0.10);
+
+  // 腰布
+  ctx.fillStyle = GI.cloth;
+  ctx.beginPath();
+  ctx.moveTo(-U * 0.22, -U * 0.44);
+  ctx.lineTo(U * 0.22, -U * 0.44);
+  ctx.lineTo(U * 0.18, -U * 0.30);
+  ctx.lineTo(0, -U * 0.26);
+  ctx.lineTo(-U * 0.18, -U * 0.30);
+  ctx.closePath(); ctx.fill();
+
+  // 胴（樽型）
+  ctx.fillStyle = GI.skin;
+  ctx.beginPath(); ctx.roundRect(-U * 0.23, -U * 0.78, U * 0.46, U * 0.38, U * 0.12); ctx.fill();
+  ctx.fillStyle = GI.skinL;                    // 胸と腹のハイライト
+  ctx.beginPath(); ctx.ellipse(0, -U * 0.60, U * 0.13, U * 0.11, 0, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = GI.clothD;                   // たすき
+  ctx.save(); ctx.rotate(-0.55);
+  ctx.fillRect(-U * 0.03 + U * 0.33, -U * 0.72, U * 0.05, U * 0.46);
+  ctx.restore();
+  ctx.fillStyle = GI.clothD;                   // ベルト
+  ctx.fillRect(-U * 0.23, -U * 0.46, U * 0.46, U * 0.05);
+  ctx.fillStyle = C.gold;
+  ctx.fillRect(-U * 0.035, -U * 0.465, U * 0.07, U * 0.06);
+
+  // 左腕（だらりと下げる）
+  ctx.save();
+  ctx.translate(-U * 0.24, -U * 0.72);
+  ctx.rotate(0.18 + Math.sin(g.t * 1.3 + 1) * 0.05);
+  ctx.fillStyle = GI.skinD;
+  ctx.beginPath(); ctx.roundRect(-U * 0.06, 0, U * 0.12, U * 0.34, U * 0.05); ctx.fill();
+  ctx.fillStyle = GI.skin;
+  ctx.beginPath(); ctx.arc(0, U * 0.36, U * 0.07, 0, 6.2832); ctx.fill();
+  ctx.restore();
+
+  // 頭
+  const hy = -U * 0.86;
+  ctx.fillStyle = GI.skin;
+  ctx.beginPath(); ctx.arc(0, hy, U * 0.11, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = GI.skinD;                    // 眉の張り出し
+  ctx.fillRect(-U * 0.09, hy - U * 0.03, U * 0.18, U * 0.03);
+  ctx.fillStyle = g.king ? "#ffcf5a" : "#ffe7a3"; // 目
+  ctx.beginPath(); ctx.arc(-U * 0.04, hy, U * 0.016, 0, 6.2832); ctx.fill();
+  ctx.beginPath(); ctx.arc(U * 0.04, hy, U * 0.016, 0, 6.2832); ctx.fill();
+  ctx.fillStyle = GI.horn;                     // 牙
+  ctx.beginPath(); ctx.moveTo(-U * 0.045, hy + U * 0.05); ctx.lineTo(-U * 0.03, hy + U * 0.05); ctx.lineTo(-U * 0.04, hy + U * 0.025); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(U * 0.045, hy + U * 0.05); ctx.lineTo(U * 0.03, hy + U * 0.05); ctx.lineTo(U * 0.04, hy + U * 0.025); ctx.fill();
+  // 角
+  for (const sg of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(sg * U * 0.06, hy - U * 0.08);
+    ctx.quadraticCurveTo(sg * U * 0.15, hy - U * 0.14, sg * U * 0.13, hy - U * 0.22);
+    ctx.lineTo(sg * U * 0.09, hy - U * 0.09);
+    ctx.closePath(); ctx.fill();
+  }
+  if (g.king) {                                // 王冠
+    ctx.fillStyle = C.gold;
+    ctx.beginPath();
+    ctx.moveTo(-U * 0.075, hy - U * 0.09);
+    ctx.lineTo(-U * 0.075, hy - U * 0.17);
+    ctx.lineTo(-U * 0.035, hy - U * 0.12);
+    ctx.lineTo(0, hy - U * 0.19);
+    ctx.lineTo(U * 0.035, hy - U * 0.12);
+    ctx.lineTo(U * 0.075, hy - U * 0.17);
+    ctx.lineTo(U * 0.075, hy - U * 0.09);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // 右腕と棍棒（振りかぶって叩きつける）
+  ctx.save();
+  ctx.translate(U * 0.24, -U * 0.72);
+  ctx.rotate(-giantArm(g));
+  ctx.fillStyle = GI.skinD;
+  ctx.beginPath(); ctx.roundRect(-U * 0.06, 0, U * 0.12, U * 0.34, U * 0.05); ctx.fill();
+  ctx.translate(0, U * 0.35);
+  ctx.fillStyle = GI.skin;
+  ctx.beginPath(); ctx.arc(0, 0, U * 0.075, 0, 6.2832); ctx.fill();
+  ctx.rotate(-1.35);                           // 棍棒は前腕の先から前方へ
+  ctx.fillStyle = GI.clubD;
+  ctx.fillRect(-U * 0.025, -U * 0.02, U * 0.05, U * 0.16);
+  ctx.fillStyle = GI.club;
+  ctx.beginPath();
+  ctx.moveTo(-U * 0.035, U * 0.12);
+  ctx.lineTo(U * 0.035, U * 0.12);
+  ctx.lineTo(U * 0.075, U * 0.46);
+  ctx.quadraticCurveTo(0, U * 0.52, -U * 0.075, U * 0.46);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = GI.horn;                     // 鋲
+  for (const [px, py] of [[-0.04, 0.26], [0.04, 0.32], [-0.05, 0.40], [0.05, 0.43], [0, 0.36]]) {
+    ctx.beginPath(); ctx.arc(U * px, U * py, U * 0.012, 0, 6.2832); ctx.fill();
+  }
+  ctx.restore();
+
+  // 被弾の白い閃き
+  if (g.flash > 0.5 && !REDUCED) {
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = alpha * 0.18;
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.roundRect(-U * 0.23, -U * 0.78, U * 0.46, U * 0.38, U * 0.12); ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  ctx.restore();
+
+  if (!g.dead) drawGiantBar(g, base, U, alpha);
+}
+
+/** 巨人の頭上に名前・体力バー・残り体力 */
+function drawGiantBar(g, base, U, alpha) {
+  const bw = Math.max(60, U * 0.55), bh = Math.max(5, U * 0.028);
+  const x0 = base.x - bw / 2;
+  const y0 = base.y - U * (g.king ? 1.14 : 1.10);
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = "rgba(20,15,12,.78)";
+  ctx.fillRect(x0 - 2, y0 - 2, bw + 4, bh + 4);
+  const r = g.hp / g.max;
+  const grad = ctx.createLinearGradient(x0, 0, x0 + bw, 0);
+  grad.addColorStop(0, C.foe); grad.addColorStop(1, "#e0643a");
+  ctx.fillStyle = grad;
+  ctx.fillRect(x0, y0, bw * r, bh);
+
+  const fs = Math.max(11, Math.min(bh * 3.2, 40));
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.lineJoin = "round";
+  ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
+  ctx.lineWidth = Math.max(2, fs * 0.16);
+  ctx.strokeStyle = "rgba(20,15,12,.8)";
+  const label = fmt(Math.ceil(g.hp));
+  ctx.strokeText(label, base.x, y0 - 4);
+  ctx.fillStyle = "#ffd2cd";
+  ctx.fillText(label, base.x, y0 - 4);
+
+  const fs2 = Math.max(10, fs * 0.5);
+  ctx.font = "700 " + fs2 + 'px "Barlow Semi Condensed", "Hiragino Sans", sans-serif';
+  ctx.lineWidth = Math.max(2, fs2 * 0.3);
+  const name = g.king ? "巨人王" : "巨人";
+  ctx.strokeText(name, base.x, y0 - 6 - fs);
+  ctx.fillStyle = C.gold;
+  ctx.fillText(name, base.x, y0 - 6 - fs);
+  ctx.textBaseline = "middle";
+  ctx.globalAlpha = 1;
+}
+
+
+function drawBullets() {
+  ctx.lineCap = "round";
+  for (const b of bullets) {
+    const a = proj(b.x, 0.95, b.z);
+    if (!a) continue;
+    const t = b.t | 0;
+    ctx.globalAlpha = 0.95;
+    if (t <= 1) {                                // 石
+      ctx.fillStyle = "#9a9ca0";
+      ctx.beginPath(); ctx.arc(a.x, a.y, Math.max(1.2, a.s * (t ? 0.09 : 0.07)), 0, 6.2832); ctx.fill();
+    } else if (t <= 3) {                         // 矢（クロスボウは短く太い）
+      const c = proj(b.x, 0.95, b.z - (t === 2 ? 1.0 : 0.6));
+      if (!c) continue;
+      ctx.strokeStyle = "#b08850"; ctx.lineWidth = Math.max(1, a.s * (t === 2 ? 0.035 : 0.055));
+      ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+      ctx.fillStyle = "#dde5ee";
+      ctx.beginPath(); ctx.arc(a.x, a.y, Math.max(1, a.s * 0.05), 0, 6.2832); ctx.fill();
+    } else if (t <= 8) {                         // 銃弾：光る筋
+      const c = proj(b.x, 0.95, b.z - (t === 8 ? 0.5 : 0.8));
+      if (!c) continue;
+      ctx.strokeStyle = t === 7 ? "#ffcf7a" : "#ffe9a8";
+      ctx.lineWidth = Math.max(1, a.s * (t === 8 ? 0.04 : 0.06));
+      ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+    } else {                                     // 砲丸
+      const r = Math.max(2, a.s * 0.24);
+      ctx.fillStyle = "#1c1e21";
+      ctx.beginPath(); ctx.arc(a.x, a.y - r * 0.3, r, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.35)";
+      ctx.beginPath(); ctx.arc(a.x - r * 0.35, a.y - r * 0.65, r * 0.3, 0, 6.2832); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.lineCap = "butt";
+}
+
+function drawParts() {
+  for (const p of parts) {
+    const g = proj(p.x, p.y, p.z);
+    if (!g) continue;
+    const a = 1 - p.t / p.life;
+    const r = Math.max(1, 0.09 * g.s * a);
+    ctx.globalAlpha = a * 0.9;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(g.x - r, g.y - r, r * 2, r * 2);
+  }
+  ctx.globalAlpha = 1;
+}
+
+
+function drawPops() {
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const p of pops) {
+    const g = proj(p.x, p.y, p.z);
+    if (!g) continue;
+    const k = p.t / p.life, a = 1 - k * k;
+    const fs = Math.min(g.s * (p.big ? 0.95 : 0.7), p.big ? 64 : 40);
+    if (fs < 8) continue;
+    ctx.globalAlpha = a;
+    ctx.font = fs + 'px Chango, "Hiragino Sans", "Arial Black", sans-serif';
+    ctx.lineWidth = Math.max(2, fs * 0.15);
+    ctx.strokeStyle = "rgba(20,15,12,.8)"; ctx.lineJoin = "round";
+    ctx.strokeText(p.text, g.x, g.y);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.text, g.x, g.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawVignette() {
+  const g = ctx.createRadialGradient(W / 2, H * 0.52, Math.min(W, H) * 0.34, W / 2, H * 0.52, Math.max(W, H) * 0.78);
+  g.addColorStop(0, "rgba(20,15,12,0)");
+  g.addColorStop(1, "rgba(20,15,12,.46)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+
+function render() {
+  horizon = H * 0.13;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (shake > 0) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake * 0.6);
+
+  drawSky();
+  drawGround();
+  drawRoad();
+
+  // 床の板は常に一番下
+  for (let i = items.length - 1; i >= 0; i--) {
+    const it = items[i];
+    if (it.type === "tile" && !it.gone) drawTile(it);
+  }
+  const front = crowdFront();
+  const objs = items.filter((it) => it.type !== "tile" && (!it.dead || (it.type === "giant" && it.fall < 1)));
+  objs.sort((a, b) => b.z - a.z);
+  const drawObj = (it) => {
+    if (it.type === "bar") drawBar(it);
+    else if (it.type === "arm") drawArm(it);
+    else if (it.type === "squad") { drawHost(it.units, false, time, 0); drawSquadBanner(it); }
+    else if (it.type === "giant") drawGiant(it);
+  };
+  for (const it of objs) if (it.z > front) drawObj(it);
+  drawBullets();
+  drawHost(crowd.units, true, time, tierOf(crowd.power));
+  for (const it of objs) if (it.z <= front) drawObj(it);
+
+  drawParts();
+  drawPops();
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  drawVignette();
+}
+
+/* ============================================================
+   9. 進行制御
+   ============================================================ */
+const FINAL_STAGE = 10;
+const hStage = document.getElementById("hStage");
+const hArmy  = document.getElementById("hArmy");
+const hWeap  = document.getElementById("hWeap");
+const hPow   = document.getElementById("hPow");
+const hBar   = document.getElementById("hBar");
+const ovTitle = document.getElementById("ovTitle");
+const ovClear = document.getElementById("ovClear");
+const ovOver  = document.getElementById("ovOver");
+const ovWin   = document.getElementById("ovWin");
+
+function loadBest() { try { return parseInt(localStorage.getItem("gr.best") || "0", 10) || 0; } catch (e) { return 0; } }
+function saveBest() { try { localStorage.setItem("gr.best", String(best)); } catch (e) {} }
+
+function resetCrowd(n, p) {
+  crowd.x = crowd.tx = 0;
+  crowd.units.length = 0;
+  crowd.count = Math.max(0, n);
+  syncCrowd();
+  hArmy.textContent = fmt(crowd.count);
+  setPower(p);
+}
+
+function beginStage(st, army, power) {
+  stage = st;
+  flowV = 4.6 + Math.min(st - 1, 9) * 0.28;
+  resetCrowd(army, power);
+  buildStage(st);
+  parts.length = 0; pops.length = 0;
+  battle = null;
+  state = "run";
+  hStage.textContent = st + "/" + FINAL_STAGE;
+  hBar.style.width = "0%";
+  ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = true;
+  Snd.intense(false); Snd.music(true);
+}
+
+function stageClear() {
+  state = "clear";
+  Snd.music(false);
+  bullets.length = 0;
+  Snd.win(); saveBest();
+  if (stage >= FINAL_STAGE) {
+    document.getElementById("wArmy").textContent = fmt(crowd.count);
+    document.getElementById("wWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
+    document.getElementById("wKills").textContent = fmt(kills);
+    ovWin.hidden = false;
+    return;
+  }
+  document.getElementById("clearEyebrow").textContent = "Stage " + stage + " 防衛成功";
+  document.getElementById("cArmy").textContent = fmt(crowd.count);
+  document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
+  document.getElementById("cKills").textContent = fmt(kills);
+  ovClear.hidden = false;
+}
+
+function gameOver() {
+  if (state === "over") return;
+  state = "over";
+  battle = null;
+  Snd.music(false);
+  Snd.lose(); saveBest(); doShake(16);
+  document.getElementById("oStage").textContent = "Stage " + stage;
+  document.getElementById("oKills").textContent = fmt(kills);
+  document.getElementById("oBest").textContent = fmt(best);
+  ovOver.hidden = false;
+}
+
+function setupDemo() {
+  stage = 1; kills = 0;
+  items = []; bullets = [];
+  resetCrowd(24, 2.6);
+  hStage.textContent = "1/" + FINAL_STAGE;
+  state = "title";
+}
+
+const startRun = () => { Snd.kick(); kills = 0; beginStage(1, 12, 1); };
+document.getElementById("btnStart").addEventListener("click", () => { best = loadBest(); startRun(); });
+document.getElementById("btnNext").addEventListener("click", () => {
+  beginStage(stage + 1, Math.max(10, Math.round(crowd.count)), crowd.power);
+});
+document.getElementById("btnRetry").addEventListener("click", startRun);
+document.getElementById("btnAgain").addEventListener("click", startRun);
+document.getElementById("btnSound").addEventListener("click", (e) => {
+  const on = Snd.toggle();
+  e.currentTarget.textContent = on ? "♪" : "✕";
+  e.currentTarget.style.color = on ? C.gold : "rgba(228,219,198,.45)";
+});
+
+/* ============================================================
+   10. メインループ
+   ============================================================ */
+let last = 0;
+function frame(t) {
+  const now = t / 1000;
+  let dt = last ? now - last : 0.016;
+  last = now;
+  if (dt > 0.05) dt = 0.05;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+function boot() { resize(); best = loadBest(); setupDemo(); requestAnimationFrame(frame); }
+if (document.fonts && document.fonts.load) {
+  Promise.all([document.fonts.load('64px Chango'), document.fonts.load('700 16px "Barlow Semi Condensed"')]).catch(() => {}).then(boot);
+} else boot();
+})();
+</script>
+
+</body></html>
