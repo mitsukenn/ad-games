@@ -1320,6 +1320,20 @@ function armyTarget(st, fr) {
 }
 /** 目安との比。1より大きいと増えすぎ */
 function armyLead(it) { return Math.max(1, crowd.count) / armyTarget(stage, (it.z0 || 0) / Math.max(1, totalZ)); }
+/* 敵の数・門や台座の固さ・増える板の大きさは「自分の兵力」ではなく「その面の標準」で決める。
+   だから兵を増やすほど楽になり、苦しいときは前の面で増員してから挑める */
+/** その面の標準の兵力（面の中の位置 z0 で決まる） */
+function refArmy(it) { return armyTarget(stage, (it.z0 || 0) / Math.max(1, totalZ)); }
+/** その面の標準の武器の強さ（入ったときの武器と、台座で一段上げた武器の間） */
+function refPower(st) {
+  const a = Math.min(WMAX, Math.max(0, st - 1)), b = Math.min(WMAX, Math.max(0, st));
+  return Math.sqrt(WEAPONS[a].p * WEAPONS[b].p);
+}
+/** その面で使える武器の上限（段）。1面は弓まで…10面でロケット砲。強い武器を持っていても、その面では上限の武器で戦う */
+function weaponCap(st) { return st > FINAL_STAGE ? WMAX : Math.min(WMAX, st + 1); }
+/** いま遊んでいるのが、一度クリアした面の遊び直しか（遊び直しは×2なし・＋の板だけ） */
+const isReplay = () => !!(mapRun && mapRun.replay);
+
 /** 増える量の倍率：目安を超えていれば渋く、下回っていれば少し甘く */
 function gainScale(lead) { return Math.max(0.3, Math.min(1.8, Math.pow(lead, -1.1))); }   // 下限は「+3」のような小さすぎる板を出さないため
 
@@ -1395,9 +1409,9 @@ function makeGiant(lane, z, st, n, p, king) {
 const READY_Z = 80;
 function finalize(it) {
   it.ready = true;
-  const n = Math.max(FLOOR, crowd.count), p = crowd.power;
+  const n = Math.max(FLOOR, refArmy(it)), p = refPower(stage);   // その面の標準（自分の兵力ではない）
   if (it.type === "arm") {
-    if (tierOf(crowd.power) >= WMAX) { it.dead = true; return; }   // もう最上位なら出さない
+    if (tierOf(crowd.power) >= weaponCap(stage)) { it.dead = true; return; }   // この面の上限に届いていれば出さない
     it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * rnd(1.6, 2.3)));
   } else if (it.type === "bar") {
     it.hp = it.max = Math.max(3, Math.round(FIRE_K * n * p * rnd(0.8, 1.35) * (1 + 0.08 * exRamp(stage))));
@@ -1407,9 +1421,9 @@ function finalize(it) {
     // 金の箱・ハート・武器は少し硬い。しっかり狙えば開く
     it.hp = it.max = Math.max(5, Math.round(FIRE_K * n * p * (it.kind === "army" ? rnd(1.5, 2.1) : rnd(2.3, 2.9))));
   } else if (it.type === "tile") {
-    const lead = armyLead(it);
-    if (it.kind === "mul" && lead > 1.15) it.kind = "add";
-    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage)) * gainScale(lead)));
+    // ×2 は初めて遊ぶ面で、兵が標準を大きく超えていないときだけ。遊び直しは＋の板だけ
+    if (it.kind === "mul" && (isReplay() || armyLead(it) > 1.15)) it.kind = "add";
+    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage))));
   } else if (it.type === "squad") {
     const { sq } = makeSquad(it.lane, it.z, stage, n, p, it.boss);
     it.count = it.max = sq.count; it.pw = sq.pw;
@@ -1441,7 +1455,7 @@ function buildStage(st) {
     lanesForBonus.forEach((l, k) => {
       // 台座は1ステージに1〜2個。全10ステージかけて最上位まで届く配分
       const wantArm = armWaves.includes(i) && k === lanesForBonus.length - 1;
-      if (wantArm && tierOf(p) < WMAX) {
+      if (wantArm && tierOf(crowd.power) < weaponCap(st)) {
         // 武器の台座：撃ち壊せば、その場で武器が一段上がる
         items.push({ type: "arm", lane: l, x: LANES[l], z: z + k * rnd(2, 6) + 2, hp: 10, max: 10, flash: 0, dead: false });
         armed = true;
@@ -1518,7 +1532,7 @@ function buildBonus() {
       const r = Math.random();
       if (r < 0.14) kind = "big";
       else if (r < 0.24 && hearts < 0) { kind = "heart"; hearts++; }   // マップ方式ではライフがないので出さない
-      else if (r < 0.32 && weapons < 1 && tierOf(crowd.power) < WMAX) { kind = "weapon"; weapons++; }
+      else if (r < 0.32 && weapons < 1 && tierOf(crowd.power) < weaponCap(stage)) { kind = "weapon"; weapons++; }
       items.push({ type: "chest", kind, lane: l, x: LANES[l], z: z + k * rnd(1, 4), hp: 10, max: 10, flash: 0, dead: false });
     });
     z += rnd(12, 15);
@@ -1536,7 +1550,7 @@ function openChest(c) {
   if (k === "heart" && lives < MAX_LIVES) {
     lives++; paintLives();
     popText("ライフ +1", "#ff8f8f", c.x, c.z, true);
-  } else if (k === "weapon" && tierOf(crowd.power) < WMAX) {
+  } else if (k === "weapon" && tierOf(crowd.power) < weaponCap(stage)) {
     const nt = tierOf(crowd.power) + 1;
     setPower(WEAPONS[nt].p);
     for (const u of crowd.units) u.pop = 0.6;
@@ -1544,8 +1558,7 @@ function openChest(c) {
     popText(WEAPONS[nt].n + "！", C.gold, c.x, c.z, true);
   } else {
     const before = crowd.count;
-    const g = gainScale(armyLead(c));
-    setCount(before * (1 + (k === "big" ? 0.2 : 0.06) * Math.min(1.5, g)));
+    setCount(before + armyTarget(stage, 1) * (k === "big" ? 0.3 : 0.08));
     popText("+" + fmt(crowd.count - before), k === "big" ? "#b8f5c2" : "#9cc0ff", c.x, c.z, true);
   }
   spawnFx("chest_open", c.x, 0.9, c.z, 2.0, 0.9, { grow: 0.15, rise: 1.2 });
@@ -1726,7 +1739,7 @@ function applyHit(t, b) {
     t.hp -= b.dmg; t.flash = 1;
     if (t.hp <= 0) {
       t.dead = true;
-      const nt = Math.min(WMAX, tierOf(crowd.power) + 1);
+      const nt = Math.min(weaponCap(stage), tierOf(crowd.power) + 1);
       setPower(WEAPONS[nt].p);
       rec.arms++;
       spawnFx("fx_levelup", crowd.x, 1.8, 0.2, 4.2, 1.0, { grow: 0.15 });
@@ -1820,7 +1833,8 @@ function onSpike(sp) {
   sp.dead = true;
   const inLane = Math.abs(sp.x - crowd.x) <= crowdHalfW() + LANE_HW * 0.3;
   if (!inLane) return;                                  // 別のレーンにいれば素通り
-  const loss = crowd.count * Math.min(0.32, 0.16 + 0.02 * exOf(stage));
+  const f = Math.min(0.32, 0.16 + 0.02 * exOf(stage));
+  const loss = Math.min(crowd.count * f, refArmy(sp) * f * 1.5);
   setCount(crowd.count - loss);
   for (let i = 0; i < 18; i++) puff(sp.x + rnd(-1.2, 1.2), rnd(.2, 1.4), 0.6, pick([C.bad, C.iron, C.foe]), 1);
   popText("トゲの柵 −" + fmt(loss), C.bad, sp.x, 1.2, true);
@@ -3366,13 +3380,13 @@ function stageClear() {
   bullets.length = 0;
   Snd.win(); saveBest();
   if (inBonus) {                                    // 宝物庫の終わり
-    const bk = recordBonus();
+    const got = recordBonus();
     document.getElementById("btnMapClear").hidden = true;
     const rEl = document.getElementById("clearRank");
     rEl.textContent = "★"; rEl.className = "rank s";
     document.getElementById("clearEyebrow").textContent = "Bonus 終了";
     document.getElementById("clearTitle").textContent = pickOne(["お宝ざくざく！", "宝物庫、制覇！", "ふところも軍勢もホクホク！"]);
-    document.getElementById("clearLede").textContent = "手に入れたぶんは、次の出撃に上乗せ（兵力 ×" + bk.toFixed(1) + "）。マップで好きな面を選ぼう。";
+    document.getElementById("clearLede").textContent = "兵が " + fmt(got) + " 人ふえて、所持兵力 " + fmt(crowd.count) + " に。マップで好きな面を選ぼう。";
     document.getElementById("clearNext").textContent = "";
     document.getElementById("btnNext").textContent = "マップへ";
     document.getElementById("cArmy").textContent = fmt(crowd.count);
@@ -3483,9 +3497,10 @@ document.getElementById("btnSound").addEventListener("click", (e) => {
 /* ============================================================
    9.7 マップ（ステージを選んで出撃する）
    ============================================================ */
-/* 各ステージは「前のステージをクリアしたときの一番いい兵力と武器」から始まる。
-   だから同じ面を遊び直して兵を増やしてから先へ進める（人によって難しさを調整できる）。
-   宝物庫は3・6・9面のあとに開き、好きなときに1回だけ遊べる。手に入れたぶんは次の出撃に上乗せ。 */
+/* どの面も「いま持っている兵力（所持兵力 MAP.army）と武器（MAP.power）」で出撃する。
+   敵の強さは面ごとに決まっているので、兵が多いほど楽。苦しいときは、クリアした面を遊び直して増員できる
+   （遊び直しは×2なし・＋の板だけ）。武器は面ごとに上限があり、その面では上限の武器で戦う。
+   失敗しても所持兵力は減らない。宝物庫は3・6・9面のあとに開き、1回だけ遊べる。手に入れたぶんは所持兵力に入る。 */
 const ovMap = document.getElementById("ovMap");
 const MAP_KEY = "gr.map";
 const AREAS = [
@@ -3503,8 +3518,16 @@ let mapRun = null;        // いま遊んでいるマップのマス（{ kind, n
 function loadMap() {
   let m = null;
   try { m = JSON.parse(localStorage.getItem(MAP_KEY) || "null"); } catch (e) {}
-  if (m && m.clears) return m;
-  m = { clears: {}, bonus: {}, boost: null, exBest: 0, sel: 1 };
+  if (m && m.clears) {
+    if (m.army === undefined) {                       // 所持兵力のない古い記録：一番先までクリアした記録を所持兵力にする
+      const last = Object.keys(m.clears).map(Number).sort((a, b) => b - a)[0];
+      const c = last ? m.clears[last] : null;
+      m.army = c ? Math.max(10, Math.round(c.army)) : 12;
+      m.power = Math.max(1, ...Object.values(m.clears).map((x) => x.power || 1));
+    }
+    return m;
+  }
+  m = { clears: {}, bonus: {}, boost: null, exBest: 0, sel: 1, army: 12, power: 1 };
   // マップ以前の「続きから」の記録があれば、そこまでを開いておく
   const sv = loadProgress();
   if (sv && sv.stage > 1) {
@@ -3512,6 +3535,7 @@ function loadMap() {
     for (let k = 1; k <= last; k++) m.clears[k] = { army: Math.round(sv.army), power: sv.power, rank: "" };
     for (const b of [3, 6, 9]) if (b <= last) m.bonus[b] = "ready";
     m.sel = Math.min(last + 1, FINAL_STAGE);
+    m.army = Math.max(10, Math.round(sv.army)); m.power = sv.power;
   }
   return m;
 }
@@ -3525,11 +3549,10 @@ function unlockedNode(n) {
   if (isBonusNode(n)) return !!MAP.clears[+n.slice(1)];
   return !!MAP.clears[n - 1];
 }
-/** そのステージを始めるときの兵力と武器（前の面の一番いいクリア記録） */
+/** そのステージに出撃するときの兵力と武器（所持兵力と、その面の上限までの武器） */
 function entryOf(st) {
-  if (st <= 1) return { army: 12, power: 1 };
-  const c = MAP.clears[Math.min(st - 1, FINAL_STAGE)];
-  return c ? { army: Math.max(10, Math.round(c.army)), power: c.power } : { army: 12, power: 1 };
+  const cap = WEAPONS[weaponCap(st)].p;
+  return { army: Math.max(10, Math.round(MAP.army || 12)), power: Math.min(MAP.power || 1, cap), capped: (MAP.power || 1) > cap };
 }
 /** まだクリアしていない一番手前のステージ */
 function frontier() { let s = 1; while (s < FINAL_STAGE && MAP.clears[s]) s++; return s; }
@@ -3728,7 +3751,7 @@ function selectNode(n, scroll) {
     if (!open) d.textContent = "Stage 10 をクリアすると開く。";
     else {
       const e = entryOf(FINAL_STAGE + 1);
-      d.innerHTML = chip("出撃兵力", fmt(e.army)) + chip("", WEAPONS[tierOf(e.power)].n) + boostChip +
+      d.innerHTML = chip("所持兵力", fmt(e.army)) + chip("", WEAPONS[tierOf(e.power)].n) + boostChip +
         (MAP.exBest ? chip("最高", "EX" + MAP.exBest, "gold") : "");
     }
   } else {
@@ -3737,8 +3760,8 @@ function selectNode(n, scroll) {
     if (!open) d.textContent = "Stage " + (n - 1) + " をクリアすると開く。";
     else {
       const e = entryOf(n), c = MAP.clears[n];
-      d.innerHTML = chip("出撃兵力", fmt(e.army)) + chip("", WEAPONS[tierOf(e.power)].n) + boostChip +
-        (c ? chip("ベスト", starsRow(starsOf(c.rank))) : "");
+      d.innerHTML = chip("所持兵力", fmt(e.army)) + chip(e.capped ? "この面の上限" : "", WEAPONS[tierOf(e.power)].n) + boostChip +
+        (c ? chip("遊び直し", "＋の門だけ") + chip("ベスト", starsRow(starsOf(c.rank))) : "");
     }
   }
   if (scroll) {
@@ -3764,14 +3787,15 @@ function startNode(n) {
   best = loadBest(); kills = 0; runBest = 0; lives = MAX_LIVES;
   MAP.sel = n; saveMap();
   if (isBonusNode(n)) {
-    const e = entryOf(frontier());
     stage = +n.slice(1);
+    const e = entryOf(stage);
     mapRun = { kind: "bonus", node: n, b: stage, a0: e.army, p0: e.power };
     beginBonus(e.army, e.power);
     return;
   }
   const st = n === "ex" ? FINAL_STAGE + 1 : n;
   const e = entryOf(st);
+  const replay = n !== "ex" && !!MAP.clears[st];
   let army = e.army, power = e.power, boost = null;
   if (MAP.boost) {
     boost = MAP.boost;
@@ -3779,7 +3803,7 @@ function startNode(n) {
     power = Math.min(WEAPONS[WMAX].p, power * boost.pk);
     MAP.boost = null; saveMap();
   }
-  mapRun = { kind: n === "ex" ? "ex" : "stage", node: n };
+  mapRun = { kind: n === "ex" ? "ex" : "stage", node: n, replay };
   beginStage(st, army, power);
   if (boost) flash(elMile, ["宝物ボーナス！", "兵力 ×" + boost.k.toFixed(1), ""]);
 }
@@ -3787,6 +3811,8 @@ function startNode(n) {
 /** クリアした記録をマップに残す（兵力が多いほうを残す。ランクは良いほう） */
 function recordClear(rank) {
   if (!mapRun || mapRun.kind === "bonus") return;
+  MAP.army = Math.max(10, Math.round(crowd.count));          // クリアしたときの兵力が、次の所持兵力
+  MAP.power = Math.max(MAP.power || 1, crowd.power);          // 武器は良いほう（上限で戦った面でも、持っている武器は減らない）
   if (stage > FINAL_STAGE) { MAP.exBest = Math.max(MAP.exBest || 0, exOf(stage)); saveMap(); return; }
   const old = MAP.clears[stage];
   const army = Math.round(crowd.count);
@@ -3799,17 +3825,16 @@ function recordClear(rank) {
   saveMap();
   return opened;
 }
-/** 宝物庫の結果を「次の出撃」の上乗せとしてとっておく */
+/** 宝物庫の結果を所持兵力・所持武器に入れる。戻り値は増えた兵の数 */
 function recordBonus() {
-  if (!mapRun || mapRun.kind !== "bonus") return 1;
-  const k = Math.max(1, crowd.count / Math.max(1, mapRun.a0));
-  const pk = Math.max(1, crowd.power / Math.max(0.01, mapRun.p0));
-  const prev = MAP.boost;
-  MAP.boost = prev ? { k: prev.k * k, pk: prev.pk * pk } : { k, pk };
+  if (!mapRun || mapRun.kind !== "bonus") return 0;
+  const gain = Math.max(0, Math.round(crowd.count) - mapRun.a0);
+  MAP.army = Math.max(MAP.army || 0, Math.round(crowd.count));
+  MAP.power = Math.max(MAP.power || 1, crowd.power);
   MAP.bonus[mapRun.b] = "done";
   MAP.sel = frontier();
   saveMap();
-  return MAP.boost.k;
+  return gain;
 }
 const rankNow = () => { const g = crowd.count / Math.max(1, rec.start); return g >= 5 ? "S" : g >= 2 ? "A" : g >= 0.8 ? "B" : "C"; };
 
