@@ -130,22 +130,68 @@
         font-size:14px; color:var(--soft)}
   .note p{margin:0 0 6px} .note p:last-child{margin:0}
   .note strong{color:var(--stone)}
+  /* ---------- 作った人（まちのAI屋さん） ---------- */
+  .maker{display:inline-flex; align-items:center; gap:7px; margin:0 0 14px; padding:4px 12px 4px 5px;
+         background:#fff; border-radius:999px; color:#0a3fa8; font-size:13px; font-weight:700; text-decoration:none;
+         box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  .maker img{width:24px; height:24px; padding:2px; background:#eef3ff; border-radius:50%}
+  .maker small{font-size:11px; font-weight:600; color:#4a5a7a}
+  .maker:hover{background:#eef3ff}
+  .maker:focus-visible{outline:2px solid var(--stone); outline-offset:3px}
+
+  /* ---------- ランキング登録者数 ---------- */
+  .stats{display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; margin:0 0 24px; padding:14px 18px;
+         background:rgba(36,28,24,.82); border:1px solid rgba(224,168,60,.45); max-width:560px}
+  .stats[hidden]{display:none}
+  .stats-main{display:flex; flex-direction:column; line-height:1.2}
+  .stats-label{font-size:12px; font-weight:700; letter-spacing:.06em; color:var(--soft)}
+  .stats-num{font-size:15px; font-weight:700; color:var(--stone)}
+  .stats-num b{font-family:var(--disp); font-weight:400; font-size:34px; color:var(--gold); margin-right:3px;
+               text-shadow:0 2px 0 rgba(0,0,0,.45); font-variant-numeric:tabular-nums}
+  .stats-games{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
+  .stats-games li{font-size:13px; color:var(--soft); background:rgba(0,0,0,.3); padding:3px 10px 4px}
+  .stats-games b{color:var(--stone)}
+  .players{align-self:flex-start; font-size:13px; font-weight:700; color:var(--stone); background:rgba(0,0,0,.35);
+           border:1px solid rgba(224,168,60,.4); padding:2px 10px 3px}
+  .players[hidden]{display:none}
+  .players b{color:var(--gold)}
+  .feature .players{display:inline-block; margin:0 0 12px}
+
   footer{font-size:13px; color:rgba(228,219,198,.55); padding-bottom:env(safe-area-inset-bottom)}
+  .footer-brand{display:inline-flex; align-items:center; gap:10px; margin:0 0 10px; color:var(--stone); text-decoration:none}
+  .footer-brand img{width:40px; height:40px; padding:5px; background:#fff; border-radius:10px}
+  .footer-brand span{display:flex; flex-direction:column; line-height:1.3; font-size:15px; font-weight:700}
+  .footer-brand small{font-size:12px; font-weight:500; color:rgba(228,219,198,.6)}
+  .footer-brand:hover span{color:#fff}
+  footer p{margin:0}
   @media (prefers-reduced-motion:reduce){ a.card{transition:none} a.card:hover{transform:none} }
 </style>
 </head>
 <body>
 <main>
+  <a class="maker" href="https://machino-ai.jp/"><img src="assets/machino-logo.png" alt="" width="24" height="24">まちのAI屋さん<small>がつくっています</small></a>
   <div class="eyebrow">AI Game Lab<span class="lab">実験中</span></div>
   <h1>AIゲーム実験室</h1>
   <p class="catch">AIだけで、<br>どこまでゲームを作れるか。</p>
   <p class="lede">スマホの広告でよく見る「あのゲーム」を、<strong>AIだけで作ってみる実験</strong>です。プログラムも、絵も、音も、難しさの調整もAI。人がやったのは、遊んでみて「もっとこうして」と言葉で頼むことだけ。どこまでちゃんと遊べるか、ぜひ試してみてください。</p>
+  <!-- ランキング登録者数（ranking-gas.js の ?view=players。取れなければ出さない） -->
+  <section class="stats" id="stats" hidden aria-label="ランキング登録者数">
+    <div class="stats-main">
+      <span class="stats-label">これまでにランキングに登録した人</span>
+      <span class="stats-num"><b id="stAll">0</b>人</span>
+    </div>
+    <ul class="stats-games">
+      <li>迎撃ロード <b id="stGeigeki">0</b>人</li>
+      <li>Million March <b id="stMillion">0</b>人</li>
+    </ul>
+  </section>
   <a class="jump" href="geigeki_road.html">迎撃ロードで遊ぶ →</a>
 
   <section class="feature" id="games" aria-labelledby="ftTitle">
     <span class="pick">いちばんのおすすめ</span>
     <span class="tag">Lane Defense ／ 撃って守る</span>
     <h3 id="ftTitle">迎撃ロード</h3>
+    <span class="players" data-game="geigeki" hidden>🏆 ランキング登録 <b></b>人</span>
     <p class="intro">動かずに撃ちまくる防衛戦。流れてくる門を撃ち開けて仲間を増やし、武器は<strong>投石からロケット砲まで12段階</strong>に進化。3本の道を見きわめて、押し寄せる大軍と巨人を食い止めろ！</p>
     <div class="shots">
       <figure><img src="assets/screens/geigeki_1.jpg" width="540" height="1052" alt="迎撃ロードの序盤。緑の谷の道に門と兵が増える青い板が流れてくる" loading="lazy"><figcaption>門を撃ち開けて、兵を増やす</figcaption></figure>
@@ -174,6 +220,7 @@
     <a class="card t3" href="million_march.html">
       <span class="tag">March Runner ／ 率いて進む</span>
       <h3>Million March</h3>
+      <span class="players" data-game="million" hidden>🏆 ランキング登録 <b></b>人</span>
       <p>ゲートをくぐるたびに兵が増える行進ゲーム。数に上限はなし、100万の大軍も夢じゃない。マップから好きな面を選んで出撃し、巨人との決戦、宝箱のボーナスステージ、移り変わる5つの景色、終わりのない遠征まで。</p>
       <div class="shots">
         <figure><img src="assets/screens/million_2.jpg" width="540" height="1052" alt="Million March の序盤。緑の谷の道で、+8 と +6 のゲートのどちらをくぐるか選ぶ" loading="lazy"><figcaption>ゲートを選んで、兵を増やす</figcaption></figure>
@@ -211,7 +258,42 @@
     <p>遊んだら、感想や「ここが変だった」をぜひ教えてください。それがそのまま次の注文になります。</p>
   </div>
 
-  <footer>AIゲーム実験室 — AIだけで、どこまでゲームを作れるか</footer>
+  <footer>
+    <a class="footer-brand" href="https://machino-ai.jp/"><img src="assets/machino-logo.png" alt="" width="40" height="40"><span>まちのAI屋さん<small>長崎のAIシステム開発・AI相談</small></span></a>
+    <p>AIゲーム実験室 — AIだけで、どこまでゲームを作れるか</p>
+  </footer>
 </main>
+<script>
+/* ランキング登録者数：ゲームと同じ Google Apps Script から人数だけもらう */
+(function () {
+  const RANKING_API = "https://script.google.com/macros/s/AKfycbyNh85RNVYJM1_cn5vn6d4_lFm-3_9MeQZe1vMGU4xk-fHRvGbbGUIgkgI2QUXhYyySMw/exec";
+  var num = function (n) { return Math.round(n).toLocaleString("ja-JP"); };
+  function countUp(el, to) {
+    if (!el) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = num(to); return; }
+    var t0 = performance.now(), ms = 1200;
+    (function step(t) {
+      var k = Math.min(1, (t - t0) / ms);
+      el.textContent = num(to * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  fetch(RANKING_API + "?view=players", { cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var p = d && d.players;
+      if (!p || !(p.all > 0)) return;
+      document.getElementById("stats").hidden = false;
+      countUp(document.getElementById("stAll"), p.all);
+      countUp(document.getElementById("stGeigeki"), p.geigeki || 0);
+      countUp(document.getElementById("stMillion"), p.million || 0);
+      document.querySelectorAll(".players").forEach(function (el) {
+        var n = p[el.dataset.game];
+        if (n > 0) { el.querySelector("b").textContent = num(n); el.hidden = false; }
+      });
+    })
+    .catch(function () {});
+})();
+</script>
 </body>
 </html>

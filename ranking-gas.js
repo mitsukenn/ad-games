@@ -33,7 +33,7 @@
  *   GET  ?view=month&game=geigeki&uid=xxx … 今月のポイント順（続けた人ほど上位）
  *   POST {game, name, stage, army, kills, uid} … 記録を登録。今日の順位を返す
  *   どの返事にも players（これまでにランキング登録したことのある人数＝端末IDの数・全期間）が入る。
- *   GET  ?view=players … { players: { geigeki: 人数, million: 人数 } }（トップページ用）
+ *   GET  ?view=players … { players: { geigeki: 人数, million: 人数, all: 全ゲームで重複なしの人数 } }（トップページ用）
  *   uid を付けると、上位に入っていなくても自分の順位が me に入って返る。
  */
 
@@ -114,11 +114,12 @@ function readRows_(game, ym) {
   }).filter(function (r) { return r.game === game && r.day.slice(0, 7) === ym; });
 }
 
-/** これまでにランキング登録したことのある人数（端末IDの数・全期間）をゲームごとに数える */
+/** これまでにランキング登録したことのある人数（端末IDの数・全期間）をゲームごとに数える。
+ *  all は全ゲーム合わせて重複なしの人数（2つのゲームで同じ端末は1人） */
 function playersAll_() {
   var sh = getSheet_();
   var last = sh.getLastRow();
-  var seen = {}, count = {};
+  var seen = {}, count = { all: 0 }, seenAll = {};
   GAMES.forEach(function (g) { seen[g] = {}; count[g] = 0; });
   if (last < 2) return count;
   sh.getRange(2, 3, last - 1, 6).getValues().forEach(function (row) {
@@ -126,6 +127,7 @@ function playersAll_() {
     if (!seen[g] || !uid || seen[g][uid]) return;
     seen[g][uid] = true;
     count[g]++;
+    if (!seenAll[uid]) { seenAll[uid] = true; count.all++; }
   });
   return count;
 }
