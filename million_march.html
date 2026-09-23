@@ -357,6 +357,188 @@
          padding:9px 16px; font-weight:700; font-size:14px; pointer-events:none; opacity:0; transition:opacity .25s;
          width:max-content; max-width:calc(100% - 32px); z-index:5}
   .toast.on{opacity:1}
+  /* ---------- マップ（1枚の地図。下から上へ登っていく） ---------- */
+  #ovMap{padding:0; overflow:hidden;
+         background:radial-gradient(ellipse at 50% 0%, rgba(224,168,60,.22), transparent 55%), #120d0a}
+  .map{height:100%; width:100%; max-width:540px; margin:0 auto; display:flex; flex-direction:column}
+  .map-head{display:flex; align-items:center; gap:10px; padding:max(8px, env(safe-area-inset-top)) 12px 6px}
+  .map-head .btn.ghost{margin:0; padding:6px 10px; font-size:13px; white-space:nowrap; flex:none}
+  .map-title{flex:1; text-align:center; line-height:1}
+  .map-title b{display:block; font-family:var(--disp); font-weight:400; font-size:24px; letter-spacing:.02em;
+               background:linear-gradient(180deg,#fff3c4 0%,#ffd24a 45%,#c47f12 100%); -webkit-background-clip:text; background-clip:text; color:transparent;
+               filter:drop-shadow(0 2px 0 #3a2208) drop-shadow(0 0 10px rgba(255,190,70,.45))}
+  .map-title small{display:block; margin-top:1px; font-size:10px; font-weight:700; letter-spacing:.4em; color:rgba(228,219,198,.6)}
+  .map-prog{display:inline-flex; align-items:center; gap:4px; padding:4px 10px 4px 7px; border-radius:999px; flex:none;
+            background:linear-gradient(180deg,#3a2d22,#1d1611); border:1px solid rgba(224,168,60,.7);
+            box-shadow:0 0 12px rgba(224,168,60,.25); font-family:var(--disp); font-size:15px; color:#fff3da; white-space:nowrap}
+  .map-prog .ps{width:18px; height:18px}
+  .map-prog small{font-size:11px; color:rgba(228,219,198,.6)}
+  .map-boost{margin:0 12px 6px; padding:5px 10px; font-size:12px; font-weight:700; color:#2a1a02; text-align:center;
+             background:linear-gradient(180deg,#ffe38a,#e0a83c); border-radius:4px; box-shadow:0 2px 0 #a37520, 0 0 16px rgba(255,200,80,.35)}
+  .map-boost:empty{display:none}
+  .map-list{flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:0 10px}
+  .world{position:relative; min-height:calc(100% - 18px); display:flex; flex-direction:column-reverse;
+         border:2px solid rgba(255,225,150,.55); border-radius:10px; margin-bottom:14px;
+         box-shadow:0 10px 24px rgba(0,0,0,.5)}
+  .world > .area:first-of-type{border-radius:0 0 8px 8px}      /* column-reverse なので最初の帯が一番下 */
+  .world > .area:last-of-type{border-radius:8px 8px 0 0}
+
+  /* 景色の帯（下から 翠緑 → 砂漠 → 雪 → 火山 → 天空 → 果ての道） */
+  .area{position:relative; flex:1 1 0; min-height:84px; background-size:cover; background-position:center 55%}
+  .area::after{content:""; position:absolute; inset:0; pointer-events:none;
+               background:linear-gradient(180deg, rgba(14,10,8,.38), rgba(14,10,8,0) 22%, rgba(14,10,8,0) 78%, rgba(14,10,8,.38))}
+  .area.lockd::after{background:linear-gradient(180deg, rgba(14,10,8,.55), rgba(14,10,8,.3) 22%, rgba(14,10,8,.3) 78%, rgba(14,10,8,.55))}
+  .area h3{position:absolute; left:0; top:5px; z-index:4; margin:0; padding:3px 12px 4px 8px;
+           font-size:11px; font-weight:700; letter-spacing:.14em; color:#fff3da; text-shadow:0 1px 0 #3a0c08;
+           background:linear-gradient(180deg,#c9443a,#8e241d); clip-path:polygon(0 0,100% 0,calc(100% - 7px) 50%,100% 100%,0 100%);
+           filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+  /* 全部クリアしたエリアは、リボンが金色になって CLEAR が付く */
+  .area.done h3{background:linear-gradient(180deg,#ffe98f,#c98a17); color:#3a2208; text-shadow:none}
+  .area h3 .ck{margin-left:6px; font-family:var(--disp); font-size:9px; letter-spacing:.06em; color:#7a1f10}
+  .area .tw{position:absolute; width:10px; height:10px; z-index:1; pointer-events:none;
+            background:#fffbe6; clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);
+            filter:drop-shadow(0 0 4px #fff3c4); animation:twinkle 2.6s ease-in-out infinite; opacity:0}
+  @keyframes twinkle{0%,100%{opacity:0; transform:scale(.3) rotate(0)} 45%{opacity:1; transform:scale(1) rotate(45deg)} 60%{opacity:.8; transform:scale(.8) rotate(60deg)}}
+
+  /* 地図全体をつなぐ1本の道 */
+  .world .road{position:absolute; left:0; top:0; pointer-events:none; z-index:2; overflow:visible}
+  .world .road path{fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .world .road .bed{stroke:rgba(35,22,10,.6); stroke-width:11}
+  .world .road .dots{stroke:#f8e9c2; stroke-width:5; stroke-dasharray:0 11}
+  .world .road .lit{stroke:#ffd24a; stroke-width:6; stroke-dasharray:0 11; filter:drop-shadow(0 0 3px rgba(255,200,60,.9))}
+
+  /* ステージの丸 */
+  .node{--c1:#6f9cff; --c2:#2a4fb3; --ink:#0d1d44;
+        position:absolute; z-index:3; transform:translate(-50%,-50%);
+        width:48px; height:48px; border-radius:50%; padding:0; cursor:pointer; border:3px solid #1a120c;
+        background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.8) 0 7%,rgba(255,255,255,0) 30%),
+                   linear-gradient(180deg,var(--c1),var(--c2));
+        box-shadow:inset 0 -5px 0 rgba(0,0,0,.28), inset 0 2px 0 rgba(255,255,255,.35),
+                   0 0 0 2px #e6b94f, 0 0 0 4px #1a120c, 0 5px 0 4px rgba(0,0,0,.45);
+        display:grid; place-items:center; transition:transform .12s ease}
+  .node:active{transform:translate(-50%,calc(-50% + 2px))}
+  .node .num{font-family:var(--disp); font-size:20px; line-height:1; color:#fff; letter-spacing:-.02em;
+             -webkit-text-stroke:4px var(--ink); paint-order:stroke fill; text-shadow:0 2px 0 var(--ink)}
+  .node.clear{--c1:#6ff0b6; --c2:#16805c; --ink:#073826;
+              box-shadow:inset 0 -5px 0 rgba(0,0,0,.28), inset 0 2px 0 rgba(255,255,255,.35),
+                         0 0 0 2px #ffd24a, 0 0 0 4px #1a120c, 0 5px 0 4px rgba(0,0,0,.45), 0 0 14px 5px rgba(255,210,74,.35)}
+  .node.next{--c1:#8fbaff; --c2:#2a4fb3; animation:nextGlow 1.4s ease-in-out infinite}
+  @keyframes nextGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(130,180,255,0))} 50%{filter:drop-shadow(0 0 12px rgba(130,180,255,.95))}}
+  /* まだ開いていない面：番号は見せたまま暗く、小さな鍵を添える（この先に何があるか見える） */
+  .node.lock{--c1:#7a6c5e; --c2:#3e342c; --ink:#1a120c; cursor:default;
+             box-shadow:inset 0 -5px 0 rgba(0,0,0,.28), inset 0 2px 0 rgba(255,255,255,.12),
+                        0 0 0 2px #8a7a62, 0 0 0 4px #1a120c, 0 5px 0 4px rgba(0,0,0,.45)}
+  .node.lock .num{color:rgba(255,243,218,.7)}
+  .node .lk{position:absolute; right:-7px; bottom:-6px; width:20px; height:20px; border-radius:50%; display:grid; place-items:center;
+            background:#2a211a; border:2px solid #8a7a62}
+  .node .lk svg{width:13px; height:13px}
+  .node.sel{transform:translate(-50%,-50%) scale(1.12)}
+  .node.sel::after{content:""; position:absolute; inset:-11px; border-radius:50%; pointer-events:none;
+                   background:conic-gradient(#ffd76a 0 12%,transparent 12% 25%,#ffd76a 25% 37%,transparent 37% 50%,#ffd76a 50% 62%,transparent 62% 75%,#ffd76a 75% 87%,transparent 87%);
+                   -webkit-mask:radial-gradient(circle,transparent 58%,#000 60% 68%,transparent 70%); mask:radial-gradient(circle,transparent 58%,#000 60% 68%,transparent 70%);
+                   filter:drop-shadow(0 0 5px rgba(255,215,106,.9)); animation:selSpin 4s linear infinite}
+  @keyframes selSpin{to{transform:rotate(360deg)}}
+  .node:focus-visible{outline:3px solid #fff; outline-offset:7px}
+  .node .stars{position:absolute; top:51px; left:50%; transform:translateX(-50%); display:flex; gap:0;
+               padding:1px 4px 2px; border-radius:9px; background:rgba(20,15,12,.85); border:1px solid rgba(224,168,60,.55)}
+  .node .stars svg{width:11px; height:11px}
+  .node .boss{position:absolute; right:-11px; top:-11px; width:23px; height:23px; border-radius:50%;
+              background:radial-gradient(circle at 40% 35%,#ff7a6a,#9e1f16); border:2px solid #1a120c; box-shadow:0 0 0 1.5px #ffd24a, 0 2px 4px rgba(0,0,0,.5)}
+  .node .boss canvas{width:20px; height:20px}
+  .node.lock .boss{filter:saturate(.6)}
+  .hero{position:absolute; z-index:5; width:46px; height:52px; pointer-events:none; transform:translate(-50%,-100%);
+        filter:drop-shadow(0 4px 3px rgba(0,0,0,.6)); animation:heroBob .7s ease-in-out infinite}
+  @keyframes heroBob{0%,100%{margin-top:0} 50%{margin-top:-5px}}
+  .node.bonus{--c1:#ffe08a; --c2:#b57a12; width:40px; height:40px}
+  .node.bonus canvas{width:28px; height:28px}
+  .node.bonus.done{--c1:#8a7b62; --c2:#4a3f33}
+  .node.bonus.done canvas{opacity:.55}
+  .node.bonus.lock{--c1:#6b5e52; --c2:#3a3029}
+  .node.bonus.lock canvas{opacity:.45}
+  .node.bonus.ready{animation:coinShine 2s ease-in-out infinite}
+  @keyframes coinShine{0%,100%{filter:brightness(1)} 50%{filter:brightness(1.25) drop-shadow(0 0 10px rgba(255,220,120,.9))}}
+  .node.ex{--c1:#d79bff; --c2:#5d1f94; --ink:#2a0848; width:auto; min-width:78px; height:44px; border-radius:26px; padding:0 16px}
+  .node.ex .num{font-size:18px}
+  .node.ex .best{position:absolute; top:48px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:700; color:#e7c8ff;
+                 white-space:nowrap; padding:1px 6px 2px; border-radius:8px; background:rgba(20,15,12,.85)}
+
+  /* 下のパネル */
+  .map-info{display:grid; grid-template-columns:1fr auto; gap:5px 12px; align-items:center; margin-top:8px;
+            border-top:2px solid rgba(224,168,60,.7); background:linear-gradient(180deg,#33271d,#1a130e);
+            box-shadow:0 -8px 20px rgba(0,0,0,.45);
+            padding:10px 14px max(12px, env(safe-area-inset-bottom))}
+  .map-info .t{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+  .map-info .t b{font-family:var(--disp); font-weight:400; font-size:20px; line-height:1; color:#fff3da;
+                 -webkit-text-stroke:4px #1a120c; paint-order:stroke fill}
+  .map-info .t small{font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--gold)}
+  .map-info .d{grid-column:1; display:flex; flex-wrap:wrap; gap:5px; font-size:12.5px; line-height:1.45; color:rgba(228,219,198,.8)}
+  .map-info .chip2{display:inline-flex; align-items:baseline; gap:4px; padding:2px 7px 3px; border-radius:3px;
+                   background:rgba(0,0,0,.35); border:1px solid rgba(224,168,60,.35); color:#fff3da; font-weight:700; white-space:nowrap}
+  .map-info .chip2 i{font-style:normal; font-size:11px; color:rgba(228,219,198,.65); font-weight:600}
+  .map-info .chip2.gold{background:rgba(224,168,60,.2); border-color:rgba(224,168,60,.7); color:#ffd76a}
+  .map-info .chip2 svg{width:12px; height:12px; align-self:center}
+  .btn.go{grid-column:2; grid-row:1 / span 2; font-size:22px; padding:12px 20px 10px; margin:0; border-radius:4px;
+          background:linear-gradient(180deg,#ffd76a,#e0a83c); box-shadow:0 0 16px rgba(255,200,80,.4)}
+  .btn.go:not(:disabled){animation:goPulse 1.6s ease-in-out infinite}
+  @keyframes goPulse{0%,100%{box-shadow:0 0 10px rgba(255,200,80,.3)} 50%{box-shadow:0 0 22px rgba(255,200,80,.75)}}
+  .btn.go:disabled{opacity:.4; cursor:default}
+  @media (max-width:360px){
+    .map-title b{font-size:19px} .map-head{gap:6px} .map-head .btn.ghost{padding:5px 7px; font-size:12px} .map-prog{font-size:13px}
+    .node{width:44px; height:44px} .node .num{font-size:18px} .node .stars{top:47px} }
+  /* 背の低いスマホ（iPhone 8・SE など）でも地図全体が1画面に収まるように詰める */
+  @media (max-height:720px){ .area{min-height:68px} .map-info{padding-top:8px} .map-info .t b{font-size:18px} .map-boost{margin-bottom:4px} }
+  @media (max-height:600px){ .area{min-height:60px} .map-head{padding-top:6px} .map-title b{font-size:18px} .map-title small{display:none}
+    .node{width:40px; height:40px} .node .num{font-size:16px} .node .stars{top:42px} .node .stars svg{width:9px; height:9px}
+    .node.bonus{width:34px; height:34px} .node.bonus canvas{width:24px; height:24px} .node.ex{height:38px; min-width:66px} .node.ex .best{top:41px}
+    .node .boss{width:19px; height:19px; right:-9px; top:-9px} .node .boss canvas{width:16px; height:16px}
+    .hero{width:38px; height:44px} .map-info .d{font-size:12px} .btn.go{font-size:19px; padding:10px 16px 8px} }
+  @media (prefers-reduced-motion:reduce){ .node.next, .node.sel::after, .hero, .area .tw, .node.bonus.ready, .btn.go{animation:none} .area .tw{opacity:.7} }
+  /* まだ見ぬフロア：雲の層（道はこの中へ消えていく） */
+  .fog{position:relative; z-index:3; flex:1 1 auto; min-height:64px; overflow:hidden; border-radius:8px 8px 0 0;
+       background:linear-gradient(180deg,rgba(14,12,30,.25),rgba(14,12,30,0) 40%),
+                  url(assets/backgrounds/map_unknown.webp) center 30%/cover no-repeat, #262e46}
+  .fog .cloud{position:absolute; border-radius:50%; pointer-events:none; opacity:.55;
+              background:radial-gradient(circle at 50% 60%,rgba(246,242,234,.96),rgba(222,216,206,.78) 45%,rgba(200,196,190,0) 70%);
+              animation:cloudDrift 9s ease-in-out infinite alternate}
+  .fog .f1{width:72%; height:96px; left:-12%; bottom:-34px}
+  .fog .f2{width:66%; height:86px; right:-14%; bottom:-26px; animation-delay:-3s}
+  .fog .f3{width:56%; height:74px; left:24%; bottom:-6px; animation-delay:-6s}
+  @keyframes cloudDrift{from{transform:translateX(-12px)} to{transform:translateX(12px)}}
+  .fog-t{position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); white-space:nowrap; text-align:center;
+         padding:8px 18px 9px; border-radius:14px; background:rgba(14,12,32,.58); border:1px solid rgba(255,215,106,.45);
+         font-size:14px; font-weight:700; letter-spacing:.24em; color:#fff3da; text-shadow:0 2px 6px rgba(0,0,0,.7)}
+  .fog-t .up{display:block; margin-bottom:2px; color:#ffd76a; font-size:15px; animation:upBob 1.2s ease-in-out infinite}
+  .fog-t small{display:block; margin-top:4px; font-size:11px; letter-spacing:.1em; color:rgba(228,219,198,.6)}
+  @keyframes upBob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
+
+  /* 新しいフロアに上がったとき：雲が晴れて帯がせり上がり、ステージが順に現れる */
+  .area.reveal{animation:areaRise .9s cubic-bezier(.2,.9,.3,1) backwards}
+  @keyframes areaRise{from{clip-path:inset(100% 0 0 0); filter:brightness(2.2)} to{clip-path:inset(0 0 0 0); filter:brightness(1)}}
+  .area .cloud{position:absolute; z-index:4; border-radius:50%; pointer-events:none;
+               background:radial-gradient(circle at 50% 55%,rgba(250,247,240,.98),rgba(228,222,212,.85) 45%,rgba(210,205,198,0) 70%)}
+  .area.reveal .c1{width:85%; height:130%; left:-8%; top:-15%; animation:cloudL 1.5s .5s ease-in both}
+  .area.reveal .c2{width:85%; height:130%; right:-8%; top:-15%; animation:cloudR 1.5s .5s ease-in both}
+  .area.reveal .c3{width:60%; height:100%; left:20%; top:0; animation:cloudUp 1.3s .6s ease-in both}
+  @keyframes cloudL{from{transform:translateX(0); opacity:1} to{transform:translateX(-95%); opacity:0}}
+  @keyframes cloudR{from{transform:translateX(0); opacity:1} to{transform:translateX(95%); opacity:0}}
+  @keyframes cloudUp{from{transform:translateY(0) scale(1); opacity:1} to{transform:translateY(-70%) scale(1.3); opacity:0}}
+  .node.pop{animation:nodePop .5s cubic-bezier(.3,1.7,.5,1) backwards}
+  .node.pop.next{animation:nodePop .5s cubic-bezier(.3,1.7,.5,1) backwards, nextGlow 1.4s ease-in-out infinite}
+  .node.pop.bonus.ready{animation:nodePop .5s cubic-bezier(.3,1.7,.5,1) backwards, coinShine 2s ease-in-out infinite}
+  @keyframes nodePop{from{transform:translate(-50%,-50%) scale(0)} to{transform:translate(-50%,-50%) scale(1)}}
+  .hero.drop{animation:heroDrop .6s 1.3s cubic-bezier(.3,1.5,.5,1) backwards, heroBob .7s 1.9s ease-in-out infinite}
+  @keyframes heroDrop{from{margin-top:-90px; opacity:0} to{margin-top:0; opacity:1}}
+  .newarea{position:absolute; left:50%; top:40%; z-index:6; transform:translate(-50%,-50%); pointer-events:none; white-space:nowrap;
+           text-align:center; padding:10px 28px 12px; border-radius:6px; border:2px solid #ffd24a;
+           background:linear-gradient(180deg,rgba(46,28,10,.94),rgba(20,12,6,.94));
+           box-shadow:0 0 0 4px rgba(20,12,6,.6), 0 0 34px rgba(255,200,80,.65); animation:newArea 2.6s ease both}
+  .newarea b{display:block; font-family:var(--disp); font-weight:400; font-size:30px; line-height:1.05;
+             background:linear-gradient(180deg,#fff3c4,#ffd24a 45%,#c47f12); -webkit-background-clip:text; background-clip:text; color:transparent;
+             filter:drop-shadow(0 2px 0 #3a2208)}
+  .newarea span{display:block; margin-top:4px; font-size:16px; font-weight:700; letter-spacing:.24em; color:#fff3da}
+  @keyframes newArea{0%{opacity:0; transform:translate(-50%,-50%) scale(.5)} 12%{opacity:1; transform:translate(-50%,-50%) scale(1.1)}
+                     20%{transform:translate(-50%,-50%) scale(1)} 80%{opacity:1; transform:translate(-50%,-50%) scale(1)} 100%{opacity:0; transform:translate(-50%,-60%) scale(1)}}
+  @media (prefers-reduced-motion:reduce){ .fog .cloud, .fog-t .up, .area.reveal, .node.pop, .hero.drop{animation:none} .area.reveal .cloud{display:none} }
   .chip .v{white-space:nowrap}
   .chip.army{flex:none}                /* 兵力の欄は数字の幅ぶん確保する（隣の欄に食い込まない） */
   @media (max-width:380px){ .hud{gap:8px} .chip{padding-left:8px; padding-right:8px} .chip .v{font-size:16px} .chip.weap .v{font-size:13px} .chip.weap{padding-right:8px} .chip.weap #hWeapIcon{display:none} }
@@ -418,11 +600,28 @@
       <p class="tag-line">ゲートをくぐって、<br>軍勢を100万へ。</p>
       <div class="records" id="records" hidden></div>
       <div class="btn-row">
-        <button class="btn" id="btnStart">出撃する</button>
+        <button class="btn" id="btnStart">▶ 出撃</button>
         <button class="btn ghost" id="btnContinue" hidden>続きから</button>
         <button class="btn ghost" id="btnRankTitle" hidden>🏆 ランキング</button>
       </div>
       <div><button class="howto-link" id="btnHowto">遊び方</button><a class="howto-link" href="select.html">ゲームを選ぶ</a></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovMap" hidden>
+    <div class="map">
+      <div class="map-head">
+        <button class="btn ghost" id="btnMapBack">◀ タイトル</button>
+        <div class="map-title"><b>WORLD MAP</b><small>マップ</small></div>
+        <span class="map-prog" id="mapProg"></span>
+      </div>
+      <p class="map-boost" id="mapBoost"></p>
+      <div class="map-list" id="mapList"></div>
+      <div class="map-info">
+        <div class="t" id="mapT"></div>
+        <button class="btn go" id="btnGo">GO</button>
+        <div class="d" id="mapD"></div>
+      </div>
     </div>
   </div>
 
@@ -438,6 +637,7 @@
       </div>
       <div class="btn-row">
         <button class="btn" id="btnNext">次のステージへ</button>
+        <button class="btn ghost" id="btnMapClear">マップへ</button>
         <button class="btn share" id="btnShareClear">📷 シェア</button>
       </div>
     </div>
@@ -455,7 +655,7 @@
       </div>
       <div class="btn-row">
         <button class="btn" id="btnEndless">エンドレスへ進む</button>
-        <button class="btn ghost" id="btnAgain">最初から</button>
+        <button class="btn ghost" id="btnAgain">マップへ</button>
       </div>
     </div>
   </div>
@@ -471,8 +671,8 @@
         <div class="stat hi"><div class="k">最高兵力</div><div class="v" id="oBest">0</div></div>
       </div>
       <div class="btn-row">
-        <button class="btn" id="btnRetryStage">このステージから</button>
-        <button class="btn ghost" id="btnRetry">最初から</button>
+        <button class="btn" id="btnRetryStage">もう一度</button>
+        <button class="btn ghost" id="btnRetry">マップへ</button>
       </div>
     </div>
   </div>
@@ -485,7 +685,7 @@
       <div class="btn-row">
         <button class="btn" id="btnResume">再開する</button>
         <button class="btn ghost" id="btnPauseSet">音量</button>
-        <button class="btn ghost" id="btnQuit">タイトルへ</button>
+        <button class="btn ghost" id="btnQuit">マップへ</button>
         <a class="btn ghost" href="select.html">ゲームを選ぶ</a>
       </div>
     </div>
@@ -545,7 +745,8 @@
         <div class="rule"><b>剣</b><span>金は武器が上がる。<strong>戦闘力 = 兵力 × 武器倍率</strong>。数を取るか、質を取るか</span></div>
         <div class="rule"><b class="n">刃</b><span>ステージ4からは回転する刃が出る。当たった兵だけを削る。隙間を抜けろ</span></div>
         <div class="rule"><b>隊</b><span>兵が増えると10人で<strong>隊長</strong>、100人で<strong>巨大騎士</strong>にまとまる。景色が変わるたびに装備も敵も強くなる</span></div>
-        <div class="rule"><b>宝</b><span>3ステージごとにボーナス。赤ゲートも敵もいない道で宝箱を拾い集める</span></div>
+        <div class="rule"><b>宝</b><span>3・6・9面のあとに宝物庫が開く。好きなときに1回だけ遊べて、<strong>手に入れたぶんは次の出撃に上乗せ</strong></span></div>
+        <div class="rule"><b class="n">地</b><span>全滅してもマップに戻るだけ。<strong>クリアした面は何度でも遊び直せる</strong>ので、兵を増やしてから先へ進もう</span></div>
         <div class="rule"><b class="r">巨</b><span>巨人は一体で道を塞ぐ。棍棒の一撃で兵がまとめて消える。<strong>戦闘力が高いほど早く倒せて、被害も少ない</strong></span></div>
       </div>
       <p class="hint" style="margin:0 0 16px">ドラッグ、または ← → キーで隊列を動かす。P / Esc で一時停止</p>
@@ -3406,7 +3607,7 @@ function refreshTitle() {
   rec.innerHTML = "<span>最高兵力<b>" + fmt(best) + "</b></span><span>最高到達<b>Stage " + bs + "</b></span>";
   const sv = store.get("mm.save", null);
   const bc = document.getElementById("btnContinue");
-  bc.hidden = !(sv && sv.st > 1);
+  bc.hidden = true;                                // マップ方式になったので「続きから」は使わない（進み具合はマップに残る）
   if (sv) bc.textContent = "続きから（Stage " + sv.st + "）";
 }
 
@@ -3487,21 +3688,24 @@ function stageClear() {
 
   vib([30, 30, 30]);
   if (inBonus) {                       // ボーナス終了
+    const bk = recordBonus();
+    document.getElementById("btnMapClear").hidden = true;
     document.getElementById("clearEyebrow").textContent = "Bonus 終了";
     document.getElementById("clearTitle").textContent = "宝物を手に入れた";
     document.getElementById("cArmy").textContent  = fmt(crowd.count);
     document.getElementById("cWeap").textContent  = wname(crowd.weapon);
     document.getElementById("cKills").textContent = fmt(kills);
-    document.getElementById("clearLede").textContent = "ふくらんだ軍勢で Stage " + (stage + 1) + " へ。";
-    document.getElementById("btnNext").textContent = "Stage " + (stage + 1) + " へ";
+    document.getElementById("clearLede").textContent = "手に入れたぶんは、次の出撃に上乗せ（兵力 ×" + bk.toFixed(1) + "）。マップで好きな面を選ぼう。";
+    document.getElementById("btnNext").textContent = "マップへ";
     ovClear.hidden = false;
     Result.hideClearShare();
     return;
   }
   document.getElementById("clearTitle").textContent = "神殿を制圧した";
-  document.getElementById("btnNext").textContent = bonusAfter(stage) ? "ボーナスステージへ" : "次のステージへ";
+  document.getElementById("btnNext").textContent = "次のステージへ";
 
   if (stage >= FINAL_STAGE && !endless) {          // 完全制覇
+    recordClear(rankNow());
     store.set("mm.save", { st: stage + 1, army: Math.max(10, Math.round(crowd.count)), weapon: crowd.weapon, kills, endless: true, rb: runBest });
     document.getElementById("wArmy").textContent  = fmt(crowd.count);
     document.getElementById("wWeap").textContent  = wname(crowd.weapon);
@@ -3517,6 +3721,8 @@ function stageClear() {
   document.getElementById("cKills").textContent = fmt(kills);
   document.getElementById("clearLede").textContent =
     "残存兵力 " + fmt(crowd.count) + " と " + wname(crowd.weapon) + " を引き継いで次の神殿へ。";
+  if (recordClear(rankNow())) document.getElementById("clearLede").textContent = "宝物庫が開いた！ マップで好きなときに使える。";
+  document.getElementById("btnMapClear").hidden = false;
   ovClear.hidden = false;
   Result.prepareClear();
 }
@@ -3529,6 +3735,11 @@ function gameOver() {
   Snd.lose();
   saveBest();
   doShake(16); vib(220);
+  const hasBonus = MAP.boost || Object.values(MAP.bonus).includes("ready");
+  document.getElementById("overLede").textContent = hasBonus && Math.random() < 0.6
+    ? "宝物庫をとってあるなら、今が使いどき。マップから遊べる。"
+    : ["数で押し負けた。ゲートの選び方を変えてみよう。", "前の面を遊び直して兵を増やしてから挑むのも手。マップから選べる。",
+       "金のゲートで武器を上げると、同じ兵力でも戦闘力が上がる。"][(Math.random() * 3) | 0];
   document.getElementById("oStage").textContent = "Stage " + stage;
   document.getElementById("oKills").textContent = fmt(kills);
   document.getElementById("oBest").textContent = fmt(best);
@@ -3604,10 +3815,7 @@ document.getElementById("btnSet").addEventListener("click", () => {
 btnPause.addEventListener("click", pauseGame);
 document.getElementById("btnResume").addEventListener("click", resumeGame);
 document.getElementById("btnPauseSet").addEventListener("click", () => openSettings(ovPause));
-document.getElementById("btnQuit").addEventListener("click", () => {
-  ovPause.hidden = true; state = "title"; pausedFrom = null;
-  setupDemo(); refreshTitle(); ovTitle.hidden = false;
-});
+document.getElementById("btnQuit").addEventListener("click", showMap);
 addEventListener("keydown", (e) => {
   if (e.target && e.target.closest && e.target.closest("input")) return;
   if (e.key === "p" || e.key === "P" || e.key === "Escape") {
@@ -3616,19 +3824,368 @@ addEventListener("keydown", (e) => {
 });
 document.addEventListener("visibilitychange", () => { if (document.hidden) pauseGame(); });
 
-document.getElementById("btnStart").addEventListener("click", () => {
-  best = loadBest(); startRun();
+document.getElementById("btnStart").addEventListener("click", () => { Snd.kick(); showMap(); });
+document.getElementById("btnNext").addEventListener("click", () => {
+  if (inBonus || !mapRun) { showMap(); return; }
+  if (stage >= FINAL_STAGE) {                      // エンドレスは続けて次の面へ
+    beginStage(stage + 1, Math.max(10, Math.round(crowd.count)), crowd.weapon);
+    return;
+  }
+  startNode(stage + 1);
 });
-document.getElementById("btnNext").addEventListener("click", nextStep);
+document.getElementById("btnMapClear").addEventListener("click", showMap);
 document.getElementById("btnContinue").addEventListener("click", () => { best = loadBest(); continueSaved(); });
-document.getElementById("btnRetryStage").addEventListener("click", continueSaved);
-document.getElementById("btnRetry").addEventListener("click", startRun);
-document.getElementById("btnAgain").addEventListener("click", startRun);
-document.getElementById("btnEndless").addEventListener("click", () => { endless = true; nextStep(); });
+document.getElementById("btnRetryStage").addEventListener("click", () => { if (mapRun) startNode(mapRun.node); else showMap(); });
+document.getElementById("btnRetry").addEventListener("click", showMap);
+document.getElementById("btnAgain").addEventListener("click", showMap);
+document.getElementById("btnEndless").addEventListener("click", () => startNode("ex"));
 document.getElementById("btnSound").addEventListener("click", (e) => {
   const on = Snd.toggle();
   e.currentTarget.textContent = on ? "♪" : "✕";
   e.currentTarget.style.color = on ? C.gold : "rgba(228,219,198,.45)";
+});
+
+/* ============================================================
+   8.7 マップ（ステージを選んで出撃する）
+   ============================================================ */
+/* 各ステージは「前のステージをクリアしたときの一番いい兵力と武器」から始まる。
+   だから同じ面を遊び直して兵を増やしてから先へ進める（人によって難しさを調整できる）。
+   宝物庫は3・6・9面のあとに開き、好きなときに1回だけ遊べる。手に入れたぶんは次の出撃に上乗せ。 */
+const ovMap = document.getElementById("ovMap");
+const MAP_KEY = "mm.map";
+const AREAS = [
+  { name: "翠緑の遺跡", file: "level_01_02_valley", nodes: [1, 2] },
+  { name: "黄金の砂漠", file: "level_03_04_desert", nodes: [3, "b3", 4] },
+  { name: "氷雪の神殿", file: "level_05_06_snow", nodes: [5, 6, "b6"] },
+  { name: "灼熱の要塞", file: "level_07_08_volcano", nodes: [7, 8] },
+  { name: "天空の聖域", file: "level_09_10_sky", nodes: [9, "b9", 10] },
+  { name: "果てなき遠征", file: "level_09_10_sky", nodes: ["ex"], ex: true },
+];
+const RANK_PT = { S: 4, A: 3, B: 2, C: 1 };
+const starsOf = (r) => (r === "S" ? 3 : r === "A" ? 2 : r ? 1 : 0);
+let mapRun = null;        // いま遊んでいるマップのマス（{ kind, node, ... }）
+
+function loadMap() {
+  let m = null;
+  try { m = JSON.parse(localStorage.getItem(MAP_KEY) || "null"); } catch (e) {}
+  if (m && m.clears) return m;
+  m = { clears: {}, bonus: {}, boost: null, exBest: 0, sel: 1 };
+  // マップ以前の「続きから」の記録があれば、そこまでを開いておく
+  const sv = store.get("mm.save", null);
+  if (sv && sv.st > 1) {
+    const last = Math.min(sv.st - 1, FINAL_STAGE);
+    for (let k = 1; k <= last; k++) m.clears[k] = { army: Math.round(sv.army), power: sv.weapon | 0, rank: "" };
+    for (const b of [3, 6, 9]) if (b <= last) m.bonus[b] = "ready";
+    m.sel = Math.min(last + 1, FINAL_STAGE);
+  }
+  return m;
+}
+let MAP = loadMap();
+const saveMap = () => { try { localStorage.setItem(MAP_KEY, JSON.stringify(MAP)); } catch (e) {} };
+
+const isBonusNode = (n) => typeof n === "string" && n[0] === "b";
+function unlockedNode(n) {
+  if (n === 1) return true;
+  if (n === "ex") return !!MAP.clears[FINAL_STAGE];
+  if (isBonusNode(n)) return !!MAP.clears[+n.slice(1)];
+  return !!MAP.clears[n - 1];
+}
+/** そのステージを始めるときの兵力と武器（前の面の一番いいクリア記録）。Million March の武器は段階の数字（power 欄に入れる） */
+function entryOf(st) {
+  if (st <= 1) return { army: 20, power: 0 };
+  const c = MAP.clears[Math.min(st - 1, FINAL_STAGE)];
+  return c ? { army: Math.max(10, Math.round(c.army)), power: c.power | 0 } : { army: 20, power: 0 };
+}
+/** まだクリアしていない一番手前のステージ */
+function frontier() { let s = 1; while (s < FINAL_STAGE && MAP.clears[s]) s++; return s; }
+function nodeLabel(n) {
+  if (n === "ex") return "エンドレス遠征";
+  if (isBonusNode(n)) return "宝物庫";
+  return "Stage " + n;
+}
+
+/* マップの絵柄：星と鍵は SVG で描く（文字の★より形がそろって見える） */
+const SVG_STAR = (on) => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="' +
+  (on ? "#ffd24a" : "#4a3d2c") + '" stroke="' + (on ? "#8a5a00" : "#241a12") + '" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const SVG_LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="#1a120c" stroke-width="4.2"/>' +
+  '<path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="#d8cbb4" stroke-width="2.2"/>' +
+  '<rect x="5" y="10.5" width="14" height="10" rx="2" fill="#d8cbb4" stroke="#1a120c" stroke-width="1.6"/><circle cx="12" cy="15.3" r="1.7" fill="#1a120c"/></svg>';
+const starsRow = (s) => [0, 1, 2].map((i) => SVG_STAR(i < s)).join("");
+const chip = (k, v, cls) => "<span class='chip2" + (cls ? " " + cls : "") + "'>" + (k ? "<i>" + k + "</i>" : "") + v + "</span>";
+
+/* 1枚の地図：下の翠緑の遺跡から、上の果ての道へ登っていく。
+   見えるのは解放したフロア（景色の帯）だけ。その上は雲に隠れていて、新しいフロアに上がると雲が晴れる。
+   帯ごとに左右の向きを入れ替えて、道がジグザグに登るように並べる（x は横の%、y は帯の中の縦の%） */
+const LAYOUT = { 1: [[50, 56]], 2: [[24, 60], [76, 48]], 3: [[16, 62], [50, 44], [84, 62]] };
+const hasKing = (st) => st === 5 || st === 8 || st === FINAL_STAGE;      // buildStage と同じ（巨人王が出る面）
+let heroTimer = 0;
+
+function renderMap() {
+  const list = document.getElementById("mapList");
+  list.innerHTML = "";
+  const world = document.createElement("div");
+  world.className = "world";
+  list.appendChild(world);
+  const next = frontier();
+  const heroNode = MAP.clears[FINAL_STAGE] ? "ex" : next;
+  // 見せるフロア：何かひとつでも開いている帯（下から続いている）
+  const openAreas = AREAS.filter((a) => a.nodes.some((n) => unlockedNode(n)));
+  if (MAP.seen === undefined) MAP.seen = openAreas.length;          // はじめて開いたときは演出なし
+  const revealIdx = openAreas.length > MAP.seen ? openAreas.length - 1 : -1;
+  // 帯の高さは、全フロアがそろったときと同じにする（増えても大きさが変わらない）
+  const bandH = Math.max(58, Math.floor((list.clientHeight - 18) / AREAS.length));
+  let total = 0;
+  AREAS.forEach((a) => a.nodes.forEach((n) => { if (typeof n === "number" && MAP.clears[n]) total += starsOf(MAP.clears[n].rank); }));
+  openAreas.forEach((a, ai) => {
+    const sec = document.createElement("section");
+    const stageNodes = a.nodes.filter((n) => typeof n === "number");
+    const areaDone = stageNodes.length > 0 && stageNodes.every((n) => MAP.clears[n]);
+    sec.className = "area" + (areaDone ? " done" : "") + (ai === revealIdx ? " reveal" : "");
+    sec.style.height = bandH + "px";
+    sec.style.backgroundImage = "url(assets/backgrounds/" + a.file + ".webp)";
+    sec.innerHTML = "<h3>" + a.name + (areaDone ? "<span class='ck'>★CLEAR</span>" : "") + "</h3>";
+    for (let i = 0; i < 4; i++) {                                       // きらめき
+      const tw = document.createElement("i");
+      tw.className = "tw";
+      tw.style.left = (8 + Math.random() * 84) + "%";
+      tw.style.top = (14 + Math.random() * 70) + "%";
+      tw.style.animationDelay = (Math.random() * 2.6).toFixed(2) + "s";
+      const sz = 6 + Math.random() * 7;
+      tw.style.width = tw.style.height = sz.toFixed(1) + "px";
+      sec.appendChild(tw);
+    }
+    if (ai === revealIdx) sec.insertAdjacentHTML("beforeend", "<i class='cloud c1'></i><i class='cloud c2'></i><i class='cloud c3'></i>");
+    // 帯ごとに向きを入れ替える（奇数番目の帯は右から左へ）。一番下の帯は少し上へ（星の札が切れないように）
+    const pts = LAYOUT[a.nodes.length].map(([x, y]) => [ai % 2 ? 100 - x : x, ai === 0 ? y - 12 : y]);
+    a.nodes.forEach((n, k) => {
+      const [x, y] = pts[k];
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.node = n;
+      b.style.left = x + "%";
+      b.style.top = y + "%";
+      if (ai === revealIdx) b.style.animationDelay = (0.75 + k * 0.18).toFixed(2) + "s";
+      const open = unlockedNode(n);
+      let cls = "node", inner = "";
+      if (isBonusNode(n)) {
+        const st = MAP.bonus[+n.slice(1)];
+        cls += " bonus" + (st === "done" ? " done" : open ? " ready" : "");
+        inner = "<canvas aria-hidden='true'></canvas>";
+      } else if (n === "ex") {
+        cls += " ex";
+        inner = "<span class='num'>∞</span>" + (MAP.exBest ? "<span class='best'>最高 Stage " + MAP.exBest + "</span>" : "");
+      } else {
+        const c = MAP.clears[n];
+        if (c) cls += " clear";
+        inner = "<span class='num'>" + n + "</span>";
+        if (c) inner += "<span class='stars'>" + starsRow(starsOf(c.rank)) + "</span>";
+        else if (n === next) cls += " next";
+        if (hasKing(n)) inner += "<span class='boss' title='巨人王'><canvas aria-hidden='true'></canvas></span>";
+      }
+      if (!open) { cls += " lock"; inner += "<span class='lk'>" + SVG_LOCK + "</span>"; }
+      if (ai === revealIdx) cls += " pop";
+      b.className = cls;
+      b.innerHTML = inner;
+      b.setAttribute("aria-label", nodeLabel(n) + (typeof n === "number" && hasKing(n) ? "（巨人王）" : "") + (open ? "" : "（まだ開いていない）"));
+      b.addEventListener("click", () => selectNode(n));
+      sec.appendChild(b);
+      b.querySelectorAll("canvas").forEach((cv) => {
+        const id = cv.parentElement.classList.contains("boss") ? "giant_king_idle"
+          : MAP.bonus[+String(n).slice(1)] === "done" ? "chest_open" : "chest_closed";
+        requestAnimationFrame(() => SpriteKit.paintIcon(cv, id));
+      });
+      if (n === heroNode && open) {                                      // 自分の隊長：次に挑む面の上に立つ
+        const h = document.createElement("canvas");
+        h.className = "hero" + (ai === revealIdx ? " drop" : "");
+        h.setAttribute("aria-hidden", "true");
+        h.style.left = x + "%";
+        h.style.top = "calc(" + y + "% - 16px)";
+        sec.appendChild(h);
+      }
+    });
+    world.appendChild(sec);
+  });
+  // まだ見ぬフロア：雲の層（全部解放したら出さない）
+  if (openAreas.length < AREAS.length) {
+    world.insertAdjacentHTML("beforeend",
+      "<div class='fog'><i class='cloud f1'></i><i class='cloud f2'></i><i class='cloud f3'></i>" +
+      "<div class='fog-t'><span class='up'>▲</span>まだ見ぬ地へ<small>あと " + (AREAS.length - openAreas.length) + " エリア</small></div></div>");
+  }
+  // 新しいフロアの演出：雲が晴れて帯がせり上がり、大きな帯で名前を知らせる
+  if (revealIdx >= 0) {
+    const a = openAreas[revealIdx];
+    world.insertAdjacentHTML("beforeend", "<div class='newarea'><b>NEW AREA</b><span>" + a.name + "</span></div>");
+    Snd.fanfare5();
+    MAP.seen = openAreas.length; saveMap();
+    setTimeout(() => { const na = world.querySelector(".newarea"); if (na) na.remove(); }, 2600);
+    setTimeout(drawMapRoad, 950);                                           // 帯がせり上がってから道を描く
+  } else requestAnimationFrame(drawMapRoad);
+  // 隊長の足踏み（2コマを交互に）
+  clearInterval(heroTimer);
+  const hero = world.querySelector(".hero");
+  if (hero) {
+    let f = 0;
+    const paint = () => { if (ovMap.hidden) { clearInterval(heroTimer); return; } SpriteKit.paintIcon(hero, "ally_run_" + (f = f % 2 + 1)); };
+    requestAnimationFrame(paint);
+    heroTimer = setInterval(paint, 340);
+  }
+  document.getElementById("mapProg").innerHTML = SVG_STAR(true).replace("<svg", "<svg class='ps'") + total + "<small>/" + FINAL_STAGE * 3 + "</small>";
+  const bEl = document.getElementById("mapBoost");
+  bEl.textContent = MAP.boost ? "🎁 宝物ボーナス：次の出撃は 兵力 ×" + MAP.boost.k.toFixed(1) + " から" : "";
+  let sel = MAP.sel;
+  if (!unlockedNode(sel)) sel = next;
+  selectNode(sel, true);
+}
+
+// ゲームの石畳を描く drawRoad とは別物（同じ名前にすると上書きして床が消える）
+/** ノードの中心を順に通る道。クリアしたところまでは金色、その先は白い点線。見えている一番上から雲の中へ続く */
+function drawMapRoad() {
+  const world = document.querySelector("#mapList .world");
+  if (!world) return;
+  const old = world.querySelector(".road");
+  if (old) old.remove();
+  const wr = world.getBoundingClientRect();
+  const order = AREAS.flatMap((a) => a.nodes).filter((n) => world.querySelector('.node[data-node="' + n + '"]'));
+  const pts = order.map((n) => {
+    const r = world.querySelector('.node[data-node="' + n + '"]').getBoundingClientRect();
+    return [r.left + r.width / 2 - wr.left, r.top + r.height / 2 - wr.top];
+  });
+  const fog = world.querySelector(".fog");
+  if (fog) {                                                              // 雲の中へ消えていく道
+    const fr = fog.getBoundingClientRect();
+    pts.push([wr.width / 2, fr.bottom - wr.top - Math.min(60, fr.height * 0.45)]);
+  }
+  let litTo = 0;
+  order.forEach((n, i) => { if (unlockedNode(n)) litTo = i; });
+  const seg = (from, to) => {
+    let d = "M" + pts[from][0].toFixed(1) + " " + pts[from][1].toFixed(1);
+    for (let i = from + 1; i <= to; i++) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+      const my = (y0 + y1) / 2;
+      d += " C" + x0.toFixed(1) + " " + my.toFixed(1) + " " + x1.toFixed(1) + " " + my.toFixed(1) + " " + x1.toFixed(1) + " " + y1.toFixed(1);
+    }
+    return d;
+  };
+  const all = seg(0, pts.length - 1);
+  const svg = '<svg class="road" width="' + wr.width + '" height="' + wr.height + '" viewBox="0 0 ' + wr.width + " " + wr.height + '" aria-hidden="true">' +
+    '<path class="bed" d="' + all + '"/><path class="dots" d="' + all + '"/>' +
+    (litTo > 0 ? '<path class="lit" d="' + seg(0, litTo) + '"/>' : "") + "</svg>";
+  world.insertAdjacentHTML("afterbegin", svg);
+}
+addEventListener("resize", () => { if (!ovMap.hidden) requestAnimationFrame(drawMapRoad); });
+
+function selectNode(n, scroll) {
+  MAP.sel = n;
+  document.querySelectorAll("#mapList .node").forEach((b) => b.classList.toggle("sel", b.dataset.node === String(n)));
+  const t = document.getElementById("mapT"), d = document.getElementById("mapD"), go = document.getElementById("btnGo");
+  const open = unlockedNode(n);
+  go.disabled = !open;
+  go.textContent = "GO";
+  const boostChip = MAP.boost ? chip("宝物", "×" + MAP.boost.k.toFixed(1), "gold") : "";
+  if (isBonusNode(n)) {
+    const b = +n.slice(1), st = MAP.bonus[b];
+    t.innerHTML = "<b>宝物庫</b><small>とっておきのボーナス</small>";
+    if (!open) d.textContent = "Stage " + b + " をクリアすると開く。";
+    else if (st === "done") { d.textContent = "もう使った。"; go.disabled = true; }
+    else d.textContent = "宝箱を拾い集めて、手に入れたぶんを次の出撃に上乗せ。苦しい面の前に取っておこう。";
+  } else if (n === "ex") {
+    t.innerHTML = "<b>∞</b><small>エンドレス遠征</small>";
+    if (!open) d.textContent = "Stage 10 をクリアすると開く。";
+    else {
+      const e = entryOf(FINAL_STAGE + 1);
+      d.innerHTML = chip("出撃兵力", fmt(e.army)) + chip("", wname(e.power)) + boostChip +
+        (MAP.exBest ? chip("最高", "Stage " + MAP.exBest, "gold") : "");
+    }
+  } else {
+    const theme = themeFor(n).name;
+    t.innerHTML = "<b>STAGE " + n + "</b><small>" + theme + "</small>";
+    if (!open) d.textContent = "Stage " + (n - 1) + " をクリアすると開く。";
+    else {
+      const e = entryOf(n), c = MAP.clears[n];
+      d.innerHTML = chip("出撃兵力", fmt(e.army)) + chip("", wname(e.power)) + boostChip +
+        (c ? chip("ベスト", starsRow(starsOf(c.rank))) : "");
+    }
+  }
+  if (scroll) {
+    const el = document.querySelector("#mapList .node.sel");
+    if (el) requestAnimationFrame(() => el.scrollIntoView({ block: "center" }));
+  }
+}
+
+function showMap() {
+  ovPause.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovTitle.hidden = ovSettings.hidden = true;
+  pausedFrom = null;
+  Snd.music(false);
+  if (state !== "title") setupDemo();
+  mapRun = null;
+  ovMap.hidden = false;                 // 先に表示してから描く（帯の高さを画面に合わせて測るため）
+  renderMap();
+}
+
+/** マップのマスから出撃する */
+function startNode(n) {
+  ovMap.hidden = true;
+  Snd.kick();
+  best = loadBest(); kills = 0; runBest = 0;
+  MAP.sel = n; saveMap();
+  if (isBonusNode(n)) {
+    const e = entryOf(frontier());
+    stage = +n.slice(1);
+    mapRun = { kind: "bonus", node: n, b: stage, a0: e.army, p0: e.power };
+    beginBonus(e.army, e.power);
+    return;
+  }
+  const st = n === "ex" ? FINAL_STAGE + 1 : n;
+  const e = entryOf(st);
+  let army = e.army, power = e.power, boost = null;
+  if (MAP.boost) {
+    boost = MAP.boost;
+    army = Math.round(army * boost.k);
+    power = Math.min(WMAX, power + (boost.pk | 0));                 // 武器は段階を足す
+    MAP.boost = null; saveMap();
+  }
+  mapRun = { kind: n === "ex" ? "ex" : "stage", node: n, start: army };
+  endless = n === "ex";
+  beginStage(st, army, power);
+  if (boost) setTimeout(() => { if (state === "run") showBanner("宝物ボーナス！", "兵力 ×" + boost.k.toFixed(1) + " で出撃", "bonus"); }, 2600);
+}
+
+/** クリアした記録をマップに残す（兵力が多いほうを残す。ランクは良いほう） */
+function recordClear(rank) {
+  if (!mapRun || mapRun.kind === "bonus") return;
+  if (stage > FINAL_STAGE) { MAP.exBest = Math.max(MAP.exBest || 0, stage); saveMap(); return; }
+  const old = MAP.clears[stage];
+  const army = Math.round(crowd.count);
+  const keep = old && old.army > army;
+  const betterRank = !old || (RANK_PT[rank] || 0) > (RANK_PT[old.rank] || 0) ? rank : old.rank;
+  MAP.clears[stage] = keep ? { army: old.army, power: old.power, rank: betterRank } : { army, power: crowd.weapon, rank: betterRank };
+  let opened = false;
+  if (stage < FINAL_STAGE && stage % 3 === 0 && !MAP.bonus[stage]) { MAP.bonus[stage] = "ready"; opened = true; }
+  MAP.sel = stage < FINAL_STAGE ? stage + 1 : "ex";
+  saveMap();
+  return opened;
+}
+/** 宝物庫の結果を「次の出撃」の上乗せとしてとっておく */
+function recordBonus() {
+  if (!mapRun || mapRun.kind !== "bonus") return 1;
+  const k = Math.max(1, crowd.count / Math.max(1, mapRun.a0));
+  const pk = Math.max(0, crowd.weapon - mapRun.p0);                 // 上がった武器の段階
+  const prev = MAP.boost;
+  MAP.boost = prev ? { k: prev.k * k, pk: (prev.pk | 0) + pk } : { k, pk };
+  MAP.bonus[mapRun.b] = "done";
+  MAP.sel = frontier();
+  saveMap();
+  return MAP.boost.k;
+}
+/** そのステージで兵をどれだけ増やしたかで星を決める */
+const rankNow = () => { const g = crowd.count / Math.max(1, (mapRun && mapRun.start) || 1); return g >= 4 ? "S" : g >= 2.2 ? "A" : g >= 1 ? "B" : "C"; };
+
+document.getElementById("btnGo").addEventListener("click", () => { if (unlockedNode(MAP.sel)) startNode(MAP.sel); });
+document.getElementById("btnMapBack").addEventListener("click", () => { ovMap.hidden = true; ovTitle.hidden = false; });
+addEventListener("keydown", (e) => {
+  if (ovMap.hidden) return;
+  if (e.key === "Escape") { ovMap.hidden = true; ovTitle.hidden = false; }
+  else if (e.key === "Enter" && e.target.tagName !== "BUTTON" && !document.getElementById("btnGo").disabled) startNode(MAP.sel);
 });
 
 /* ============================================================
