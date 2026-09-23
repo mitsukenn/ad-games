@@ -3648,8 +3648,8 @@ function renderMap() {
     Snd.fanfare();
     MAP.seen = openAreas.length; saveMap();
     setTimeout(() => { const na = world.querySelector(".newarea"); if (na) na.remove(); }, 2600);
-    setTimeout(drawRoad, 950);                                           // 帯がせり上がってから道を描く
-  } else requestAnimationFrame(drawRoad);
+    setTimeout(drawMapRoad, 950);                                           // 帯がせり上がってから道を描く
+  } else requestAnimationFrame(drawMapRoad);
   // 隊長の足踏み（2コマを交互に）
   clearInterval(heroTimer);
   const hero = world.querySelector(".hero");
@@ -3667,8 +3667,9 @@ function renderMap() {
   selectNode(sel, true);
 }
 
+// ゲームの石畳を描く drawRoad とは別物（同じ名前にすると上書きして床が消える）
 /** ノードの中心を順に通る道。クリアしたところまでは金色、その先は白い点線。見えている一番上から雲の中へ続く */
-function drawRoad() {
+function drawMapRoad() {
   const world = document.querySelector("#mapList .world");
   if (!world) return;
   const old = world.querySelector(".road");
@@ -3701,7 +3702,7 @@ function drawRoad() {
     (litTo > 0 ? '<path class="lit" d="' + seg(0, litTo) + '"/>' : "") + "</svg>";
   world.insertAdjacentHTML("afterbegin", svg);
 }
-addEventListener("resize", () => { if (!ovMap.hidden) requestAnimationFrame(drawRoad); });
+addEventListener("resize", () => { if (!ovMap.hidden) requestAnimationFrame(drawMapRoad); });
 
 function selectNode(n, scroll) {
   MAP.sel = n;
