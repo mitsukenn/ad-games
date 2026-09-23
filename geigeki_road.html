@@ -419,66 +419,99 @@
   @media (prefers-reduced-motion:reduce){ .finger .hand{animation:none} .tip{transition:none} }
   /* ---------- マップ ---------- */
   #hLife{display:none}                 /* マップ方式ではライフを使わない */
-  #ovMap{padding:0; overflow:hidden; background:rgba(14,10,8,.94)}
+  #ovMap{padding:0; overflow:hidden;
+         background:radial-gradient(ellipse at 50% 0%, rgba(224,168,60,.22), transparent 55%),
+                    radial-gradient(ellipse at 50% 100%, rgba(59,111,209,.18), transparent 60%), #120d0a}
   .map{height:100%; width:100%; max-width:540px; margin:0 auto; display:flex; flex-direction:column}
-  .map-head{display:flex; align-items:center; gap:10px; padding:max(12px, env(safe-area-inset-top)) 14px 8px}
-  .map-head h2{margin:0; flex:1; text-align:center; font-size:26px; color:var(--gold); text-shadow:0 3px 0 rgba(0,0,0,.5)}
-  .map-head .btn.ghost{margin:0; padding:7px 12px; font-size:13px}
+  .map-head{display:flex; align-items:center; gap:10px; padding:max(10px, env(safe-area-inset-top)) 14px 6px}
+  .map-head .btn.ghost{margin:0; padding:7px 10px; font-size:13px; white-space:nowrap; flex:none}
+  .map-title{flex:1; text-align:center; line-height:1}
+  .map-title b{display:block; font-family:var(--disp); font-weight:400; font-size:26px; letter-spacing:.02em;
+               background:linear-gradient(180deg,#fff3c4 0%,#ffd24a 45%,#c47f12 100%); -webkit-background-clip:text; background-clip:text; color:transparent;
+               filter:drop-shadow(0 2px 0 #3a2208) drop-shadow(0 0 10px rgba(255,190,70,.45))}
+  .map-title small{display:block; margin-top:2px; font-size:10px; font-weight:700; letter-spacing:.4em; color:rgba(228,219,198,.6)}
   .map-prog{display:inline-flex; align-items:center; gap:4px; padding:4px 10px 4px 7px; border-radius:999px;
-            background:linear-gradient(180deg,#3a2d22,#1d1611); border:1px solid rgba(224,168,60,.6);
-            font-family:var(--disp); font-size:15px; color:#fff3da; white-space:nowrap}
+            background:linear-gradient(180deg,#3a2d22,#1d1611); border:1px solid rgba(224,168,60,.7);
+            box-shadow:0 0 12px rgba(224,168,60,.25); font-family:var(--disp); font-size:15px; color:#fff3da; white-space:nowrap}
   .map-prog .ps{width:18px; height:18px}
   .map-prog small{font-size:11px; color:rgba(228,219,198,.6)}
   .map-boost{margin:0 14px 8px; padding:7px 12px; font-size:13px; font-weight:700; color:#2a1a02; text-align:center;
-             background:linear-gradient(180deg,#ffd76a,#e0a83c); border-radius:4px; box-shadow:0 2px 0 #a37520}
+             background:linear-gradient(180deg,#ffe38a,#e0a83c); border-radius:4px; box-shadow:0 2px 0 #a37520, 0 0 16px rgba(255,200,80,.35)}
   .map-boost:empty{display:none}
-  .map-list{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:6px 12px 18px; display:flex; flex-direction:column; gap:12px}
-  .area{position:relative; flex:none; border:1px solid rgba(224,168,60,.55); border-radius:6px; background-size:cover; background-position:center 60%;
-        padding:10px 10px 34px; box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.35)}
-  .area h3{display:inline-block; margin:0 0 20px; padding:3px 10px 4px; border-radius:3px; background:rgba(20,15,12,.72);
-           font-size:12px; font-weight:700; letter-spacing:.16em; color:#fff3da}
-  .area + .area::before{content:""; position:absolute; left:50%; top:-13px; width:6px; height:12px; margin-left:-3px;
-                        background:radial-gradient(circle,#f3e2b3 45%,transparent 50%) center/6px 6px repeat-y}
-  /* 道：砂色の点線（ノードとノードをつなぐ） */
-  .nodes{display:flex; justify-content:space-around; align-items:center; position:relative; min-height:72px}
-  .nodes::before{content:""; position:absolute; left:13%; right:13%; top:50%; height:8px; margin-top:-4px;
-                 background:radial-gradient(circle,#f6e7bd 42%,rgba(60,40,20,.6) 48%,transparent 56%) 0 50%/14px 8px repeat-x;
-                 filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
-  .area.exa .nodes::before{display:none}
+  .map-list{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:6px 12px 22px; display:flex; flex-direction:column; gap:16px}
+
+  /* エリア：景色の絵の上に、くねくね道とステージを置く */
+  .area{position:relative; flex:none; height:176px; border-radius:10px; overflow:visible;
+        background-size:cover; background-position:center 60%;
+        border:2px solid rgba(255,225,150,.55);
+        box-shadow:0 10px 24px rgba(0,0,0,.5), inset 0 0 50px rgba(0,0,0,.4), inset 0 0 0 1px rgba(0,0,0,.5)}
+  .area.done{border-color:#ffd24a; box-shadow:0 10px 24px rgba(0,0,0,.5), 0 0 18px rgba(255,210,74,.35), inset 0 0 50px rgba(0,0,0,.35)}
+  .area + .area::before{content:""; position:absolute; left:50%; top:-17px; width:6px; height:16px; margin-left:-3px;
+                        background:radial-gradient(circle,#f6e7bd 45%,transparent 52%) center/6px 7px repeat-y}
+  /* エリア名：帯のリボン */
+  .area h3{position:absolute; left:-6px; top:10px; z-index:3; margin:0; padding:5px 16px 6px 12px;
+           font-size:12px; font-weight:700; letter-spacing:.16em; color:#fff3da; text-shadow:0 1px 0 #3a0c08;
+           background:linear-gradient(180deg,#c9443a,#8e241d); clip-path:polygon(0 0,100% 0,calc(100% - 8px) 50%,100% 100%,0 100%);
+           filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+  .area h3::after{content:""; position:absolute; left:0; top:100%; border-top:5px solid #4a100c; border-left:6px solid transparent}
+  .area .road{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:1}
+  .area .road path{fill:none; vector-effect:non-scaling-stroke; stroke-linecap:round}
+  .area .road .bed{stroke:rgba(40,25,10,.55); stroke-width:12}
+  .area .road .dots{stroke:#f8e9c2; stroke-width:6; stroke-dasharray:0 13}
+  .area .road .dots.lit{stroke:#ffd24a}
+  /* クリアしたエリア：旗と CLEAR の札 */
+  .area .flag{position:absolute; right:10px; top:6px; width:40px; height:48px; z-index:2; filter:drop-shadow(0 3px 3px rgba(0,0,0,.6))}
+  .area .cleared{position:absolute; right:48px; top:14px; z-index:2; padding:2px 8px 3px; border-radius:3px;
+                 font-family:var(--disp); font-size:11px; letter-spacing:.06em; color:#3a2208;
+                 background:linear-gradient(180deg,#fff0a8,#e0a83c); box-shadow:0 2px 0 #7a5212}
+  /* きらめき */
+  .area .tw{position:absolute; width:10px; height:10px; z-index:1; pointer-events:none;
+            background:#fffbe6; clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);
+            filter:drop-shadow(0 0 4px #fff3c4); animation:twinkle 2.6s ease-in-out infinite; opacity:0}
+  @keyframes twinkle{0%,100%{opacity:0; transform:scale(.3) rotate(0)} 45%{opacity:1; transform:scale(1) rotate(45deg)} 60%{opacity:.8; transform:scale(.8) rotate(60deg)}}
 
   /* ステージの丸：宝石のようなつやと金の縁 */
   .node{--c1:#6f9cff; --c2:#2a4fb3; --ink:#0d1d44;
-        position:relative; width:62px; height:62px; border-radius:50%; padding:0; cursor:pointer;
+        position:absolute; z-index:2; transform:translate(-50%,-50%);
+        width:62px; height:62px; border-radius:50%; padding:0; cursor:pointer;
         border:3px solid #1a120c;
-        background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.75) 0 7%,rgba(255,255,255,0) 30%),
+        background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.8) 0 7%,rgba(255,255,255,0) 30%),
                    linear-gradient(180deg,var(--c1),var(--c2));
         box-shadow:inset 0 -6px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.35),
                    0 0 0 3px #e6b94f, 0 0 0 5px #1a120c, 0 6px 0 5px rgba(0,0,0,.45);
         display:grid; place-items:center; transition:transform .12s ease}
-  .node:active{transform:translateY(2px)}
+  .node:active{transform:translate(-50%,calc(-50% + 2px))}
   .node .num{font-family:var(--disp); font-size:25px; line-height:1; color:#fff; letter-spacing:-.02em;
              -webkit-text-stroke:5px var(--ink); paint-order:stroke fill; text-shadow:0 3px 0 var(--ink)}
-  .node.clear{--c1:#5fe0a8; --c2:#16805c; --ink:#073826}
-  .node.next{--c1:#7fb0ff; --c2:#2a4fb3}
+  .node.clear{--c1:#6ff0b6; --c2:#16805c; --ink:#073826;
+              box-shadow:inset 0 -6px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.35),
+                         0 0 0 3px #ffd24a, 0 0 0 5px #1a120c, 0 6px 0 5px rgba(0,0,0,.45), 0 0 18px 6px rgba(255,210,74,.35)}
+  .node.next{--c1:#8fbaff; --c2:#2a4fb3; animation:nextGlow 1.4s ease-in-out infinite}
+  @keyframes nextGlow{0%,100%{box-shadow:inset 0 -6px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.35), 0 0 0 3px #e6b94f, 0 0 0 5px #1a120c, 0 6px 0 5px rgba(0,0,0,.45), 0 0 0 0 rgba(130,180,255,.0)}
+                      50%{box-shadow:inset 0 -6px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.35), 0 0 0 3px #e6b94f, 0 0 0 5px #1a120c, 0 6px 0 5px rgba(0,0,0,.45), 0 0 22px 10px rgba(130,180,255,.55)}}
   .node.lock{--c1:#6b5e52; --c2:#3a3029; cursor:default;
              box-shadow:inset 0 -6px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.12),
                         0 0 0 3px #7a6a55, 0 0 0 5px #1a120c, 0 6px 0 5px rgba(0,0,0,.45)}
   .node.lock svg{width:24px; height:24px; opacity:.85}
-  .node.sel{transform:scale(1.08)}
-  .node.sel::after{content:""; position:absolute; inset:-12px; border-radius:50%; border:3px solid #ffd76a;
-                   box-shadow:0 0 14px rgba(255,215,106,.8); animation:selSpin 1.6s ease-in-out infinite}
-  @keyframes selSpin{0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.55; transform:scale(1.06)}}
+  .node.sel{transform:translate(-50%,-50%) scale(1.08)}
+  .node.sel::after{content:""; position:absolute; inset:-13px; border-radius:50%; pointer-events:none;
+                   background:conic-gradient(#ffd76a 0 12%,transparent 12% 25%,#ffd76a 25% 37%,transparent 37% 50%,#ffd76a 50% 62%,transparent 62% 75%,#ffd76a 75% 87%,transparent 87%);
+                   -webkit-mask:radial-gradient(circle,transparent 58%,#000 60% 68%,transparent 70%); mask:radial-gradient(circle,transparent 58%,#000 60% 68%,transparent 70%);
+                   filter:drop-shadow(0 0 6px rgba(255,215,106,.9)); animation:selSpin 4s linear infinite}
+  @keyframes selSpin{to{transform:rotate(360deg)}}
   .node:focus-visible{outline:3px solid #fff; outline-offset:8px}
   /* 星：丸の下の小さな札に3つ */
   .node .stars{position:absolute; top:67px; left:50%; transform:translateX(-50%); display:flex; gap:1px;
-               padding:2px 5px 3px; border-radius:10px; background:rgba(20,15,12,.82); border:1px solid rgba(224,168,60,.5)}
+               padding:2px 5px 3px; border-radius:10px; background:rgba(20,15,12,.85); border:1px solid rgba(224,168,60,.55)}
   .node .stars svg{width:14px; height:14px}
-  /* 次に挑む面：上に NEXT の旗 */
-  .node .pin{position:absolute; bottom:72px; left:50%; transform:translateX(-50%); padding:2px 7px 3px; border-radius:3px;
-             background:#e0a83c; color:#241c18; font-family:var(--disp); font-size:10px; letter-spacing:.06em; white-space:nowrap;
-             box-shadow:0 2px 0 #7a5212; animation:pinBob 1s ease-in-out infinite}
-  .node .pin::after{content:""; position:absolute; left:50%; top:100%; margin-left:-5px; border:5px solid transparent; border-top-color:#e0a83c}
-  @keyframes pinBob{0%,100%{transform:translate(-50%,0)} 50%{transform:translate(-50%,-4px)}}
+  /* ボスの印（巨人王が出る面） */
+  .node .boss{position:absolute; right:-14px; top:-14px; width:30px; height:30px; border-radius:50%;
+              background:radial-gradient(circle at 40% 35%,#ff7a6a,#9e1f16); border:2px solid #1a120c; box-shadow:0 0 0 2px #ffd24a, 0 2px 4px rgba(0,0,0,.5)}
+  .node .boss canvas{width:26px; height:26px; margin:0}
+  /* 自分の隊長（次に挑む面に立つ） */
+  .hero{position:absolute; z-index:3; width:64px; height:70px; pointer-events:none; transform:translate(-50%,-100%);
+        filter:drop-shadow(0 4px 3px rgba(0,0,0,.6)); animation:heroBob .7s ease-in-out infinite}
+  @keyframes heroBob{0%,100%{margin-top:0} 50%{margin-top:-5px}}
   /* 宝物庫：金のコイン */
   .node.bonus{--c1:#ffe08a; --c2:#b57a12; width:52px; height:52px}
   .node.bonus canvas{width:36px; height:36px}
@@ -486,17 +519,20 @@
   .node.bonus.done canvas{opacity:.55}
   .node.bonus.lock{--c1:#6b5e52; --c2:#3a3029}
   .node.bonus.lock canvas{opacity:.3}
+  .node.bonus.ready{animation:coinShine 2s ease-in-out infinite}
+  @keyframes coinShine{0%,100%{filter:brightness(1)} 50%{filter:brightness(1.25) drop-shadow(0 0 10px rgba(255,220,120,.9))}}
   .node.bonus .tag{position:absolute; top:57px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:700; color:#ffd76a;
-                   white-space:nowrap; padding:1px 6px 2px; border-radius:8px; background:rgba(20,15,12,.82)}
+                   white-space:nowrap; padding:1px 6px 2px; border-radius:8px; background:rgba(20,15,12,.85)}
   /* エクストラ：紫の宝石 */
-  .node.ex{--c1:#c98bff; --c2:#5d1f94; --ink:#2a0848; width:auto; min-width:92px; height:56px; border-radius:30px; padding:0 18px}
+  .node.ex{--c1:#d79bff; --c2:#5d1f94; --ink:#2a0848; width:auto; min-width:96px; height:58px; border-radius:30px; padding:0 20px}
   .node.ex .num{font-size:22px}
-  .node.ex .best{position:absolute; top:62px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:700; color:#e7c8ff;
-                 white-space:nowrap; padding:1px 7px 2px; border-radius:8px; background:rgba(20,15,12,.82)}
+  .node.ex .best{position:absolute; top:64px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:700; color:#e7c8ff;
+                 white-space:nowrap; padding:1px 7px 2px; border-radius:8px; background:rgba(20,15,12,.85)}
 
   /* 下のパネル */
   .map-info{display:grid; grid-template-columns:1fr auto; gap:6px 12px; align-items:center;
-            border-top:2px solid rgba(224,168,60,.6); background:linear-gradient(180deg,#2e241c,#1d1611);
+            border-top:2px solid rgba(224,168,60,.7); background:linear-gradient(180deg,#33271d,#1a130e);
+            box-shadow:0 -8px 20px rgba(0,0,0,.45);
             padding:12px 16px max(14px, env(safe-area-inset-bottom))}
   .map-info .t{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
   .map-info .t b{font-family:var(--disp); font-weight:400; font-size:22px; line-height:1; color:#fff3da;
@@ -508,10 +544,14 @@
   .map-info .chip2 i{font-style:normal; font-size:11px; color:rgba(228,219,198,.65); font-weight:600}
   .map-info .chip2.gold{background:rgba(224,168,60,.2); border-color:rgba(224,168,60,.7); color:#ffd76a}
   .map-info .chip2 svg{width:12px; height:12px; align-self:center}
-  .btn.go{grid-column:2; grid-row:1 / span 2; font-size:24px; padding:14px 22px 12px; margin:0; border-radius:4px}
+  .btn.go{grid-column:2; grid-row:1 / span 2; font-size:24px; padding:14px 22px 12px; margin:0; border-radius:4px;
+          background:linear-gradient(180deg,#ffd76a,#e0a83c); box-shadow:0 0 16px rgba(255,200,80,.4)}
+  .btn.go:not(:disabled){animation:goPulse 1.6s ease-in-out infinite}
+  @keyframes goPulse{0%,100%{box-shadow:0 0 10px rgba(255,200,80,.3)} 50%{box-shadow:0 0 22px rgba(255,200,80,.75)}}
   .btn.go:disabled{opacity:.4; cursor:default}
-  @media (max-width:360px){ .node{width:56px; height:56px} .node .num{font-size:22px} .node .stars{top:61px} .node .pin{bottom:66px} }
-  @media (prefers-reduced-motion:reduce){ .node .pin, .node.sel::after{animation:none} }
+  @media (max-width:360px){ .node{width:56px; height:56px} .node .num{font-size:22px} .node .stars{top:61px}
+    .map-title b{font-size:20px} .map-head{gap:6px} .map-head .btn.ghost{padding:6px 8px; font-size:12px} .map-prog{font-size:13px} }
+  @media (prefers-reduced-motion:reduce){ .node.next, .node.sel::after, .hero, .area .tw, .node.bonus.ready, .btn.go{animation:none} .area .tw{opacity:.7} }
 
   @media (prefers-reduced-motion:reduce){
     #hArmy.bump, .warn .band, .warn .msg b{animation:none}
@@ -561,7 +601,7 @@
     <div class="map">
       <div class="map-head">
         <button class="btn ghost" id="btnMapBack">◀ タイトル</button>
-        <h2>マップ</h2>
+        <div class="map-title"><b>WORLD MAP</b><small>マップ</small></div>
         <span class="map-prog" id="mapProg"></span>
       </div>
       <p class="map-boost" id="mapBoost"></p>
@@ -3456,26 +3496,71 @@ const SVG_LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10.5
 const starsRow = (s) => [0, 1, 2].map((i) => SVG_STAR(i < s)).join("");
 const chip = (k, v, cls) => "<span class='chip2" + (cls ? " " + cls : "") + "'>" + (k ? "<i>" + k + "</i>" : "") + v + "</span>";
 
+/* エリアの中の並び（x は横の%、y は上からの px）。くねくね道でつなぐ */
+const AREA_H = 190;
+const LAYOUT = { 1: [[50, 112]], 2: [[26, 112], [76, 130]], 3: [[17, 132], [50, 98], [83, 132]] };
+const hasKing = (st) => st % 3 === 0 || st === 8 || st >= FINAL_STAGE;   // buildStage と同じ（巨人王が出る面）
+let heroTimer = 0;
+
+function roadPath(pts, lastArea) {
+  let d = "M50 0";
+  let [px, py] = [50, 0];
+  for (const [x, y] of [...pts, ...(lastArea ? [] : [[50, AREA_H]])]) {
+    const my = (py + y) / 2;
+    d += " C" + px + " " + my + " " + x + " " + my + " " + x + " " + y;
+    px = x; py = y;
+  }
+  return d;
+}
+
 function renderMap() {
   const list = document.getElementById("mapList");
   list.innerHTML = "";
   const next = frontier();
+  const heroNode = MAP.clears[FINAL_STAGE] ? "ex" : next;
   let total = 0;
-  AREAS.forEach((a) => {
+  AREAS.forEach((a, ai) => {
     const sec = document.createElement("section");
-    sec.className = "area" + (a.ex ? " exa" : "");
-    sec.style.backgroundImage = "linear-gradient(180deg,rgba(20,15,12,.1),rgba(20,15,12,.5)), url(assets/backgrounds/" + a.file + ".webp)";
-    sec.innerHTML = "<h3>" + a.name + "</h3><div class='nodes'></div>";
-    const row = sec.querySelector(".nodes");
-    a.nodes.forEach((n) => {
+    const stageNodes = a.nodes.filter((n) => typeof n === "number");
+    const areaDone = stageNodes.length > 0 && stageNodes.every((n) => MAP.clears[n]);
+    sec.className = "area" + (a.ex ? " exa" : "") + (areaDone ? " done" : "");
+    sec.style.height = AREA_H + "px";
+    sec.style.backgroundImage = "linear-gradient(180deg,rgba(20,15,12,.05),rgba(20,15,12,.45)), url(assets/backgrounds/" + a.file + ".webp)";
+    const pts = LAYOUT[a.nodes.length];
+    const last = ai === AREAS.length - 1;
+    const d = roadPath(pts, last);
+    sec.innerHTML = "<h3>" + a.name + "</h3>" +
+      "<svg class='road' viewBox='0 0 100 " + AREA_H + "' preserveAspectRatio='none' aria-hidden='true'>" +
+      "<path class='bed' d='" + d + "'/><path class='dots" + (areaDone ? " lit" : "") + "' d='" + d + "'/></svg>";
+    // きらめき
+    for (let i = 0; i < 6; i++) {
+      const tw = document.createElement("i");
+      tw.className = "tw";
+      tw.style.left = (6 + Math.random() * 88) + "%";
+      tw.style.top = (22 + Math.random() * 130) + "px";
+      tw.style.animationDelay = (Math.random() * 2.6).toFixed(2) + "s";
+      const sz = 7 + Math.random() * 7;
+      tw.style.width = tw.style.height = sz.toFixed(1) + "px";
+      sec.appendChild(tw);
+    }
+    // クリアしたエリアには旗
+    if (areaDone) {
+      sec.insertAdjacentHTML("beforeend", "<span class='cleared'>CLEAR</span><canvas class='flag' aria-hidden='true'></canvas>");
+      const fl = sec.querySelector(".flag");
+      requestAnimationFrame(() => SK.paintIcon(fl, "banner_ally"));
+    }
+    a.nodes.forEach((n, k) => {
+      const [x, y] = pts[k];
       const b = document.createElement("button");
       b.type = "button";
       b.dataset.node = n;
+      b.style.left = x + "%";
+      b.style.top = y + "px";
       const open = unlockedNode(n);
       let cls = "node", inner = "";
       if (isBonusNode(n)) {
         const st = MAP.bonus[+n.slice(1)];
-        cls += " bonus" + (st === "done" ? " done" : "");
+        cls += " bonus" + (st === "done" ? " done" : open ? " ready" : "");
         inner = "<canvas aria-hidden='true'></canvas>" + (open && st !== "done" ? "<span class='tag'>宝物庫</span>" : "");
       } else if (n === "ex") {
         cls += " ex";
@@ -3489,20 +3574,42 @@ function renderMap() {
         else {
           inner = "<span class='num'>" + n + "</span>";
           if (c) inner += "<span class='stars'>" + starsRow(s) + "</span>";
-          else if (n === next) { cls += " next"; inner += "<span class='pin'>NEXT</span>"; }
+          else if (n === next) cls += " next";
         }
+        if (hasKing(n)) inner += "<span class='boss' title='巨人王'><canvas aria-hidden='true'></canvas></span>";
       }
       if (!open) cls += " lock";
       b.className = cls;
       b.innerHTML = inner;
-      b.setAttribute("aria-label", nodeLabel(n) + (open ? "" : "（まだ開いていない）"));
+      b.setAttribute("aria-label", nodeLabel(n) + (hasKing(n) && typeof n === "number" ? "（巨人王）" : "") + (open ? "" : "（まだ開いていない）"));
       b.addEventListener("click", () => selectNode(n));
-      row.appendChild(b);
-      const cv = b.querySelector("canvas");
-      if (cv) requestAnimationFrame(() => SK.paintIcon(cv, MAP.bonus[+n.slice(1)] === "done" ? "chest_open" : "chest_closed"));
+      sec.appendChild(b);
+      b.querySelectorAll("canvas").forEach((cv) => {
+        const id = cv.parentElement.classList.contains("boss") ? "giant_king_idle"
+          : MAP.bonus[+String(n).slice(1)] === "done" ? "chest_open" : "chest_closed";
+        requestAnimationFrame(() => SK.paintIcon(cv, id));
+      });
+      // 自分の隊長：次に挑む面の上に立つ
+      if (n === heroNode && open) {
+        const h = document.createElement("canvas");
+        h.className = "hero";
+        h.setAttribute("aria-hidden", "true");
+        h.style.left = x + "%";
+        h.style.top = (y - 22) + "px";
+        sec.appendChild(h);
+      }
     });
     list.appendChild(sec);
   });
+  // 隊長の足踏み（2コマを交互に）
+  clearInterval(heroTimer);
+  const hero = list.querySelector(".hero");
+  if (hero) {
+    let f = 0;
+    const paint = () => { if (ovMap.hidden) { clearInterval(heroTimer); return; } SK.paintIcon(hero, "ally_captain_" + (f = f % 2 + 1)); };
+    requestAnimationFrame(paint);
+    heroTimer = setInterval(paint, 340);
+  }
   document.getElementById("mapProg").innerHTML = SVG_STAR(true).replace("<svg", "<svg class='ps'") + total + "<small>/" + FINAL_STAGE * 3 + "</small>";
   const bEl = document.getElementById("mapBoost");
   bEl.textContent = MAP.boost ? "🎁 宝物ボーナス：次の出撃は 兵力 ×" + MAP.boost.k.toFixed(1) + " から" : "";
