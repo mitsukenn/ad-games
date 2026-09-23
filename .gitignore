@@ -1,2 +1,3 @@
 _asset_work/
-.claude/
+.claude/*
+!.claude/launch.json
