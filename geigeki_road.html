@@ -554,6 +554,51 @@
     .node .boss{width:19px; height:19px; right:-9px; top:-9px} .node .boss canvas{width:16px; height:16px}
     .hero{width:38px; height:44px} .map-info .d{font-size:12px} .btn.go{font-size:19px; padding:10px 16px 8px} }
   @media (prefers-reduced-motion:reduce){ .node.next, .node.sel::after, .hero, .area .tw, .node.bonus.ready, .btn.go{animation:none} .area .tw{opacity:.7} }
+  /* まだ見ぬフロア：雲の層（道はこの中へ消えていく） */
+  .fog{position:relative; z-index:3; flex:1 1 auto; min-height:64px; overflow:hidden; border-radius:8px 8px 0 0;
+       background:radial-gradient(ellipse at 50% 120%, rgba(120,130,160,.55), transparent 60%),
+                  linear-gradient(180deg,#141a28 0%,#262e46 60%,#3a4360 100%)}
+  .fog .cloud{position:absolute; border-radius:50%; pointer-events:none;
+              background:radial-gradient(circle at 50% 60%,rgba(246,242,234,.96),rgba(222,216,206,.78) 45%,rgba(200,196,190,0) 70%);
+              animation:cloudDrift 9s ease-in-out infinite alternate}
+  .fog .f1{width:72%; height:96px; left:-12%; bottom:-34px}
+  .fog .f2{width:66%; height:86px; right:-14%; bottom:-26px; animation-delay:-3s}
+  .fog .f3{width:56%; height:74px; left:24%; bottom:-6px; opacity:.85; animation-delay:-6s}
+  @keyframes cloudDrift{from{transform:translateX(-12px)} to{transform:translateX(12px)}}
+  .fog-t{position:absolute; left:0; right:0; top:30%; text-align:center; font-size:14px; font-weight:700; letter-spacing:.24em;
+         color:rgba(255,243,218,.88); text-shadow:0 2px 6px rgba(0,0,0,.7)}
+  .fog-t .up{display:block; margin-bottom:2px; color:#ffd76a; font-size:15px; animation:upBob 1.2s ease-in-out infinite}
+  .fog-t small{display:block; margin-top:4px; font-size:11px; letter-spacing:.1em; color:rgba(228,219,198,.6)}
+  @keyframes upBob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
+
+  /* 新しいフロアに上がったとき：雲が晴れて帯がせり上がり、ステージが順に現れる */
+  .area.reveal{animation:areaRise .9s cubic-bezier(.2,.9,.3,1) backwards}
+  @keyframes areaRise{from{clip-path:inset(100% 0 0 0); filter:brightness(2.2)} to{clip-path:inset(0 0 0 0); filter:brightness(1)}}
+  .area .cloud{position:absolute; z-index:4; border-radius:50%; pointer-events:none;
+               background:radial-gradient(circle at 50% 55%,rgba(250,247,240,.98),rgba(228,222,212,.85) 45%,rgba(210,205,198,0) 70%)}
+  .area.reveal .c1{width:85%; height:130%; left:-8%; top:-15%; animation:cloudL 1.5s .5s ease-in both}
+  .area.reveal .c2{width:85%; height:130%; right:-8%; top:-15%; animation:cloudR 1.5s .5s ease-in both}
+  .area.reveal .c3{width:60%; height:100%; left:20%; top:0; animation:cloudUp 1.3s .6s ease-in both}
+  @keyframes cloudL{from{transform:translateX(0); opacity:1} to{transform:translateX(-95%); opacity:0}}
+  @keyframes cloudR{from{transform:translateX(0); opacity:1} to{transform:translateX(95%); opacity:0}}
+  @keyframes cloudUp{from{transform:translateY(0) scale(1); opacity:1} to{transform:translateY(-70%) scale(1.3); opacity:0}}
+  .node.pop{animation:nodePop .5s cubic-bezier(.3,1.7,.5,1) backwards}
+  .node.pop.next{animation:nodePop .5s cubic-bezier(.3,1.7,.5,1) backwards, nextGlow 1.4s ease-in-out infinite}
+  .node.pop.bonus.ready{animation:nodePop .5s cubic-bezier(.3,1.7,.5,1) backwards, coinShine 2s ease-in-out infinite}
+  @keyframes nodePop{from{transform:translate(-50%,-50%) scale(0)} to{transform:translate(-50%,-50%) scale(1)}}
+  .hero.drop{animation:heroDrop .6s 1.3s cubic-bezier(.3,1.5,.5,1) backwards, heroBob .7s 1.9s ease-in-out infinite}
+  @keyframes heroDrop{from{margin-top:-90px; opacity:0} to{margin-top:0; opacity:1}}
+  .newarea{position:absolute; left:50%; top:40%; z-index:6; transform:translate(-50%,-50%); pointer-events:none; white-space:nowrap;
+           text-align:center; padding:10px 28px 12px; border-radius:6px; border:2px solid #ffd24a;
+           background:linear-gradient(180deg,rgba(46,28,10,.94),rgba(20,12,6,.94));
+           box-shadow:0 0 0 4px rgba(20,12,6,.6), 0 0 34px rgba(255,200,80,.65); animation:newArea 2.6s ease both}
+  .newarea b{display:block; font-family:var(--disp); font-weight:400; font-size:30px; line-height:1.05;
+             background:linear-gradient(180deg,#fff3c4,#ffd24a 45%,#c47f12); -webkit-background-clip:text; background-clip:text; color:transparent;
+             filter:drop-shadow(0 2px 0 #3a2208)}
+  .newarea span{display:block; margin-top:4px; font-size:16px; font-weight:700; letter-spacing:.24em; color:#fff3da}
+  @keyframes newArea{0%{opacity:0; transform:translate(-50%,-50%) scale(.5)} 12%{opacity:1; transform:translate(-50%,-50%) scale(1.1)}
+                     20%{transform:translate(-50%,-50%) scale(1)} 80%{opacity:1; transform:translate(-50%,-50%) scale(1)} 100%{opacity:0; transform:translate(-50%,-60%) scale(1)}}
+  @media (prefers-reduced-motion:reduce){ .fog .cloud, .fog-t .up, .area.reveal, .node.pop, .hero.drop{animation:none} .area.reveal .cloud{display:none} }
 
   @media (prefers-reduced-motion:reduce){
     #hArmy.bump, .warn .band, .warn .msg b{animation:none}
@@ -3499,6 +3544,7 @@ const starsRow = (s) => [0, 1, 2].map((i) => SVG_STAR(i < s)).join("");
 const chip = (k, v, cls) => "<span class='chip2" + (cls ? " " + cls : "") + "'>" + (k ? "<i>" + k + "</i>" : "") + v + "</span>";
 
 /* 1枚の地図：下の翠緑の遺跡から、上の果ての道へ登っていく。
+   見えるのは解放したフロア（景色の帯）だけ。その上は雲に隠れていて、新しいフロアに上がると雲が晴れる。
    帯ごとに左右の向きを入れ替えて、道がジグザグに登るように並べる（x は横の%、y は帯の中の縦の%） */
 const LAYOUT = { 1: [[50, 56]], 2: [[24, 60], [76, 48]], 3: [[16, 62], [50, 44], [84, 62]] };
 const hasKing = (st) => st % 3 === 0 || st === 8 || st >= FINAL_STAGE;   // buildStage と同じ（巨人王が出る面）
@@ -3512,13 +3558,20 @@ function renderMap() {
   list.appendChild(world);
   const next = frontier();
   const heroNode = MAP.clears[FINAL_STAGE] ? "ex" : next;
+  // 見せるフロア：何かひとつでも開いている帯（下から続いている）
+  const openAreas = AREAS.filter((a) => a.nodes.some((n) => unlockedNode(n)));
+  if (MAP.seen === undefined) MAP.seen = openAreas.length;          // はじめて開いたときは演出なし
+  const revealIdx = openAreas.length > MAP.seen ? openAreas.length - 1 : -1;
+  // 帯の高さは、全フロアがそろったときと同じにする（増えても大きさが変わらない）
+  const bandH = Math.max(58, Math.floor((list.clientHeight - 18) / AREAS.length));
   let total = 0;
-  AREAS.forEach((a, ai) => {
+  AREAS.forEach((a) => a.nodes.forEach((n) => { if (typeof n === "number" && MAP.clears[n]) total += starsOf(MAP.clears[n].rank); }));
+  openAreas.forEach((a, ai) => {
     const sec = document.createElement("section");
     const stageNodes = a.nodes.filter((n) => typeof n === "number");
     const areaDone = stageNodes.length > 0 && stageNodes.every((n) => MAP.clears[n]);
-    const areaOpen = a.nodes.some((n) => unlockedNode(n));
-    sec.className = "area" + (areaOpen ? "" : " lockd") + (areaDone ? " done" : "");
+    sec.className = "area" + (areaDone ? " done" : "") + (ai === revealIdx ? " reveal" : "");
+    sec.style.height = bandH + "px";
     sec.style.backgroundImage = "url(assets/backgrounds/" + a.file + ".webp)";
     sec.innerHTML = "<h3>" + a.name + (areaDone ? "<span class='ck'>★CLEAR</span>" : "") + "</h3>";
     for (let i = 0; i < 4; i++) {                                       // きらめき
@@ -3531,8 +3584,8 @@ function renderMap() {
       tw.style.width = tw.style.height = sz.toFixed(1) + "px";
       sec.appendChild(tw);
     }
-    // 帯ごとに向きを入れ替える（奇数番目の帯は右から左へ）
-    // 一番下の帯は少し上へ（星の札が地図の下で切れないように）
+    if (ai === revealIdx) sec.insertAdjacentHTML("beforeend", "<i class='cloud c1'></i><i class='cloud c2'></i><i class='cloud c3'></i>");
+    // 帯ごとに向きを入れ替える（奇数番目の帯は右から左へ）。一番下の帯は少し上へ（星の札が切れないように）
     const pts = LAYOUT[a.nodes.length].map(([x, y]) => [ai % 2 ? 100 - x : x, ai === 0 ? y - 12 : y]);
     a.nodes.forEach((n, k) => {
       const [x, y] = pts[k];
@@ -3541,6 +3594,7 @@ function renderMap() {
       b.dataset.node = n;
       b.style.left = x + "%";
       b.style.top = y + "%";
+      if (ai === revealIdx) b.style.animationDelay = (0.75 + k * 0.18).toFixed(2) + "s";
       const open = unlockedNode(n);
       let cls = "node", inner = "";
       if (isBonusNode(n)) {
@@ -3553,14 +3607,13 @@ function renderMap() {
       } else {
         const c = MAP.clears[n];
         if (c) cls += " clear";
-        const s = c ? starsOf(c.rank) : 0;
-        total += s;
-        inner = "<span class='num'>" + n + "</span>";                    // 開いていなくても番号は見せる
-        if (c) inner += "<span class='stars'>" + starsRow(s) + "</span>";
+        inner = "<span class='num'>" + n + "</span>";
+        if (c) inner += "<span class='stars'>" + starsRow(starsOf(c.rank)) + "</span>";
         else if (n === next) cls += " next";
         if (hasKing(n)) inner += "<span class='boss' title='巨人王'><canvas aria-hidden='true'></canvas></span>";
       }
       if (!open) { cls += " lock"; inner += "<span class='lk'>" + SVG_LOCK + "</span>"; }
+      if (ai === revealIdx) cls += " pop";
       b.className = cls;
       b.innerHTML = inner;
       b.setAttribute("aria-label", nodeLabel(n) + (typeof n === "number" && hasKing(n) ? "（巨人王）" : "") + (open ? "" : "（まだ開いていない）"));
@@ -3573,7 +3626,7 @@ function renderMap() {
       });
       if (n === heroNode && open) {                                      // 自分の隊長：次に挑む面の上に立つ
         const h = document.createElement("canvas");
-        h.className = "hero";
+        h.className = "hero" + (ai === revealIdx ? " drop" : "");
         h.setAttribute("aria-hidden", "true");
         h.style.left = x + "%";
         h.style.top = "calc(" + y + "% - 16px)";
@@ -3582,8 +3635,21 @@ function renderMap() {
     });
     world.appendChild(sec);
   });
-  // 地図全体をつなぐ1本の道（配置が決まってから、ノードの位置を測って描く）
-  requestAnimationFrame(drawRoad);
+  // まだ見ぬフロア：雲の層（全部解放したら出さない）
+  if (openAreas.length < AREAS.length) {
+    world.insertAdjacentHTML("beforeend",
+      "<div class='fog'><i class='cloud f1'></i><i class='cloud f2'></i><i class='cloud f3'></i>" +
+      "<div class='fog-t'><span class='up'>▲</span>まだ見ぬ地へ<small>あと " + (AREAS.length - openAreas.length) + " エリア</small></div></div>");
+  }
+  // 新しいフロアの演出：雲が晴れて帯がせり上がり、大きな帯で名前を知らせる
+  if (revealIdx >= 0) {
+    const a = openAreas[revealIdx];
+    world.insertAdjacentHTML("beforeend", "<div class='newarea'><b>NEW AREA</b><span>" + a.name + "</span></div>");
+    Snd.fanfare();
+    MAP.seen = openAreas.length; saveMap();
+    setTimeout(() => { const na = world.querySelector(".newarea"); if (na) na.remove(); }, 2600);
+    setTimeout(drawRoad, 950);                                           // 帯がせり上がってから道を描く
+  } else requestAnimationFrame(drawRoad);
   // 隊長の足踏み（2コマを交互に）
   clearInterval(heroTimer);
   const hero = world.querySelector(".hero");
@@ -3601,20 +3667,23 @@ function renderMap() {
   selectNode(sel, true);
 }
 
-/** ノードの中心を順に通る道。クリアしたところまでは金色、その先は白い点線 */
+/** ノードの中心を順に通る道。クリアしたところまでは金色、その先は白い点線。見えている一番上から雲の中へ続く */
 function drawRoad() {
   const world = document.querySelector("#mapList .world");
   if (!world) return;
   const old = world.querySelector(".road");
   if (old) old.remove();
   const wr = world.getBoundingClientRect();
-  const order = AREAS.flatMap((a) => a.nodes);
+  const order = AREAS.flatMap((a) => a.nodes).filter((n) => world.querySelector('.node[data-node="' + n + '"]'));
   const pts = order.map((n) => {
-    const el = world.querySelector('.node[data-node="' + n + '"]');
-    const r = el.getBoundingClientRect();
+    const r = world.querySelector('.node[data-node="' + n + '"]').getBoundingClientRect();
     return [r.left + r.width / 2 - wr.left, r.top + r.height / 2 - wr.top];
   });
-  // どこまで金色にするか：開いているマスのうち最後のもの
+  const fog = world.querySelector(".fog");
+  if (fog) {                                                              // 雲の中へ消えていく道
+    const fr = fog.getBoundingClientRect();
+    pts.push([wr.width / 2, fr.bottom - wr.top - Math.min(60, fr.height * 0.45)]);
+  }
   let litTo = 0;
   order.forEach((n, i) => { if (unlockedNode(n)) litTo = i; });
   const seg = (from, to) => {
@@ -3678,8 +3747,8 @@ function showMap() {
   Snd.music(false);
   if (state !== "title") setupDemo();
   mapRun = null;
+  ovMap.hidden = false;                 // 先に表示してから描く（帯の高さを画面に合わせて測るため）
   renderMap();
-  ovMap.hidden = false;
 }
 
 /** マップのマスから出撃する */
