@@ -417,6 +417,101 @@
   .tip b{color:var(--gold); margin-right:6px}
   .tip.on{opacity:1; transform:translate(-50%,0)}
   @media (prefers-reduced-motion:reduce){ .finger .hand{animation:none} .tip{transition:none} }
+  /* ---------- マップ ---------- */
+  #hLife{display:none}                 /* マップ方式ではライフを使わない */
+  #ovMap{padding:0; overflow:hidden; background:rgba(14,10,8,.94)}
+  .map{height:100%; width:100%; max-width:540px; margin:0 auto; display:flex; flex-direction:column}
+  .map-head{display:flex; align-items:center; gap:10px; padding:max(12px, env(safe-area-inset-top)) 14px 8px}
+  .map-head h2{margin:0; flex:1; text-align:center; font-size:26px; color:var(--gold); text-shadow:0 3px 0 rgba(0,0,0,.5)}
+  .map-head .btn.ghost{margin:0; padding:7px 12px; font-size:13px}
+  .map-prog{display:inline-flex; align-items:center; gap:4px; padding:4px 10px 4px 7px; border-radius:999px;
+            background:linear-gradient(180deg,#3a2d22,#1d1611); border:1px solid rgba(224,168,60,.6);
+            font-family:var(--disp); font-size:15px; color:#fff3da; white-space:nowrap}
+  .map-prog .ps{width:18px; height:18px}
+  .map-prog small{font-size:11px; color:rgba(228,219,198,.6)}
+  .map-boost{margin:0 14px 8px; padding:7px 12px; font-size:13px; font-weight:700; color:#2a1a02; text-align:center;
+             background:linear-gradient(180deg,#ffd76a,#e0a83c); border-radius:4px; box-shadow:0 2px 0 #a37520}
+  .map-boost:empty{display:none}
+  .map-list{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:6px 12px 18px; display:flex; flex-direction:column; gap:12px}
+  .area{position:relative; flex:none; border:1px solid rgba(224,168,60,.55); border-radius:6px; background-size:cover; background-position:center 60%;
+        padding:10px 10px 34px; box-shadow:0 8px 20px rgba(0,0,0,.45), inset 0 0 40px rgba(0,0,0,.35)}
+  .area h3{display:inline-block; margin:0 0 20px; padding:3px 10px 4px; border-radius:3px; background:rgba(20,15,12,.72);
+           font-size:12px; font-weight:700; letter-spacing:.16em; color:#fff3da}
+  .area + .area::before{content:""; position:absolute; left:50%; top:-13px; width:6px; height:12px; margin-left:-3px;
+                        background:radial-gradient(circle,#f3e2b3 45%,transparent 50%) center/6px 6px repeat-y}
+  /* 道：砂色の点線（ノードとノードをつなぐ） */
+  .nodes{display:flex; justify-content:space-around; align-items:center; position:relative; min-height:72px}
+  .nodes::before{content:""; position:absolute; left:13%; right:13%; top:50%; height:8px; margin-top:-4px;
+                 background:radial-gradient(circle,#f6e7bd 42%,rgba(60,40,20,.6) 48%,transparent 56%) 0 50%/14px 8px repeat-x;
+                 filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+  .area.exa .nodes::before{display:none}
+
+  /* ステージの丸：宝石のようなつやと金の縁 */
+  .node{--c1:#6f9cff; --c2:#2a4fb3; --ink:#0d1d44;
+        position:relative; width:62px; height:62px; border-radius:50%; padding:0; cursor:pointer;
+        border:3px solid #1a120c;
+        background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.75) 0 7%,rgba(255,255,255,0) 30%),
+                   linear-gradient(180deg,var(--c1),var(--c2));
+        box-shadow:inset 0 -6px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.35),
+                   0 0 0 3px #e6b94f, 0 0 0 5px #1a120c, 0 6px 0 5px rgba(0,0,0,.45);
+        display:grid; place-items:center; transition:transform .12s ease}
+  .node:active{transform:translateY(2px)}
+  .node .num{font-family:var(--disp); font-size:25px; line-height:1; color:#fff; letter-spacing:-.02em;
+             -webkit-text-stroke:5px var(--ink); paint-order:stroke fill; text-shadow:0 3px 0 var(--ink)}
+  .node.clear{--c1:#5fe0a8; --c2:#16805c; --ink:#073826}
+  .node.next{--c1:#7fb0ff; --c2:#2a4fb3}
+  .node.lock{--c1:#6b5e52; --c2:#3a3029; cursor:default;
+             box-shadow:inset 0 -6px 0 rgba(0,0,0,.28), inset 0 3px 0 rgba(255,255,255,.12),
+                        0 0 0 3px #7a6a55, 0 0 0 5px #1a120c, 0 6px 0 5px rgba(0,0,0,.45)}
+  .node.lock svg{width:24px; height:24px; opacity:.85}
+  .node.sel{transform:scale(1.08)}
+  .node.sel::after{content:""; position:absolute; inset:-12px; border-radius:50%; border:3px solid #ffd76a;
+                   box-shadow:0 0 14px rgba(255,215,106,.8); animation:selSpin 1.6s ease-in-out infinite}
+  @keyframes selSpin{0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.55; transform:scale(1.06)}}
+  .node:focus-visible{outline:3px solid #fff; outline-offset:8px}
+  /* 星：丸の下の小さな札に3つ */
+  .node .stars{position:absolute; top:67px; left:50%; transform:translateX(-50%); display:flex; gap:1px;
+               padding:2px 5px 3px; border-radius:10px; background:rgba(20,15,12,.82); border:1px solid rgba(224,168,60,.5)}
+  .node .stars svg{width:14px; height:14px}
+  /* 次に挑む面：上に NEXT の旗 */
+  .node .pin{position:absolute; bottom:72px; left:50%; transform:translateX(-50%); padding:2px 7px 3px; border-radius:3px;
+             background:#e0a83c; color:#241c18; font-family:var(--disp); font-size:10px; letter-spacing:.06em; white-space:nowrap;
+             box-shadow:0 2px 0 #7a5212; animation:pinBob 1s ease-in-out infinite}
+  .node .pin::after{content:""; position:absolute; left:50%; top:100%; margin-left:-5px; border:5px solid transparent; border-top-color:#e0a83c}
+  @keyframes pinBob{0%,100%{transform:translate(-50%,0)} 50%{transform:translate(-50%,-4px)}}
+  /* 宝物庫：金のコイン */
+  .node.bonus{--c1:#ffe08a; --c2:#b57a12; width:52px; height:52px}
+  .node.bonus canvas{width:36px; height:36px}
+  .node.bonus.done{--c1:#8a7b62; --c2:#4a3f33}
+  .node.bonus.done canvas{opacity:.55}
+  .node.bonus.lock{--c1:#6b5e52; --c2:#3a3029}
+  .node.bonus.lock canvas{opacity:.3}
+  .node.bonus .tag{position:absolute; top:57px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:700; color:#ffd76a;
+                   white-space:nowrap; padding:1px 6px 2px; border-radius:8px; background:rgba(20,15,12,.82)}
+  /* エクストラ：紫の宝石 */
+  .node.ex{--c1:#c98bff; --c2:#5d1f94; --ink:#2a0848; width:auto; min-width:92px; height:56px; border-radius:30px; padding:0 18px}
+  .node.ex .num{font-size:22px}
+  .node.ex .best{position:absolute; top:62px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:700; color:#e7c8ff;
+                 white-space:nowrap; padding:1px 7px 2px; border-radius:8px; background:rgba(20,15,12,.82)}
+
+  /* 下のパネル */
+  .map-info{display:grid; grid-template-columns:1fr auto; gap:6px 12px; align-items:center;
+            border-top:2px solid rgba(224,168,60,.6); background:linear-gradient(180deg,#2e241c,#1d1611);
+            padding:12px 16px max(14px, env(safe-area-inset-bottom))}
+  .map-info .t{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+  .map-info .t b{font-family:var(--disp); font-weight:400; font-size:22px; line-height:1; color:#fff3da;
+                 -webkit-text-stroke:4px #1a120c; paint-order:stroke fill}
+  .map-info .t small{font-size:13px; font-weight:700; letter-spacing:.08em; color:var(--gold)}
+  .map-info .d{grid-column:1; display:flex; flex-wrap:wrap; gap:5px; font-size:13px; line-height:1.45; color:rgba(228,219,198,.8)}
+  .map-info .chip2{display:inline-flex; align-items:baseline; gap:4px; padding:2px 8px 3px; border-radius:3px;
+                   background:rgba(0,0,0,.35); border:1px solid rgba(224,168,60,.35); color:#fff3da; font-weight:700; white-space:nowrap}
+  .map-info .chip2 i{font-style:normal; font-size:11px; color:rgba(228,219,198,.65); font-weight:600}
+  .map-info .chip2.gold{background:rgba(224,168,60,.2); border-color:rgba(224,168,60,.7); color:#ffd76a}
+  .map-info .chip2 svg{width:12px; height:12px; align-self:center}
+  .btn.go{grid-column:2; grid-row:1 / span 2; font-size:24px; padding:14px 22px 12px; margin:0; border-radius:4px}
+  .btn.go:disabled{opacity:.4; cursor:default}
+  @media (max-width:360px){ .node{width:56px; height:56px} .node .num{font-size:22px} .node .stars{top:61px} .node .pin{bottom:66px} }
+  @media (prefers-reduced-motion:reduce){ .node .pin, .node.sel::after{animation:none} }
 
   @media (prefers-reduced-motion:reduce){
     #hArmy.bump, .warn .band, .warn .msg b{animation:none}
@@ -454,11 +549,28 @@
       <h1>迎撃ロード</h1>
       <p class="tag-line">撃って、増やして、<br>大軍を食い止めろ！</p>
       <div class="btns">
-        <button class="btn" id="btnStart">防衛開始</button>
+        <button class="btn" id="btnStart">▶ 出撃</button>
         <button class="btn ghost" id="btnContinue" hidden>続きから</button>
         <button class="btn ghost" id="btnRankTitle" hidden>🏆 ランキング</button>
       </div>
       <div><button class="howto-link" id="btnHowto">遊び方</button><a class="howto-link" href="select.html">ゲームを選ぶ</a></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovMap" hidden>
+    <div class="map">
+      <div class="map-head">
+        <button class="btn ghost" id="btnMapBack">◀ タイトル</button>
+        <h2>マップ</h2>
+        <span class="map-prog" id="mapProg"></span>
+      </div>
+      <p class="map-boost" id="mapBoost"></p>
+      <div class="map-list" id="mapList"></div>
+      <div class="map-info">
+        <div class="t" id="mapT"></div>
+        <button class="btn go" id="btnGo">GO</button>
+        <div class="d" id="mapD"></div>
+      </div>
     </div>
   </div>
 
@@ -479,6 +591,7 @@
       </div>
       <div class="btns">
         <button class="btn" id="btnNext">次の波へ</button>
+        <button class="btn ghost" id="btnMapClear">マップへ</button>
         <button class="btn share" id="btnShareClear">📷 シェア</button>
       </div>
     </div>
@@ -496,9 +609,9 @@
       </div>
       <div class="btns">
         <button class="btn ex" id="btnExtra">エクストラステージへ</button>
-        <button class="btn ghost" id="btnAgain">もう一度</button>
+        <button class="btn ghost" id="btnAgain">マップへ</button>
       </div>
-      <p class="exnote">ここから先は、敵も巨人王もぐっと強くなる上級者向け。ライフは♥3に戻る。</p>
+      <p class="exnote">ここから先は、敵も巨人王もぐっと強くなる上級者向け。マップの「エクストラ」からいつでも挑める。</p>
     </div>
   </div>
 
@@ -512,7 +625,7 @@
       </div>
       <div class="btns">
         <button class="btn" id="btnResume">再開する</button>
-        <button class="btn ghost" id="btnQuit">タイトルへ</button>
+        <button class="btn ghost" id="btnQuit">マップへ</button>
         <a class="btn ghost" href="select.html">ゲームを選ぶ</a>
       </div>
       <p class="hint">P または Esc キーでも一時停止・再開できます</p>
@@ -531,8 +644,8 @@
         <div class="stat hi"><div class="k">最高兵力</div><div class="v" id="oBest">0</div></div>
       </div>
       <div class="btns">
-        <button class="btn" id="btnRetryStage">このステージから</button>
-        <button class="btn ghost" id="btnRetry">最初から</button>
+        <button class="btn" id="btnRetryStage">もう一度</button>
+        <button class="btn ghost" id="btnRetry">マップへ</button>
       </div>
     </div>
   </div>
@@ -578,7 +691,7 @@
         <div class="rule"><b class="b">+1</b><span>青い板は兵が増える。そのレーンに立って受け止めろ</span></div>
         <div class="rule"><b>銃</b><span>武器の台座は撃ち壊すと、<strong>全員の武器が一段上がる</strong>。投石→弓→火縄銃→ライフル→マシンガン→大砲と、持ち替えるほど攻撃が重くなる</span></div>
         <div class="rule"><b class="r">敵</b><span>赤軍は撃って減らせ。同じレーンで受ければ白兵戦、よそ見をすると<strong>丸ごと突破される</strong></span></div>
-        <div class="rule"><b class="r">♥</b><span>ライフは3つ。全滅するとひとつ減り、そのステージからやり直せる。<strong>尽きたら最初から</strong></span></div>
+        <div class="rule"><b class="r">♥</b><span>全滅してもマップに戻るだけ。<strong>クリアした面は何度でも遊び直せる</strong>ので、兵を増やしてから先へ進もう</span></div>
         <div class="rule"><b class="r">巨</b><span>巨人はレーンをまたいで迫る。近づく前に削りきれ</span></div>
       </div>
       <p class="hint" style="margin:0 0 16px">ドラッグ、または ← → キーで隊列を左右に動かす。P / Esc で一時停止</p>
@@ -1312,7 +1425,7 @@ function buildBonus() {
       let kind = "army";
       const r = Math.random();
       if (r < 0.14) kind = "big";
-      else if (r < 0.24 && hearts < 1) { kind = "heart"; hearts++; }
+      else if (r < 0.24 && hearts < 0) { kind = "heart"; hearts++; }   // マップ方式ではライフがないので出さない
       else if (r < 0.32 && weapons < 1 && tierOf(crowd.power) < WMAX) { kind = "weapon"; weapons++; }
       items.push({ type: "chest", kind, lane: l, x: LANES[l], z: z + k * rnd(1, 4), hp: 10, max: 10, flash: 0, dead: false });
     });
@@ -1661,8 +1774,10 @@ function updateGunners(dt, front) {
 function onSquad(sq) {
   const overlap = Math.abs(crowd.x - sq.x) <= crowdHalfW() + LANE_HW * 0.5;
   if (overlap) { startBattle(sq); return; }
-  // 受け止めなかった敵は防衛線を抜けて、そのまま兵を削っていく
-  const loss = (sq.count * sq.pw) / crowd.power;
+  // 受け止めなかった敵は防衛線を抜けて、そのまま兵を削っていく。
+  // 初めての人は赤い敵を「よける」ことが多いので、被害は敵の戦力の約半分にとどめる
+  // （自動プレイで、赤軍の3割をよける人が4面 → 7面まで進めるように合わせた値）
+  const loss = (sq.count * sq.pw) / crowd.power * PASS_LOSS;
   sq.dead = true; sq.units.length = 0;
   setCount(crowd.count - loss);
   popText("突破された −" + fmt(loss), C.bad, sq.x, 1.2, true);
@@ -3019,6 +3134,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) pause
 
 /* --- ライフ：3つ。全滅するたびに1つ減り、尽きたら最初から --- */
 const MAX_LIVES = 3;
+const PASS_LOSS = 0.52;   // 赤軍を受け止めずに通したときの被害の割合（onSquad）
 let lives = MAX_LIVES;
 function heartsHtml(n, breaking) {
   let h = "";
@@ -3037,7 +3153,7 @@ function loadProgress() {
 function clearProgress() { try { localStorage.removeItem("gr.save"); } catch (e) {} }
 function refreshContinue() {
   const sv = loadProgress(), b = document.getElementById("btnContinue");
-  b.hidden = !(sv && sv.stage > 1);
+  b.hidden = true;                                 // マップ方式になったので「続きから」は使わない（進み具合はマップに残る）
   if (sv) b.textContent = "続きから（" + stageName(sv.stage) + "・♥" + (sv.lives || MAX_LIVES) + "）";
 }
 
@@ -3158,13 +3274,15 @@ function stageClear() {
   bullets.length = 0;
   Snd.win(); saveBest();
   if (inBonus) {                                    // 宝物庫の終わり
+    const bk = recordBonus();
+    document.getElementById("btnMapClear").hidden = true;
     const rEl = document.getElementById("clearRank");
     rEl.textContent = "★"; rEl.className = "rank s";
     document.getElementById("clearEyebrow").textContent = "Bonus 終了";
     document.getElementById("clearTitle").textContent = pickOne(["お宝ざくざく！", "宝物庫、制覇！", "ふところも軍勢もホクホク！"]);
-    document.getElementById("clearLede").textContent = "ふくらんだ軍勢で " + stageName(stage + 1) + " へ。";
+    document.getElementById("clearLede").textContent = "手に入れたぶんは、次の出撃に上乗せ（兵力 ×" + bk.toFixed(1) + "）。マップで好きな面を選ぼう。";
     document.getElementById("clearNext").textContent = "";
-    document.getElementById("btnNext").textContent = stageName(stage + 1) + " へ";
+    document.getElementById("btnNext").textContent = "マップへ";
     document.getElementById("cArmy").textContent = fmt(crowd.count);
     document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
     document.getElementById("cKills").textContent = fmt(kills);
@@ -3176,6 +3294,7 @@ function stageClear() {
     return;
   }
   if (stage === FINAL_STAGE) {
+    recordClear(rankNow());
     lives = MAX_LIVES;
     saveProgress(FINAL_STAGE + 1, crowd.count, crowd.power);   // 「続きから」はエクストラから
     document.getElementById("wArmy").textContent = fmt(crowd.count);
@@ -3186,8 +3305,10 @@ function stageClear() {
     return;
   }
   showClearMessage();
+  const opened = recordClear(document.getElementById("clearRank").textContent);
+  document.getElementById("btnMapClear").hidden = false;
   document.getElementById("clearEyebrow").textContent = stageName(stage) + " 防衛成功";
-  if (bonusAfter(stage)) document.getElementById("btnNext").textContent = "ボーナスステージへ";
+  if (opened) document.getElementById("clearNext").textContent = "宝物庫が開いた！ マップで好きなときに使える";
   document.getElementById("cArmy").textContent = fmt(crowd.count);
   document.getElementById("cWeap").textContent = WEAPONS[tierOf(crowd.power)].n;
   document.getElementById("cKills").textContent = fmt(kills);
@@ -3195,32 +3316,30 @@ function stageClear() {
   Result.prepareClear(document.getElementById("clearRank").textContent);
 }
 
+const OVER_TIPS = [
+  "赤い敵は同じレーンで受け止めると、通したときより被害が少ない。",
+  "前の面を遊び直して兵を増やしてから挑むのも手。マップから選べる。",
+  "木の門を開けないまま届くと、奥の宝ごと砕けてしまう。",
+  "武器の台座を壊すと、全員の武器が一段上がる。",
+];
 function gameOver() {
   if (state === "over") return;
   state = "over";
   battle = null;
   Snd.music(false);
   Snd.lose(); saveBest(); doShake(16);
-  lives = Math.max(0, lives - 1);
-  paintLives();
-  const sv = loadProgress();
+  lives = 0;
   const retry = document.getElementById("btnRetryStage"), again = document.getElementById("btnRetry");
-  document.getElementById("overLife").innerHTML = heartsHtml(lives, true);
-  if (lives > 0) {
-    if (sv) { sv.lives = lives; try { localStorage.setItem("gr.save", JSON.stringify(sv)); } catch (e) {} }
-    document.getElementById("overEyebrow").textContent = "防衛線崩壊";
-    document.getElementById("overTitle").textContent = "軍勢は尽きた";
-    document.getElementById("overLede").textContent = "ライフはあと " + lives + " つ。どの門を開け、どのレーンで受けるか、変えてみよう。";
-    retry.hidden = false; retry.textContent = "このステージから（残り♥" + lives + "）";
-    again.className = "btn ghost";
-  } else {
-    clearProgress();
-    document.getElementById("overEyebrow").textContent = "Game Over";
-    document.getElementById("overTitle").textContent = "ライフが尽きた";
-    document.getElementById("overLede").textContent = stageName(stage) + " まで到達！ 次はどこまで行けるか、もう一度。";
-    retry.hidden = true;
-    again.className = "btn";
-  }
+  document.getElementById("overLife").innerHTML = "";
+  document.getElementById("overEyebrow").textContent = "防衛線崩壊";
+  document.getElementById("overTitle").textContent = "軍勢は尽きた";
+  // 次の一手になるひとこと。宝物庫をとってあるなら、それを勧める
+  const hasBonus = MAP.boost || Object.values(MAP.bonus).includes("ready");
+  document.getElementById("overLede").textContent = hasBonus && Math.random() < 0.6
+    ? "宝物庫をとってあるなら、今が使いどき。マップから遊べる。"
+    : pickOne(OVER_TIPS);
+  retry.hidden = false; retry.className = "btn";
+  again.className = "btn ghost";
   document.getElementById("oStage").textContent = stageName(stage);
   document.getElementById("oKills").textContent = fmt(kills);
   document.getElementById("oBest").textContent = fmt(best);
@@ -3239,17 +3358,19 @@ function setupDemo() {
 }
 
 const startRun = () => { Snd.kick(); kills = 0; runBest = 0; lives = MAX_LIVES; paintLives(); beginStage(1, 12, 1); };
-document.getElementById("btnStart").addEventListener("click", () => { best = loadBest(); startRun(); });
+document.getElementById("btnStart").addEventListener("click", () => { Snd.kick(); showMap(); });
 document.getElementById("btnNext").addEventListener("click", () => {
-  const army = Math.max(10, Math.round(crowd.count));
-  if (!inBonus && bonusAfter(stage)) beginBonus(army, crowd.power);
-  else beginStage(stage + 1, army, crowd.power);
+  if (inBonus || !mapRun) { showMap(); return; }
+  if (stage > FINAL_STAGE) {                       // エクストラは続けて次の面へ
+    beginStage(stage + 1, Math.max(10, Math.round(crowd.count)), crowd.power);
+    return;
+  }
+  startNode(stage + 1);
 });
-document.getElementById("btnRetry").addEventListener("click", startRun);
+document.getElementById("btnMapClear").addEventListener("click", showMap);
+document.getElementById("btnRetry").addEventListener("click", showMap);
 document.getElementById("btnRetryStage").addEventListener("click", () => {
-  const sv = loadProgress();
-  Snd.kick();
-  if (sv) { lives = sv.lives || MAX_LIVES; paintLives(); beginStage(sv.stage, sv.army, sv.power); } else startRun();
+  if (mapRun) startNode(mapRun.node); else showMap();
 });
 document.getElementById("btnContinue").addEventListener("click", () => {
   const sv = loadProgress();
@@ -3258,21 +3379,248 @@ document.getElementById("btnContinue").addEventListener("click", () => {
   lives = sv.lives || MAX_LIVES; paintLives();
   beginStage(sv.stage, sv.army, sv.power);
 });
-document.getElementById("btnQuit").addEventListener("click", () => {
-  ovPause.hidden = true; pausedFrom = null;
-  Snd.music(false);
-  setupDemo();
-  ovTitle.hidden = false;
-});
-document.getElementById("btnAgain").addEventListener("click", startRun);
-document.getElementById("btnExtra").addEventListener("click", () => {
-  Snd.kick(); lives = MAX_LIVES; paintLives();
-  beginStage(FINAL_STAGE + 1, Math.max(10, Math.round(crowd.count)), crowd.power);
-});
+document.getElementById("btnQuit").addEventListener("click", showMap);
+document.getElementById("btnAgain").addEventListener("click", showMap);
+document.getElementById("btnExtra").addEventListener("click", () => startNode("ex"));
 document.getElementById("btnSound").addEventListener("click", (e) => {
   const on = Snd.toggle();
   e.currentTarget.textContent = on ? "♪" : "✕";
   e.currentTarget.style.color = on ? C.gold : "rgba(228,219,198,.45)";
+});
+
+/* ============================================================
+   9.7 マップ（ステージを選んで出撃する）
+   ============================================================ */
+/* 各ステージは「前のステージをクリアしたときの一番いい兵力と武器」から始まる。
+   だから同じ面を遊び直して兵を増やしてから先へ進める（人によって難しさを調整できる）。
+   宝物庫は3・6・9面のあとに開き、好きなときに1回だけ遊べる。手に入れたぶんは次の出撃に上乗せ。 */
+const ovMap = document.getElementById("ovMap");
+const MAP_KEY = "gr.map";
+const AREAS = [
+  { name: "翠緑の遺跡", file: "level_01_02_valley", nodes: [1, 2] },
+  { name: "黄金の砂漠", file: "level_03_04_desert", nodes: [3, "b3", 4] },
+  { name: "氷雪の神殿", file: "level_05_06_snow", nodes: [5, 6, "b6"] },
+  { name: "灼熱の要塞", file: "level_07_08_volcano", nodes: [7, 8] },
+  { name: "天空の聖域", file: "level_09_10_sky", nodes: [9, "b9", 10] },
+  { name: "果ての道", file: "level_07_08_volcano", nodes: ["ex"], ex: true },
+];
+const RANK_PT = { S: 4, A: 3, B: 2, C: 1 };
+const starsOf = (r) => (r === "S" ? 3 : r === "A" ? 2 : r ? 1 : 0);
+let mapRun = null;        // いま遊んでいるマップのマス（{ kind, node, ... }）
+
+function loadMap() {
+  let m = null;
+  try { m = JSON.parse(localStorage.getItem(MAP_KEY) || "null"); } catch (e) {}
+  if (m && m.clears) return m;
+  m = { clears: {}, bonus: {}, boost: null, exBest: 0, sel: 1 };
+  // マップ以前の「続きから」の記録があれば、そこまでを開いておく
+  const sv = loadProgress();
+  if (sv && sv.stage > 1) {
+    const last = Math.min(sv.stage - 1, FINAL_STAGE);
+    for (let k = 1; k <= last; k++) m.clears[k] = { army: Math.round(sv.army), power: sv.power, rank: "" };
+    for (const b of [3, 6, 9]) if (b <= last) m.bonus[b] = "ready";
+    m.sel = Math.min(last + 1, FINAL_STAGE);
+  }
+  return m;
+}
+let MAP = loadMap();
+const saveMap = () => { try { localStorage.setItem(MAP_KEY, JSON.stringify(MAP)); } catch (e) {} };
+
+const isBonusNode = (n) => typeof n === "string" && n[0] === "b";
+function unlockedNode(n) {
+  if (n === 1) return true;
+  if (n === "ex") return !!MAP.clears[FINAL_STAGE];
+  if (isBonusNode(n)) return !!MAP.clears[+n.slice(1)];
+  return !!MAP.clears[n - 1];
+}
+/** そのステージを始めるときの兵力と武器（前の面の一番いいクリア記録） */
+function entryOf(st) {
+  if (st <= 1) return { army: 12, power: 1 };
+  const c = MAP.clears[Math.min(st - 1, FINAL_STAGE)];
+  return c ? { army: Math.max(10, Math.round(c.army)), power: c.power } : { army: 12, power: 1 };
+}
+/** まだクリアしていない一番手前のステージ */
+function frontier() { let s = 1; while (s < FINAL_STAGE && MAP.clears[s]) s++; return s; }
+function nodeLabel(n) {
+  if (n === "ex") return "エクストラ";
+  if (isBonusNode(n)) return "宝物庫";
+  return "Stage " + n;
+}
+
+/* マップの絵柄：星と鍵は SVG で描く（文字の★より形がそろって見える） */
+const SVG_STAR = (on) => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="' +
+  (on ? "#ffd24a" : "#4a3d2c") + '" stroke="' + (on ? "#8a5a00" : "#241a12") + '" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const SVG_LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="#1a120c" stroke-width="4.2"/>' +
+  '<path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="#d8cbb4" stroke-width="2.2"/>' +
+  '<rect x="5" y="10.5" width="14" height="10" rx="2" fill="#d8cbb4" stroke="#1a120c" stroke-width="1.6"/><circle cx="12" cy="15.3" r="1.7" fill="#1a120c"/></svg>';
+const starsRow = (s) => [0, 1, 2].map((i) => SVG_STAR(i < s)).join("");
+const chip = (k, v, cls) => "<span class='chip2" + (cls ? " " + cls : "") + "'>" + (k ? "<i>" + k + "</i>" : "") + v + "</span>";
+
+function renderMap() {
+  const list = document.getElementById("mapList");
+  list.innerHTML = "";
+  const next = frontier();
+  let total = 0;
+  AREAS.forEach((a) => {
+    const sec = document.createElement("section");
+    sec.className = "area" + (a.ex ? " exa" : "");
+    sec.style.backgroundImage = "linear-gradient(180deg,rgba(20,15,12,.1),rgba(20,15,12,.5)), url(assets/backgrounds/" + a.file + ".webp)";
+    sec.innerHTML = "<h3>" + a.name + "</h3><div class='nodes'></div>";
+    const row = sec.querySelector(".nodes");
+    a.nodes.forEach((n) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.node = n;
+      const open = unlockedNode(n);
+      let cls = "node", inner = "";
+      if (isBonusNode(n)) {
+        const st = MAP.bonus[+n.slice(1)];
+        cls += " bonus" + (st === "done" ? " done" : "");
+        inner = "<canvas aria-hidden='true'></canvas>" + (open && st !== "done" ? "<span class='tag'>宝物庫</span>" : "");
+      } else if (n === "ex") {
+        cls += " ex";
+        inner = open ? "<span class='num'>EX</span>" + (MAP.exBest ? "<span class='best'>最高 EX" + MAP.exBest + "</span>" : "") : SVG_LOCK;
+      } else {
+        const c = MAP.clears[n];
+        if (c) cls += " clear";
+        const s = c ? starsOf(c.rank) : 0;
+        total += s;
+        if (!open) inner = SVG_LOCK;
+        else {
+          inner = "<span class='num'>" + n + "</span>";
+          if (c) inner += "<span class='stars'>" + starsRow(s) + "</span>";
+          else if (n === next) { cls += " next"; inner += "<span class='pin'>NEXT</span>"; }
+        }
+      }
+      if (!open) cls += " lock";
+      b.className = cls;
+      b.innerHTML = inner;
+      b.setAttribute("aria-label", nodeLabel(n) + (open ? "" : "（まだ開いていない）"));
+      b.addEventListener("click", () => selectNode(n));
+      row.appendChild(b);
+      const cv = b.querySelector("canvas");
+      if (cv) requestAnimationFrame(() => SK.paintIcon(cv, MAP.bonus[+n.slice(1)] === "done" ? "chest_open" : "chest_closed"));
+    });
+    list.appendChild(sec);
+  });
+  document.getElementById("mapProg").innerHTML = SVG_STAR(true).replace("<svg", "<svg class='ps'") + total + "<small>/" + FINAL_STAGE * 3 + "</small>";
+  const bEl = document.getElementById("mapBoost");
+  bEl.textContent = MAP.boost ? "🎁 宝物ボーナス：次の出撃は 兵力 ×" + MAP.boost.k.toFixed(1) + " から" : "";
+  let sel = MAP.sel;
+  if (!unlockedNode(sel)) sel = next;
+  selectNode(sel, true);
+}
+
+function selectNode(n, scroll) {
+  MAP.sel = n;
+  document.querySelectorAll("#mapList .node").forEach((b) => b.classList.toggle("sel", b.dataset.node === String(n)));
+  const t = document.getElementById("mapT"), d = document.getElementById("mapD"), go = document.getElementById("btnGo");
+  const open = unlockedNode(n);
+  go.disabled = !open;
+  go.textContent = "GO";
+  const boostChip = MAP.boost ? chip("宝物", "×" + MAP.boost.k.toFixed(1), "gold") : "";
+  if (isBonusNode(n)) {
+    const b = +n.slice(1), st = MAP.bonus[b];
+    t.innerHTML = "<b>宝物庫</b><small>とっておきのボーナス</small>";
+    if (!open) d.textContent = "Stage " + b + " をクリアすると開く。";
+    else if (st === "done") { d.textContent = "もう使った。"; go.disabled = true; }
+    else d.textContent = "宝箱を撃ち開けて、手に入れたぶんを次の出撃に上乗せ。苦しい面の前に取っておこう。";
+  } else if (n === "ex") {
+    t.innerHTML = "<b>EX</b><small>果ての道</small>";
+    if (!open) d.textContent = "Stage 10 をクリアすると開く。";
+    else {
+      const e = entryOf(FINAL_STAGE + 1);
+      d.innerHTML = chip("出撃兵力", fmt(e.army)) + chip("", WEAPONS[tierOf(e.power)].n) + boostChip +
+        (MAP.exBest ? chip("最高", "EX" + MAP.exBest, "gold") : "");
+    }
+  } else {
+    const theme = window.StageBackgrounds ? StageBackgrounds.themeFor(n).name : "";
+    t.innerHTML = "<b>STAGE " + n + "</b><small>" + theme + "</small>";
+    if (!open) d.textContent = "Stage " + (n - 1) + " をクリアすると開く。";
+    else {
+      const e = entryOf(n), c = MAP.clears[n];
+      d.innerHTML = chip("出撃兵力", fmt(e.army)) + chip("", WEAPONS[tierOf(e.power)].n) + boostChip +
+        (c ? chip("ベスト", starsRow(starsOf(c.rank))) : "");
+    }
+  }
+  if (scroll) {
+    const el = document.querySelector("#mapList .node.sel");
+    if (el) requestAnimationFrame(() => el.scrollIntoView({ block: "center" }));
+  }
+}
+
+function showMap() {
+  ovPause.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovTitle.hidden = true;
+  pausedFrom = null;
+  Snd.music(false);
+  if (state !== "title") setupDemo();
+  mapRun = null;
+  renderMap();
+  ovMap.hidden = false;
+}
+
+/** マップのマスから出撃する */
+function startNode(n) {
+  ovMap.hidden = true;
+  Snd.kick();
+  best = loadBest(); kills = 0; runBest = 0; lives = MAX_LIVES;
+  MAP.sel = n; saveMap();
+  if (isBonusNode(n)) {
+    const e = entryOf(frontier());
+    stage = +n.slice(1);
+    mapRun = { kind: "bonus", node: n, b: stage, a0: e.army, p0: e.power };
+    beginBonus(e.army, e.power);
+    return;
+  }
+  const st = n === "ex" ? FINAL_STAGE + 1 : n;
+  const e = entryOf(st);
+  let army = e.army, power = e.power, boost = null;
+  if (MAP.boost) {
+    boost = MAP.boost;
+    army = Math.round(army * boost.k);
+    power = Math.min(WEAPONS[WMAX].p, power * boost.pk);
+    MAP.boost = null; saveMap();
+  }
+  mapRun = { kind: n === "ex" ? "ex" : "stage", node: n };
+  beginStage(st, army, power);
+  if (boost) flash(elMile, ["宝物ボーナス！", "兵力 ×" + boost.k.toFixed(1), ""]);
+}
+
+/** クリアした記録をマップに残す（兵力が多いほうを残す。ランクは良いほう） */
+function recordClear(rank) {
+  if (!mapRun || mapRun.kind === "bonus") return;
+  if (stage > FINAL_STAGE) { MAP.exBest = Math.max(MAP.exBest || 0, exOf(stage)); saveMap(); return; }
+  const old = MAP.clears[stage];
+  const army = Math.round(crowd.count);
+  const keep = old && old.army > army;
+  const betterRank = !old || (RANK_PT[rank] || 0) > (RANK_PT[old.rank] || 0) ? rank : old.rank;
+  MAP.clears[stage] = keep ? { army: old.army, power: old.power, rank: betterRank } : { army, power: crowd.power, rank: betterRank };
+  let opened = false;
+  if (stage < FINAL_STAGE && stage % 3 === 0 && !MAP.bonus[stage]) { MAP.bonus[stage] = "ready"; opened = true; }
+  MAP.sel = stage < FINAL_STAGE ? stage + 1 : "ex";
+  saveMap();
+  return opened;
+}
+/** 宝物庫の結果を「次の出撃」の上乗せとしてとっておく */
+function recordBonus() {
+  if (!mapRun || mapRun.kind !== "bonus") return 1;
+  const k = Math.max(1, crowd.count / Math.max(1, mapRun.a0));
+  const pk = Math.max(1, crowd.power / Math.max(0.01, mapRun.p0));
+  const prev = MAP.boost;
+  MAP.boost = prev ? { k: prev.k * k, pk: prev.pk * pk } : { k, pk };
+  MAP.bonus[mapRun.b] = "done";
+  MAP.sel = frontier();
+  saveMap();
+  return MAP.boost.k;
+}
+const rankNow = () => { const g = crowd.count / Math.max(1, rec.start); return g >= 5 ? "S" : g >= 2 ? "A" : g >= 0.8 ? "B" : "C"; };
+
+document.getElementById("btnGo").addEventListener("click", () => { if (unlockedNode(MAP.sel)) startNode(MAP.sel); });
+document.getElementById("btnMapBack").addEventListener("click", () => { ovMap.hidden = true; ovTitle.hidden = false; });
+addEventListener("keydown", (e) => {
+  if (ovMap.hidden) return;
+  if (e.key === "Escape") { ovMap.hidden = true; ovTitle.hidden = false; }
+  else if (e.key === "Enter" && e.target.tagName !== "BUTTON" && !document.getElementById("btnGo").disabled) startNode(MAP.sel);
 });
 
 /* ============================================================
