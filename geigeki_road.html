@@ -376,6 +376,9 @@
   .rk-list .sc{font-family:var(--disp); font-size:13px; color:var(--gold); text-align:right; white-space:nowrap}
   .rk-list .sc small{display:block; font-family:var(--ui); font-weight:600; font-size:11px; color:rgba(228,219,198,.55)}
   .rk-list .empty{display:block; text-align:center; color:rgba(228,219,198,.6); border:0; padding:18px 0}
+  .rk-count{font-size:13px; color:var(--stone-l); margin:-4px 0 12px}
+  .rk-count:empty{display:none}
+  .rk-count b{color:var(--gold); font-size:16px}
   .rk-me{font-size:14px; color:var(--stone-l); margin:0 0 14px}
   .rk-me:empty{display:none}
   .rk-me b{color:var(--gold)}
@@ -755,6 +758,7 @@
     <div class="tablet">
       <div class="eyebrow">Ranking</div>
       <h2>ランキング</h2>
+      <p class="rk-count" id="rkCount"></p>
       <div class="rk-tabs" role="tablist">
         <button data-v="today" class="on" role="tab">今日</button>
         <button data-v="month" role="tab">今月</button>
@@ -4023,6 +4027,8 @@ async function loadRanking(view) {
   try {
     const d = await apiGet(view);
     if (my !== rkReq) return;
+    // これまでにランキング登録したことのある人数（全期間）。GAS が古いと来ないので、そのときは出さない
+    if (typeof d.players === "number" && d.players > 0) document.getElementById("rkCount").innerHTML = "これまでのランキング登録者 <b>" + fmt(d.players) + "</b>人";
     const es = d.entries || [];
     list.innerHTML = es.length ? es.map((e) => {
       const sc = view === "month"
