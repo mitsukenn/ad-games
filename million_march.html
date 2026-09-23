@@ -1821,6 +1821,8 @@ function syncUnits(host, palDeath) {
   }
   const top = ranks.length ? ranks[0] : 0;
   host.spacing = Math.max(1, rankScale(top) * 0.85);
+  // 味方の隊列は先頭から後ろへ伸ばす（前に張り出すと、これから来るゲートの数字を隠すため）
+  if (host === crowd) crowd.back = Math.max(0, 0.4 * Math.sqrt(ranks.length + 0.5) * 1.45 * host.spacing - 1.0);
   if (host === crowd) {
     if (top > (crowd.topRank | 0) && (state === "run" || state === "battle") && RANK_NAME[top]) {
       popText(RANK_NAME[top] + " 結成!", C.gold, crowd.z + 4, true);
@@ -1850,10 +1852,10 @@ const SP = {
 /* --- 隊（まとまり）--------------------------------------------
    兵が増えすぎて画面が埋まらないよう、150体を超えたら10人を1体の「隊長」、
    さらに増えたら100人を1体の「巨大騎士」…とまとめて描く。数字の兵力は変わらない */
-const RANK_SCALE = [1, 1.45, 2.0, 2.4, 2.75, 3.0, 3.2];
+const RANK_SCALE = [1, 1.25, 1.45, 1.6, 1.75, 1.85, 1.95];   // まとまった兵の大きさ。大きすぎるとゲートの数字を隠すので2倍まで
 const RANK_NAME = ["", "十人隊", "百人隊", "千人隊", "万人隊", "十万隊", "百万隊", "千万隊"];
 const rankScale = (r) => RANK_SCALE[Math.min(r | 0, RANK_SCALE.length - 1)];
-const RANK_CAP = 150;   // これを超えたらまとめる。兵力の伸びを抑えたので、隊長はステージ2、巨大騎士は3〜4ごろに出る
+const RANK_CAP = 150;   // これを超えたらまとめる。兵力の伸びを抑えたので、隊長はステージ2、巨大騎士は3〜4ごろに出る（刃で減る単位もこれで決まるので変えない）
 function composition(n) {
   n = Math.max(0, Math.round(n));
   const out = [];
@@ -2242,7 +2244,7 @@ function updateCrowdUnits(dt) {
     const p = u[i];
     p.pz = p.z;
     p.x += (crowd.x + Math.max(-lim, Math.min(lim, p.sx * sp)) - p.x) * k;
-    p.z += (crowd.z + p.sz * sp - p.z) * k;
+    p.z += (crowd.z + p.sz * sp - (crowd.back || 0) - p.z) * k;
     if (p.pop > 0) p.pop = Math.max(0, p.pop - dt * 3.4);
   }
 }
