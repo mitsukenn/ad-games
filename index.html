@@ -83,6 +83,8 @@
   .order .res::before{content:"→ "; color:var(--gold); font-weight:700}
   .card .go{margin-top:auto; padding-top:8px; font-family:var(--disp); color:var(--gold); font-size:17px}
   .t2 .tag{color:#9cc0ff} .t3 .tag{color:#e0a83c}
+  .card .shots{margin:6px -20px 4px}        /* カードの中でも画面写真を横に並べる */
+  @media (min-width:700px){ .card .shots{margin:6px auto 6px; max-width:560px} }
 
   /* ---------- イチオシ：迎撃ロード ---------- */
   .feature{
@@ -172,7 +174,12 @@
     <a class="card t3" href="million_march.html">
       <span class="tag">March Runner ／ 率いて進む</span>
       <h3>Million March</h3>
-      <p>ゲートをくぐるたびに兵が増える行進ゲーム。数に上限はなし、100万の大軍も夢じゃない。巨人との決戦、宝箱のボーナスステージ、移り変わる5つの景色、終わりのない遠征まで。</p>
+      <p>ゲートをくぐるたびに兵が増える行進ゲーム。数に上限はなし、100万の大軍も夢じゃない。マップから好きな面を選んで出撃し、巨人との決戦、宝箱のボーナスステージ、移り変わる5つの景色、終わりのない遠征まで。</p>
+      <div class="shots">
+        <figure><img src="assets/screens/million_2.jpg" width="540" height="1052" alt="Million March の序盤。緑の谷の道で、+8 と +6 のゲートのどちらをくぐるか選ぶ" loading="lazy"><figcaption>ゲートを選んで、兵を増やす</figcaption></figure>
+        <figure><img src="assets/screens/million_3.jpg" width="540" height="1052" alt="雪の神殿のステージ。4万を超える青い軍勢が赤い敵軍とぶつかる" loading="lazy"><figcaption>数万の軍勢で押しつぶす</figcaption></figure>
+        <figure><img src="assets/screens/million_4.jpg" width="540" height="1052" alt="火山の要塞のステージ。数十万の金色の鎧の大軍に回転する刃が当たる" loading="lazy"><figcaption>数十万の大軍が行進</figcaption></figure>
+      </div>
       <p class="order"><small>AIにこう頼んだら</small>「巨人みたいなやつが出てきてほしい」「増減は限界なしでいいかも」<span class="res">巨人と巨人王が出現。兵力はどこまでも増えるように</span></p>
       <span class="go">遊んでみる →</span>
     </a>
