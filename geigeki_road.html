@@ -440,6 +440,15 @@
   .map-boost{margin:0 12px 6px; padding:5px 10px; font-size:12px; font-weight:700; color:#2a1a02; text-align:center;
              background:linear-gradient(180deg,#ffe38a,#e0a83c); border-radius:4px; box-shadow:0 2px 0 #a37520, 0 0 16px rgba(255,200,80,.35)}
   .map-boost:empty{display:none}
+  /* 所持兵力：どの面もこの兵力と武器で出撃する。ひと目で分かるよう大きく */
+  .map-army{display:flex; align-items:center; justify-content:center; gap:10px; margin:0 12px 8px; padding:6px 14px;
+            border-radius:10px; white-space:nowrap; background:linear-gradient(180deg,#2c4f86,#162a52);
+            border:1px solid rgba(156,192,255,.75); box-shadow:0 2px 0 #0c1733, 0 0 14px rgba(90,140,255,.3)}
+  .map-army .k{font-size:11px; font-weight:700; letter-spacing:.12em; color:#cfe0ff}
+  .map-army b{font-family:var(--disp); font-weight:400; font-size:28px; line-height:1; color:#fff; text-shadow:0 2px 0 #0c1733}
+  .map-army .w{display:inline-flex; align-items:center; gap:3px; font-size:13px; font-weight:700; color:#ffd24a}
+  .map-army canvas{width:26px; height:26px}
+  @media (max-width:340px){ .map-army{gap:7px; padding:5px 10px} .map-army b{font-size:24px} .map-army .w{font-size:12px} }
   .map-list{flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding:0 10px}
   .world{position:relative; min-height:calc(100% - 18px); display:flex; flex-direction:column-reverse;
          border:2px solid rgba(255,225,150,.55); border-radius:10px; margin-bottom:14px;
@@ -654,6 +663,10 @@
         <button class="btn ghost" id="btnMapBack">◀ タイトル</button>
         <div class="map-title"><b>WORLD MAP</b><small>マップ</small></div>
         <span class="map-prog" id="mapProg"></span>
+      </div>
+      <div class="map-army" id="mapArmy" aria-live="polite">
+        <span class="k">所持兵力</span><b id="mapArmyN">12</b>
+        <span class="w"><canvas id="mapArmyIcon" aria-hidden="true"></canvas><span id="mapArmyW">投石</span></span>
       </div>
       <p class="map-boost" id="mapBoost"></p>
       <div class="map-list" id="mapList"></div>
@@ -3645,7 +3658,11 @@ function renderMap() {
       b.className = cls;
       b.innerHTML = inner;
       b.setAttribute("aria-label", nodeLabel(n) + (typeof n === "number" && hasKing(n) ? "（巨人王）" : "") + (open ? "" : "（まだ開いていない）"));
-      b.addEventListener("click", () => selectNode(n));
+      // 開いている面は押したらそのまま出撃。開いていない面・使い終わった宝物庫は説明だけ出す
+      b.addEventListener("click", () => {
+        selectNode(n);
+        if (!document.getElementById("btnGo").disabled) startNode(n);
+      });
       sec.appendChild(b);
       b.querySelectorAll("canvas").forEach((cv) => {
         const id = cv.parentElement.classList.contains("boss") ? "giant_king_idle"
@@ -3688,6 +3705,10 @@ function renderMap() {
     heroTimer = setInterval(paint, 340);
   }
   document.getElementById("mapProg").innerHTML = SVG_STAR(true).replace("<svg", "<svg class='ps'") + total + "<small>/" + FINAL_STAGE * 3 + "</small>";
+  document.getElementById("mapArmyN").textContent = fmt(MAP.army || 12);
+  const wt = tierOf(MAP.power || 1);
+  document.getElementById("mapArmyW").textContent = WEAPONS[wt].n;
+  requestAnimationFrame(() => SK.paintIcon(document.getElementById("mapArmyIcon"), WEAPON_SPR[wt]));
   const bEl = document.getElementById("mapBoost");
   bEl.textContent = MAP.boost ? "🎁 宝物ボーナス：次の出撃は 兵力 ×" + MAP.boost.k.toFixed(1) + " から" : "";
   let sel = MAP.sel;
