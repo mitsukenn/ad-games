@@ -829,8 +829,9 @@ const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let W = 0, H = 0, DPR = 1;
 function resize() {
-  DPR = Math.min(devicePixelRatio || 1, 2);
   W = cvs.clientWidth; H = cvs.clientHeight;
+  // 描く点の数は約240万まで（スマホは今までどおり2倍、iPad のような大きい画面だけ少し粗くして軽くする）
+  DPR = Math.min(devicePixelRatio || 1, 2, Math.max(1, Math.sqrt(2.4e6 / Math.max(1, W * H))));
   // 焦点距離は画面の高さと幅の両方に合わせる（背の低い画面・細い画面でも道全体が収まる）
   FOCAL = Math.max(300, Math.min(H * 1.18, W * 2.2));   // 望遠気味にして、奥の物も大きめに見せる
   cvs.width = Math.round(W * DPR);
@@ -1237,12 +1238,14 @@ function syncCrowd() {
     crowd.units.push({ sx: s.sx, sz: s.sz, x: crowd.x + s.sx, z: s.sz, ph: Math.random() * 6.28, pop: 1 });
   }
 }
+/** 画面上部の兵力の数字。同じ文字なら書き換えない */
+function paintArmy(v) { const t = fmt(v); if (hArmy.textContent !== t) hArmy.textContent = t; }
 function setCount(n) {
   crowd.count = Math.max(0, n);
   syncCrowd(); syncBigs();
   if (crowd.count > best) best = Math.round(crowd.count);
   if (crowd.count > runBest) runBest = Math.round(crowd.count);
-  hArmy.textContent = fmt(crowd.count);
+  paintArmy(crowd.count);
 }
 /* --- 素材（assets/prepared）の対応表。読めないときは Canvas 描画に戻る --- */
 const SK = window.SpriteKit || { ok: () => false, foot: () => false, footW: () => false, center: () => false, paintIcon: () => false, onReady() {} };
@@ -1930,7 +1933,7 @@ function updateSquadBattle(dt) {
   sq.count = Math.max(0, sq.count - dEnemy);
   kills += before - sq.count;
   syncCrowd(); syncSquad(sq);
-  hArmy.textContent = fmt(crowd.count);
+  paintArmy(crowd.count);
   if (Math.random() < dt * 30) puff(crowd.x + rnd(-1.4, 1.4), rnd(.4, 1.6), sq.z - rnd(0, 1), pick([C.gold, C.foe, C.cream]), 2);
   if (Math.random() < dt * 9) Snd.clash();
   doShake(dt * 22);
@@ -1961,7 +1964,7 @@ function updateGiantBattle(dt) {
     const loss = g.atk * g.period;
     crowd.count = Math.max(0, crowd.count - loss);
     syncCrowd();
-    hArmy.textContent = fmt(crowd.count);
+    paintArmy(crowd.count);
     for (let i = 0; i < 18; i++) puff(g.x + rnd(-2.2, 2.2), 0.3, rnd(-0.5, 1.5), pick([C.roadD, C.foe, C.cream]), 1);
     popText("−" + fmt(loss), C.bad, g.x, 1.0, true);
     Snd.boom(); doShake(14 * Math.min(1.4, g.scale)); buzz(40);
@@ -2089,7 +2092,8 @@ function update(dt) {
   }
   updateGunners(dt, front);
   if (state !== "run") return;
-  hBar.style.width = Math.min(100, (1 - remaining / totalZ) * 100) + "%";
+  const bw = Math.round(Math.min(100, (1 - remaining / totalZ) * 100) * 2) / 2 + "%";   // 0.5%刻み。変わったときだけ書き換える
+  if (hBar.style.width !== bw) hBar.style.width = bw;
   if (remaining <= 0 && !items.some((it) => it.type === "giant" && it.dead && it.fall < 1)) stageClear();
 }
 
@@ -2299,7 +2303,7 @@ function soldierSprite(body, bodyD, skin, wt) {
   soldierCache.set(key, sprite);
   return sprite;
 }
-function drawUnit(u, body, bodyD, skin, t, wt, beast, gun) {
+function drawUnit(u, body, bodyD, skin, t, wt, beast, gun, noShadow) {
   const p = proj(u.x, 0, u.z); if (!p || p.s < 2.2) return;
   const ally = body === C.ally;
   const frame = ((t * 5 + u.ph) | 0) % 2;                      // 2コマで足踏み
@@ -2316,8 +2320,10 @@ function drawUnit(u, body, bodyD, skin, t, wt, beast, gun) {
   else sid = SK.ok("enemy_" + lv + f) ? "enemy_" + lv + f : "enemy_stand" + f;
   if (p.s >= 3.2 && SK.ok(sid)) {
     const hh = scale * p.s * (1 - u.pop * 0.5);
-    ctx.fillStyle = "rgba(21,34,29,.24)";
-    ctx.beginPath(); ctx.ellipse(p.x, p.y, p.s * 0.3, p.s * 0.1, 0, 0, 6.2832); ctx.fill();
+    if (!noShadow) {
+      ctx.fillStyle = "rgba(21,34,29,.24)";
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, p.s * 0.3, p.s * 0.1, 0, 0, 6.2832); ctx.fill();
+    }
     SK.foot(ctx, sid, p.x, p.y, hh);
     // 手にした飛び道具：斜め45度の絵を立てて、右手の位置に持たせる
     if (ally && wt > 0 && p.s >= 7 && u.kind !== "titan") {
@@ -2330,8 +2336,10 @@ function drawUnit(u, body, bodyD, skin, t, wt, beast, gun) {
   }
   const bob = Math.sin(t * 12 + u.ph), lift = Math.max(0, bob) * 0.10 * p.s;
   const h = 1.13 * p.s * (1 - u.pop * 0.55), w = 0.75 * p.s * (1 + u.pop * 0.3);
-  ctx.fillStyle = "rgba(21,34,29,.24)";
-  ctx.beginPath(); ctx.ellipse(p.x + p.s * 0.08, p.y, p.s * 0.28, p.s * 0.095, 0, 0, 6.2832); ctx.fill();
+  if (!noShadow) {
+    ctx.fillStyle = "rgba(21,34,29,.24)";
+    ctx.beginPath(); ctx.ellipse(p.x + p.s * 0.08, p.y, p.s * 0.28, p.s * 0.095, 0, 0, 6.2832); ctx.fill();
+  }
   if (p.s < 7) { ctx.fillStyle = body; ctx.fillRect(p.x - w * 0.3, p.y - h * 0.8, w * 0.6, h * 0.8); return; }
   const feet = p.y - lift;
   ctx.drawImage(soldierSprite(body, bodyD, skin, wt), p.x - w / 2, feet - h, w, h);
@@ -2341,10 +2349,41 @@ function drawUnit(u, body, bodyD, skin, t, wt, beast, gun) {
 function drawHost(units, ally, t, wt, beast, gun) {
   const order = units.slice().sort((a, b) => b.z - a.z);
   const body = ally ? C.ally : C.foe, bodyD = ally ? C.allyD : C.foeD, skin = ally ? C.skin : C.skinF;
-  for (const u of order) drawUnit(u, body, bodyD, skin, t, wt, beast, gun);
+  // 足元の影は、全員ぶんを1回でまとめて塗る（1体ずつ塗ると、大軍のときに重い）
+  ctx.fillStyle = "rgba(21,34,29,.24)";
+  ctx.beginPath();
+  for (const u of order) {
+    const p = proj(u.x, 0, u.z);
+    if (!p || p.s < 3.2) continue;
+    ctx.moveTo(p.x + p.s * 0.3, p.y);
+    ctx.ellipse(p.x, p.y, p.s * 0.3, p.s * 0.1, 0, 0, 6.2832);
+  }
+  ctx.fill();
+  for (const u of order) drawUnit(u, body, bodyD, skin, t, wt, beast, gun, true);
 }
 
 /* --- 宝の板 ------------------------------------------------ */
+/* 床の板の「+123」は、同じ文字・色の絵を一度だけ作って使い回す。
+   板は何十枚も並ぶので、1枚ごとに文字の大きさを設定して幅を測ると重い */
+const LABEL_FS = 56;
+const labelCache = new Map();
+function labelImg(text, color) {
+  const key = text + "|" + color;
+  let c = labelCache.get(key);
+  if (c) return c;
+  const font = LABEL_FS + 'px Chango, "Arial Black", sans-serif';
+  c = document.createElement("canvas");
+  let g = c.getContext("2d");
+  g.font = font;
+  c.tw = g.measureText(text).width;
+  c.width = Math.ceil(c.tw) + 6; c.height = Math.ceil(LABEL_FS * 1.3);
+  g = c.getContext("2d");                                    // 大きさを変えると設定が消えるので、もう一度
+  g.font = font; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = color;
+  g.fillText(text, c.width / 2, c.height / 2);
+  if (labelCache.size > 240) labelCache.clear();
+  labelCache.set(key, c);
+  return c;
+}
 function drawTile(t) {
   if (t.kind === "mul" && SK.ok("supply_crate")) {
     const b = proj(t.x, 0, t.z + 0.5);
@@ -2376,14 +2415,12 @@ function drawTile(t) {
   const c = proj(t.x, h, z0 + 0.52);
   if (c) {
     const label = t.kind === "pow" ? "+" + Math.round(t.v * 100) + "%" : (t.kind === "mul" ? "×" : "+") + fmt(t.v);
-    let fs = Math.min(c.s * 0.62, 40);
+    const fs = Math.min(c.s * 0.62, 40);
     if (fs >= 6) {
-      ctx.font = fs + 'px Chango, "Arial Black", sans-serif';
-      const mw = ctx.measureText(label).width;
-      if (mw > c.s * 1.5) { fs *= (c.s * 1.5) / mw; ctx.font = fs + 'px Chango, "Arial Black", sans-serif'; }
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillStyle = txt;
-      ctx.fillText(label, c.x, c.y);
+      const img = labelImg(label, txt);
+      let k = fs / LABEL_FS;
+      if (img.tw * k > c.s * 1.5) k = (c.s * 1.5) / img.tw;   // 板からはみ出す長い数字は縮める
+      ctx.drawImage(img, c.x - (img.width * k) / 2, c.y - (img.height * k) / 2, img.width * k, img.height * k);
     }
   }
   ctx.globalAlpha = 1;
@@ -3102,10 +3139,12 @@ function render() {
   // 床の板は常に一番下
   for (let i = items.length - 1; i >= 0; i--) {
     const it = items[i];
-    if (it.type === "tile" && !it.gone) drawTile(it);
+    if (it.type === "tile" && !it.gone && it.z < DRAW_Z) drawTile(it);   // 奥の透明な板は描かない
   }
   const front = crowdFront();
-  const objs = items.filter((it) => it.type !== "tile" && (!it.dead || (it.type === "giant" && it.fall < 1)));
+  // 奥（DRAW_Z より先）の物は透明なので描かない。敵の隊だけは遠くからも見えるので残す
+  const objs = items.filter((it) => it.type !== "tile" && (!it.dead || (it.type === "giant" && it.fall < 1)) &&
+    (it.type === "squad" || it.z < DRAW_Z + 25));
   objs.sort((a, b) => b.z - a.z);
   const drawObj = (it) => {
     if (it.type === "goal") drawGoal(it);
@@ -3199,7 +3238,7 @@ function syncArmy() {
   shownArmy = lastArmy = crowd.count;
   mileIdx = 0;
   while (mileIdx < MILES.length && crowd.count >= MILES[mileIdx]) mileIdx++;
-  hArmy.textContent = fmt(crowd.count);
+  paintArmy(crowd.count);
 }
 function tickHud(dt) {
   const target = crowd.count;
@@ -3209,7 +3248,7 @@ function tickHud(dt) {
   const k = target > shownArmy ? 1 - Math.exp(-dt * 5) : 1 - Math.exp(-dt * 16);
   shownArmy += (target - shownArmy) * k;
   if (Math.abs(target - shownArmy) < 0.5) shownArmy = target;
-  hArmy.textContent = fmt(shownArmy);
+  paintArmy(shownArmy);
   if (state === "run" || state === "battle") {
     while (mileIdx < MILES.length && target >= MILES[mileIdx]) {   // 桁の節目を祝う
       flash(elMile, [mileLabel(MILES[mileIdx]) + " 突破!", "兵力", ""]);
@@ -3217,7 +3256,8 @@ function tickHud(dt) {
       mileIdx++;
     }
   }
-  hPause.hidden = !(state === "run" || state === "battle");
+  const hidePause = !(state === "run" || state === "battle");
+  if (hPause.hidden !== hidePause) hPause.hidden = hidePause;
 }
 
 /* --- 一時停止 --- */

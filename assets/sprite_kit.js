@@ -96,9 +96,14 @@
     if (!ok(id) || h <= 0) return false;
     const r = rect(id), w = (h * r.w) / r.h;
     const c = scaled(id, h * DPR());
+    if (!flip) {                          // 反転しないときは save/restore なしで直接描く（何百体も描くので軽くする）
+      if (c) ctx.drawImage(c, x - w / 2, y - h, w, h);
+      else ctx.drawImage(r.img, r.x, r.y, r.w, r.h, x - w / 2, y - h, w, h);
+      return true;
+    }
     ctx.save();
     ctx.translate(x, y);
-    if (flip) ctx.scale(-1, 1);
+    ctx.scale(-1, 1);
     if (c) ctx.drawImage(c, -w / 2, -h, w, h);
     else ctx.drawImage(r.img, r.x, r.y, r.w, r.h, -w / 2, -h, w, h);
     ctx.restore();
@@ -110,9 +115,14 @@
     if (!ok(id) || size <= 0) return false;
     const r = rect(id), k = size / Math.max(r.w, r.h), w = r.w * k, h = r.h * k;
     const c = scaled(id, h * DPR());
+    if (!rot) {                           // 回さないときは save/restore なしで直接描く
+      if (c) ctx.drawImage(c, x - w / 2, y - h / 2, w, h);
+      else ctx.drawImage(r.img, r.x, r.y, r.w, r.h, x - w / 2, y - h / 2, w, h);
+      return true;
+    }
     ctx.save();
     ctx.translate(x, y);
-    if (rot) ctx.rotate(rot);
+    ctx.rotate(rot);
     if (c) ctx.drawImage(c, -w / 2, -h / 2, w, h);
     else ctx.drawImage(r.img, r.x, r.y, r.w, r.h, -w / 2, -h / 2, w, h);
     ctx.restore();
