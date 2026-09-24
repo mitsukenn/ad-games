@@ -4019,11 +4019,11 @@ function buildShareImage(r) {
     g.fillText(c.v, x + w / 2, top + (c.icon ? 190 : 160));
   });
 
-  // 今週の順位、なければ挑戦のひとこと
+  // ランキングの順位（今週／今月）、なければ挑戦のひとこと
   g.font = "800 46px " + JP;
   if (r.place) {
     g.fillStyle = "#ffd76a";
-    g.fillText("今週のランキング " + r.place + "位", S / 2, 890);
+    g.fillText(RK_TITLE + " " + r.place + "位", S / 2, 890);
     g.fillStyle = "rgba(228,219,198,.75)"; g.font = "700 30px " + JP;
     g.fillText(r.total + "人中", S / 2, 934);
   } else {
@@ -4044,7 +4044,7 @@ function shareText(r) {
   else if (r.stage === FINAL_STAGE + 1) t = "迎撃ロード 全10ステージ完全制覇！最高兵力 " + jpShort(r.army) + "人。";
   else if (r.stage > FINAL_STAGE) t = "迎撃ロード 全10ステージ制覇のその先、エクストラ " + exOf(r.stage) + " 面まで到達！最高兵力 " + jpShort(r.army) + "人。";
   else t = "迎撃ロードで Stage " + r.stage + " まで到達！最高兵力 " + jpShort(r.army) + "人。";
-  if (r.place) t = "【今週のランキング " + r.place + "位】" + t;
+  if (r.place) t = "【" + RK_TITLE + " " + r.place + "位】" + t;
   return t + "\nAIだけで作ったゲームです。あなたはどこまで守れる？\n#AIゲーム実験室 #迎撃ロード";
 }
 
@@ -4104,7 +4104,15 @@ let rkReq = 0;
 const RK_NOTE = {
   week: "到達ステージ → 最大兵力の順。毎週月曜0時にリセット。何回挑戦してもOK（一番いい記録が残ります）",
   month: "到達ステージ → 最大兵力の順。毎月1日にリセット。何回挑戦してもOK（一番いい記録が残ります）",
+  year: "到達ステージ → 最大兵力の順。毎年1月1日にリセット。何回挑戦してもOK（一番いい記録が残ります）",
 };
+const RK_EMPTY = { week: "今週はまだ誰も登録していません。一番乗りのチャンス！", month: "今月はまだ誰も登録していません。一番乗りのチャンス！", year: "今年はまだ誰も登録していません" };
+/* 2026年11月1日0時（日本時間）から、タブを「今週・今月」→「今月・今年」に切り替える */
+const RK_LONG = Date.now() >= Date.UTC(2026, 9, 31, 15);
+const RK_TABS = RK_LONG ? [["month", "今月"], ["year", "今年"]] : [["week", "今週"], ["month", "今月"]];
+const RK_MAIN = RK_TABS[0][0];                          // 開いたとき・登録したときに見せる期間
+const RK_TITLE = RK_TABS[0][1] + "のランキング";
+ovRank.querySelectorAll(".rk-tabs button").forEach((b, i) => { b.dataset.v = RK_TABS[i][0]; b.textContent = RK_TABS[i][1]; });
 async function loadRanking(view) {
   ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === view));
   document.getElementById("rkNote").textContent = RK_NOTE[view];
@@ -4120,7 +4128,7 @@ async function loadRanking(view) {
     list.innerHTML = es.length ? es.map((e) => {
       const sc = stageLabel(e.stage) + "<small>兵力 " + jpShort(e.army) + "人</small>";
       return '<li class="' + (e.mine ? "mine" : "") + '"><span class="no">' + e.rank + '</span><span class="nm">' + esc(e.name) + '</span><span class="sc">' + sc + "</span></li>";
-    }).join("") : '<li class="empty">' + (view === "week" ? "今週はまだ誰も登録していません。一番乗りのチャンス！" : "今月はまだ誰も登録していません") + "</li>";
+    }).join("") : '<li class="empty">' + RK_EMPTY[view] + "</li>";
     if (d.me) {
       const tail = stageLabel(d.me.stage) + "・兵力 " + jpShort(d.me.army) + "人";
       meEl.innerHTML = "あなたは <b>" + d.total + "人中 " + d.me.rank + "位</b>（" + esc(tail) + "）";
@@ -4129,11 +4137,11 @@ async function loadRanking(view) {
     if (my === rkReq) list.innerHTML = '<li class="empty">読み込めませんでした。通信のよい場所でもう一度どうぞ</li>';
   }
 }
-function openRanking(view) { ovRank.hidden = false; loadRanking(view || "week"); }
+function openRanking(view) { ovRank.hidden = false; loadRanking(view || RK_MAIN); }
 ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.addEventListener("click", () => loadRanking(b.dataset.v)));
 document.getElementById("btnRankClose").addEventListener("click", () => { ovRank.hidden = true; });
-document.getElementById("btnRankTitle").addEventListener("click", () => openRanking("week"));
-document.getElementById("btnRankRec").addEventListener("click", () => openRanking("week"));
+document.getElementById("btnRankTitle").addEventListener("click", () => openRanking(RK_MAIN));
+document.getElementById("btnRankRec").addEventListener("click", () => openRanking(RK_MAIN));
 if (RANKING_API) document.getElementById("btnRankTitle").hidden = false;
 
 /* 結果画面の数字は折り返さず、枠に入るまで文字を小さくする */
@@ -4171,7 +4179,7 @@ const Result = {
     document.getElementById("btnRankRec").hidden = !on;
     recName.value = lsGet("gr.name", "");
     btnRegister.disabled = false; btnRegister.textContent = "ランキングに登録";
-    recMsg.textContent = on && info.final ? "今週のランキングに記録を残そう" : "";
+    recMsg.textContent = on && info.final ? RK_TITLE + "に記録を残そう" : "";
     resultShare.prepare(lastResult);
   },
 };
@@ -4182,13 +4190,13 @@ async function register() {
   lsSet("gr.name", name);
   btnRegister.disabled = true; btnRegister.textContent = "送信中…";
   try {
-    const d = await apiPost({ game: GAME_ID, name, stage: lastResult.stage, army: Math.round(lastResult.army), kills: Math.round(lastResult.kills), uid: getUid() });
+    const d = await apiPost({ game: GAME_ID, name, stage: lastResult.stage, army: Math.round(lastResult.army), kills: Math.round(lastResult.kills), uid: getUid(), view: RK_MAIN });
     if (!d.ok) throw new Error(d.error || "failed");
     registered = true;
     btnRegister.textContent = "登録済み";
     if (d.me) {
       const better = d.me.stage > lastResult.stage || (d.me.stage === lastResult.stage && d.me.army > lastResult.army);
-      recMsg.innerHTML = "今週のランキング <b>" + d.total + "人中 " + d.me.rank + "位</b>" + (better ? "（今週のベスト記録で集計）" : "");
+      recMsg.innerHTML = RK_TITLE + " <b>" + d.total + "人中 " + d.me.rank + "位</b>" + (better ? "（" + RK_TABS[0][1] + "のベスト記録で集計）" : "");
       lastResult.place = d.me.rank; lastResult.total = d.total;
       resultShare.prepare(lastResult);                // 順位入りの画像に作り直す
     } else recMsg.textContent = "登録しました";

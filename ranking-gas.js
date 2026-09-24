@@ -31,8 +31,9 @@
  * 【API】（game は "geigeki" など。省略時は geigeki）
  *   GET  ?view=week&game=geigeki&uid=xxx  … 今週の順位（月曜0時〜・日本時間。1人1件・その週のベスト）
  *   GET  ?view=month&game=geigeki&uid=xxx … 今月の順位（1日〜。1人1件・その月のベスト）
+ *   GET  ?view=year&game=geigeki&uid=xxx  … 今年の順位（1月1日〜。1人1件・その年のベスト）
  *   GET  ?view=today …… 古いゲーム画面のために残している（今日のベスト）
- *   POST {game, name, stage, army, kills, uid} … 記録を登録。今週の順位を返す
+ *   POST {game, name, stage, army, kills, uid, view} … 記録を登録。view（week/month/year・省略時は week）の順位を返す
  *   どの返事にも players（これまでにランキング登録したことのある人数＝端末IDの数・全期間）が入る。
  *   GET  ?view=players … { players: { geigeki: 人数, million: 人数, all: 全ゲームで重複なしの人数 } }（トップページ用）
  *   uid を付けると、上位に入っていなくても自分の順位が me に入って返る。
@@ -77,6 +78,17 @@ function weekStartKey_() {
 /** 日本時間の「今月1日」を YYYY-MM-DD で返す */
 function monthStartKey_() {
   return todayKey_().slice(0, 8) + '01';
+}
+/** 日本時間の「今年1月1日」を YYYY-MM-DD で返す */
+function yearStartKey_() {
+  return todayKey_().slice(0, 5) + '01-01';
+}
+/** 期間の名前から、集計を始める日を返す（知らない名前は今週） */
+function viewStart_(view) {
+  if (view === 'month') return monthStartKey_();
+  if (view === 'year') return yearStartKey_();
+  if (view === 'today') return todayKey_();
+  return weekStartKey_();
 }
 
 function cleanGame_(v) {
@@ -186,9 +198,8 @@ function doGet(e) {
     if (p.view === 'players') return json_({ players: playersAll_() });
     var game = cleanGame_(p.game);
     var uid = cleanUid_(p.uid);
-    if (p.view === 'month') return json_(pack_('month', bestSince_(game, monthStartKey_()), uid, game));
-    if (p.view === 'today') return json_(pack_('today', bestSince_(game, todayKey_()), uid, game));
-    return json_(pack_('week', bestSince_(game, weekStartKey_()), uid, game));
+    var view = ['month', 'year', 'today'].indexOf(p.view) === -1 ? 'week' : p.view;
+    return json_(pack_(view, bestSince_(game, viewStart_(view)), uid, game));
   } catch (err) {
     return json_({ entries: [], error: String(err) });
   }
@@ -217,7 +228,8 @@ function doPost(e) {
     } finally {
       lock.releaseLock();
     }
-    var res = pack_('week', bestSince_(game, weekStartKey_()), uid, game);
+    var view = ['month', 'year'].indexOf(body.view) === -1 ? 'week' : body.view;
+    var res = pack_(view, bestSince_(game, viewStart_(view)), uid, game);
     res.ok = true;
     return json_(res);
   } catch (err) {
