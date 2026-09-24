@@ -725,7 +725,7 @@
       <h2>ランキング</h2>
       <p class="rk-count" id="rkCount"></p>
       <div class="rk-tabs" role="tablist">
-        <button data-v="today" class="on" role="tab">今日</button>
+        <button data-v="week" class="on" role="tab">今週</button>
         <button data-v="month" role="tab">今月</button>
       </div>
       <p class="rk-note" id="rkNote"></p>
@@ -4310,11 +4310,11 @@ function buildShareImage(r) {
     g.fillText(c.v, x + w / 2, top + (drew ? 190 : 160));
   });
 
-  // 今日の順位、なければ挑戦のひとこと
+  // 今週の順位、なければ挑戦のひとこと
   g.font = "800 46px " + JP;
   if (r.place) {
     g.fillStyle = "#ffd76a";
-    g.fillText("今日のランキング " + r.place + "位", S / 2, 890);
+    g.fillText("今週のランキング " + r.place + "位", S / 2, 890);
     g.fillStyle = "rgba(228,219,198,.75)"; g.font = "700 30px " + JP;
     g.fillText(r.total + "人中", S / 2, 934);
   } else {
@@ -4335,7 +4335,7 @@ function shareText(r) {
   else if (r.win) t = "Million March 全10ステージ完全制覇！最高兵力 " + jpShort(r.army) + "人。";
   else if (r.stage > FINAL_STAGE) t = "Million March エンドレス遠征で Stage " + r.stage + " まで到達！最高兵力 " + jpShort(r.army) + "人。";
   else t = "Million March で Stage " + r.stage + " まで到達！最高兵力 " + jpShort(r.army) + "人。";
-  if (r.place) t = "【今日のランキング " + r.place + "位】" + t;
+  if (r.place) t = "【今週のランキング " + r.place + "位】" + t;
   return t + "\nAIだけで作ったゲームです。あなたは何万人まで増やせる？\n#AIゲーム実験室 #MillionMarch";
 }
 
@@ -4393,8 +4393,8 @@ async function apiPost(body) {
 
 let rkReq = 0;
 const RK_NOTE = {
-  today: "到達ステージ → 最高兵力の順。毎日0時にリセット。何回挑戦してもOK（一番いい記録が残ります）",
-  month: "遊んだ日 +1点 ／ その日の1〜3位 +10・7・5点 ／ 全制覇 +3点。続けるほど上位へ",
+  week: "到達ステージ → 最大兵力の順。毎週月曜0時にリセット。何回挑戦してもOK（一番いい記録が残ります）",
+  month: "到達ステージ → 最大兵力の順。毎月1日にリセット。何回挑戦してもOK（一番いい記録が残ります）",
 };
 async function loadRanking(view) {
   ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === view));
@@ -4409,24 +4409,22 @@ async function loadRanking(view) {
     if (typeof d.players === "number" && d.players > 0) document.getElementById("rkCount").innerHTML = "これまでのランキング登録者 <b>" + fmt(d.players) + "</b>人";
     const es = d.entries || [];
     list.innerHTML = es.length ? es.map((e) => {
-      const sc = view === "month"
-        ? e.points + "点<small>" + e.days + "日・" + stageLabel(e.stage) + "</small>"
-        : stageLabel(e.stage) + "<small>兵力 " + jpShort(e.army) + "人</small>";
+      const sc = stageLabel(e.stage) + "<small>兵力 " + jpShort(e.army) + "人</small>";
       return '<li class="' + (e.mine ? "mine" : "") + '"><span class="no">' + e.rank + '</span><span class="nm">' + esc(e.name) + '</span><span class="sc">' + sc + "</span></li>";
-    }).join("") : '<li class="empty">' + (view === "today" ? "今日はまだ誰も登録していません。一番乗りのチャンス！" : "今月の記録はまだありません") + "</li>";
+    }).join("") : '<li class="empty">' + (view === "week" ? "今週はまだ誰も登録していません。一番乗りのチャンス！" : "今月はまだ誰も登録していません") + "</li>";
     if (d.me) {
-      const tail = view === "month" ? d.me.points + "点" : stageLabel(d.me.stage) + "・兵力 " + jpShort(d.me.army) + "人";
+      const tail = stageLabel(d.me.stage) + "・兵力 " + jpShort(d.me.army) + "人";
       meEl.innerHTML = "あなたは <b>" + d.total + "人中 " + d.me.rank + "位</b>（" + esc(tail) + "）";
-    } else if (view === "today") meEl.textContent = "登録すると、ここにあなたの順位が出ます";
+    } else meEl.textContent = "登録すると、ここにあなたの順位が出ます";
   } catch (e) {
     if (my === rkReq) list.innerHTML = '<li class="empty">読み込めませんでした。通信のよい場所でもう一度どうぞ</li>';
   }
 }
-function openRanking(view) { ovRank.hidden = false; loadRanking(view || "today"); }
+function openRanking(view) { ovRank.hidden = false; loadRanking(view || "week"); }
 ovRank.querySelectorAll(".rk-tabs button").forEach((b) => b.addEventListener("click", () => loadRanking(b.dataset.v)));
 document.getElementById("btnRankClose").addEventListener("click", () => { ovRank.hidden = true; });
-document.getElementById("btnRankTitle").addEventListener("click", () => openRanking("today"));
-document.getElementById("btnRankRec").addEventListener("click", () => openRanking("today"));
+document.getElementById("btnRankTitle").addEventListener("click", () => openRanking("week"));
+document.getElementById("btnRankRec").addEventListener("click", () => openRanking("week"));
 if (RANKING_API) document.getElementById("btnRankTitle").hidden = false;
 
 /* 結果画面の数字は折り返さず、枠に入るまで文字を小さくする */
@@ -4461,7 +4459,7 @@ const Result = {
     document.getElementById("btnRankRec").hidden = !on;
     recName.value = store.get("mm.name", "");
     btnRegister.disabled = false; btnRegister.textContent = "ランキングに登録";
-    recMsg.textContent = on ? "今日のランキングに記録を残そう" : "";
+    recMsg.textContent = on ? "今週のランキングに記録を残そう" : "";
     resultShare.prepare(lastResult);
   },
 };
@@ -4478,7 +4476,7 @@ async function register() {
     btnRegister.textContent = "登録済み";
     if (d.me) {
       const better = d.me.stage > lastResult.stage || (d.me.stage === lastResult.stage && d.me.army > lastResult.army);
-      recMsg.innerHTML = "今日のランキング <b>" + d.total + "人中 " + d.me.rank + "位</b>" + (better ? "（今日のベスト記録で集計）" : "");
+      recMsg.innerHTML = "今週のランキング <b>" + d.total + "人中 " + d.me.rank + "位</b>" + (better ? "（今週のベスト記録で集計）" : "");
       lastResult.place = d.me.rank; lastResult.total = d.total;
       resultShare.prepare(lastResult);                // 順位入りの画像に作り直す
     } else recMsg.textContent = "登録しました";

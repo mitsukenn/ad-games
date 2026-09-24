@@ -29,9 +29,10 @@
  *   そのため「どこまで進んだか」を一番の基準にしている。
  *
  * 【API】（game は "geigeki" など。省略時は geigeki）
- *   GET  ?view=today&game=geigeki&uid=xxx … 今日の順位（1人1件・その日のベスト）
- *   GET  ?view=month&game=geigeki&uid=xxx … 今月のポイント順（続けた人ほど上位）
- *   POST {game, name, stage, army, kills, uid} … 記録を登録。今日の順位を返す
+ *   GET  ?view=week&game=geigeki&uid=xxx  … 今週の順位（月曜0時〜・日本時間。1人1件・その週のベスト）
+ *   GET  ?view=month&game=geigeki&uid=xxx … 今月の順位（1日〜。1人1件・その月のベスト）
+ *   GET  ?view=today …… 古いゲーム画面のために残している（今日のベスト）
+ *   POST {game, name, stage, army, kills, uid} … 記録を登録。今週の順位を返す
  *   どの返事にも players（これまでにランキング登録したことのある人数＝端末IDの数・全期間）が入る。
  *   GET  ?view=players … { players: { geigeki: 人数, million: 人数, all: 全ゲームで重複なしの人数 } }（トップページ用）
  *   uid を付けると、上位に入っていなくても自分の順位が me に入って返る。
@@ -44,15 +45,9 @@ var SHEET_NAME = 'records';
 var TOP_N = 20;
 // ありえない値を弾く簡易チェック
 var MAX_STAGE = 99;          // エクストラステージは終わりがないので余裕を持たせる
-var CLEAR_STAGE = 11;        // これ以上なら全10ステージ制覇
 var MAX_ARMY = 1e15;
 var MAX_KILLS = 1e12;
 var GAMES = ['geigeki', 'million'];
-
-// 今月ポイントの配分
-var PT_PLAY = 1;            // その日に遊んだ
-var PT_CLEAR = 3;           // 全ステージ制覇
-var PT_RANK = [10, 7, 5];   // その日の1位・2位・3位
 
 function getSheet_() {
   var ss = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
@@ -72,6 +67,16 @@ function json_(obj) {
 /** 日本時間の「今日」を YYYY-MM-DD で返す */
 function todayKey_() {
   return Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd');
+}
+/** 日本時間の「今週の月曜」を YYYY-MM-DD で返す */
+function weekStartKey_() {
+  var now = new Date();
+  var dow = Number(Utilities.formatDate(now, 'Asia/Tokyo', 'u'));   // 1=月曜 … 7=日曜
+  return Utilities.formatDate(new Date(now.getTime() - (dow - 1) * 86400000), 'Asia/Tokyo', 'yyyy-MM-dd');
+}
+/** 日本時間の「今月1日」を YYYY-MM-DD で返す */
+function monthStartKey_() {
+  return todayKey_().slice(0, 8) + '01';
 }
 
 function cleanGame_(v) {
@@ -94,8 +99,8 @@ function better_(a, b) {
   return b.kills - a.kills;
 }
 
-/** 指定ゲーム・指定月（YYYY-MM）の記録を読む */
-function readRows_(game, ym) {
+/** 指定ゲームの、fromDay（YYYY-MM-DD）以降の記録を読む */
+function readRows_(game, fromDay) {
   var sh = getSheet_();
   var last = sh.getLastRow();
   if (last < 2) return [];
@@ -111,7 +116,7 @@ function readRows_(game, ym) {
       kills: Number(row[6]) || 0,
       uid: String(row[7]),
     };
-  }).filter(function (r) { return r.game === game && r.day.slice(0, 7) === ym; });
+  }).filter(function (r) { return r.game === game && r.day >= fromDay; });
 }
 
 /** これまでにランキング登録したことのある人数（端末IDの数・全期間）をゲームごとに数える。
@@ -145,38 +150,11 @@ function bestPerUid_(rows) {
   return list;
 }
 
-/** 今日のランキング（全員分・順位つき） */
-function todayAll_(game) {
-  var today = todayKey_();
-  var list = bestPerUid_(readRows_(game, today.slice(0, 7)).filter(function (r) { return r.day === today; }));
+/** fromDay 以降のランキング（全員分・順位つき）。1人1件のベスト記録を「到達ステージ → 最大兵力 → 撃破数」で並べる */
+function bestSince_(game, fromDay) {
+  var list = bestPerUid_(readRows_(game, fromDay));
   return list.map(function (r, i) {
     return { rank: i + 1, name: r.name, stage: r.stage, army: r.army, kills: r.kills, uid: r.uid };
-  });
-}
-
-/** 今月のポイント順（全員分・順位つき） */
-function monthAll_(game) {
-  var rows = readRows_(game, todayKey_().slice(0, 7));
-  var byDay = {};
-  rows.forEach(function (r) { (byDay[r.day] = byDay[r.day] || []).push(r); });
-
-  var agg = {};
-  Object.keys(byDay).sort().forEach(function (day) {
-    bestPerUid_(byDay[day]).forEach(function (r, i) {
-      var a = agg[r.uid] || (agg[r.uid] = { uid: r.uid, name: r.name, points: 0, days: 0, stage: 0, army: 0, kills: 0 });
-      a.name = r.name;
-      a.days += 1;
-      a.points += PT_PLAY;
-      if (r.stage >= CLEAR_STAGE) a.points += PT_CLEAR;
-      if (i < PT_RANK.length) a.points += PT_RANK[i];
-      if (better_(r, a) < 0) { a.stage = r.stage; a.army = r.army; a.kills = r.kills; }
-    });
-  });
-
-  var list = Object.keys(agg).map(function (k) { return agg[k]; });
-  list.sort(function (a, b) { return b.points !== a.points ? b.points - a.points : better_(a, b); });
-  return list.map(function (a, i) {
-    return { rank: i + 1, name: a.name, points: a.points, days: a.days, stage: a.stage, army: a.army, uid: a.uid };
   });
 }
 
@@ -208,8 +186,9 @@ function doGet(e) {
     if (p.view === 'players') return json_({ players: playersAll_() });
     var game = cleanGame_(p.game);
     var uid = cleanUid_(p.uid);
-    if (p.view === 'month') return json_(pack_('month', monthAll_(game), uid, game));
-    return json_(pack_('today', todayAll_(game), uid, game));
+    if (p.view === 'month') return json_(pack_('month', bestSince_(game, monthStartKey_()), uid, game));
+    if (p.view === 'today') return json_(pack_('today', bestSince_(game, todayKey_()), uid, game));
+    return json_(pack_('week', bestSince_(game, weekStartKey_()), uid, game));
   } catch (err) {
     return json_({ entries: [], error: String(err) });
   }
@@ -238,7 +217,7 @@ function doPost(e) {
     } finally {
       lock.releaseLock();
     }
-    var res = pack_('today', todayAll_(game), uid, game);
+    var res = pack_('week', bestSince_(game, weekStartKey_()), uid, game);
     res.ok = true;
     return json_(res);
   } catch (err) {
