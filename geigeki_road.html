@@ -1349,6 +1349,7 @@ function refPower(st) {
 function weaponCap(st) { return st > FINAL_STAGE ? WMAX : Math.min(WMAX, st + 1); }
 /** いま遊んでいるのが、一度クリアした面の遊び直しか（遊び直しは×2なし・＋の板だけ） */
 const isReplay = () => !!(mapRun && mapRun.replay);
+const REPLAY_GAIN = 0.5;      // 遊び直しの＋の板は、初めてのときの半分（増員はできるが、稼ぎすぎないように）
 
 /** 増える量の倍率：目安を超えていれば渋く、下回っていれば少し甘く */
 function gainScale(lead) { return Math.max(0.3, Math.min(1.8, Math.pow(lead, -1.1))); }   // 下限は「+3」のような小さすぎる板を出さないため
@@ -1439,7 +1440,7 @@ function finalize(it) {
   } else if (it.type === "tile") {
     // ×2 は初めて遊ぶ面で、兵が標準を大きく超えていないときだけ。遊び直しは＋の板だけ
     if (it.kind === "mul" && (isReplay() || armyLead(it) > 1.15)) it.kind = "add";
-    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage))));
+    if (it.kind === "add") it.v = Math.max(1, Math.round(n * rnd(0.013, 0.022) * (1 - 0.06 * exRamp(stage)) * (isReplay() ? REPLAY_GAIN : 1)));
   } else if (it.type === "squad") {
     const { sq } = makeSquad(it.lane, it.z, stage, n, p, it.boss);
     it.count = it.max = sq.count; it.pw = sq.pw;
