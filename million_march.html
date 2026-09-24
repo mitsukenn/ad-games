@@ -1805,6 +1805,37 @@ function slot(i) {
   return { sx, sz };
 }
 
+/* 隊列の場所を「前（ゲート側）から順」に並べた表。真ん中ほど少し前に出る矢じり形。人数ごとに作って使い回す */
+const slotOrderCache = new Map();
+function slotOrder(n) {
+  let o = slotOrderCache.get(n);
+  if (o) return o;
+  o = [];
+  for (let i = 0; i < n; i++) { const s = slot(i); s.key = s.sz - 0.6 * Math.abs(s.sx); o.push(s); }
+  o.sort((p, q) => q.key - p.key);
+  if (slotOrderCache.size > 400) slotOrderCache.clear();
+  slotOrderCache.set(n, o);
+  return o;
+}
+
+/* 味方の並び：最前列は一番上の段の兵。その後ろは段ごとに前から後ろまで均等に混ぜる
+   （上の段を全部前に固めると、画面に映る先頭側が1種類だけになって混ぜた意味がなくなるため） */
+function placeCrowd(units, ranks) {
+  const n = ranks.length, o = slotOrder(n), R = ranks[0];
+  let nTop = 0;
+  while (nTop < n && ranks[nTop] === R) nTop++;
+  const lead = Math.min(nTop, Math.max(3, Math.round(n * 0.12)));
+  const cnt = {}, seen = {}, rest = [];
+  for (let i = lead; i < n; i++) cnt[ranks[i]] = (cnt[ranks[i]] || 0) + 1;
+  for (let i = lead; i < n; i++) {
+    const r = ranks[i], t = seen[r] = (seen[r] || 0) + 1;
+    rest.push({ i, k: (t - 0.5) / cnt[r] + (R - r) * 0.004 });
+  }
+  rest.sort((p, q) => p.k - q.k);
+  for (let i = 0; i < lead; i++) { units[i].sx = o[i].sx; units[i].sz = o[i].sz; }
+  for (let j = 0; j < rest.length; j++) { const u = units[rest[j].i]; u.sx = o[lead + j].sx; u.sz = o[lead + j].sz; }
+}
+
 function newUnit(i, host) {
   const s = slot(i);
   return {
@@ -1828,6 +1859,7 @@ function syncUnits(host, palDeath) {
     if (!u) { u = newUnit(i, host); host.units.push(u); }
     if (u.rank !== ranks[i]) { if (u.rank !== undefined) u.pop = 0.8; u.rank = ranks[i]; }
   }
+  if (host === crowd && ranks.length) placeCrowd(host.units, ranks);   // 位の高い兵を前に。場所だけ入れ替えるので、兵は歩いてなめらかに並び替わる
   const top = ranks.length ? ranks[0] : 0;
   host.spacing = Math.max(1, rankScale(top) * 0.85);
   // 味方の隊列は先頭から後ろへ伸ばす（前に張り出すと、これから来るゲートの数字を隠すため）
