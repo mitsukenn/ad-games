@@ -50,8 +50,9 @@
 
   /* ---------- 見出し ---------- */
   .hero{position:relative; text-align:center; padding:24px 0 6px}
-  .lab{display:inline-block; font-size:12px; font-weight:800; letter-spacing:.1em; color:var(--ink); background:var(--gold);
-       padding:2px 12px; border-radius:999px; transform:rotate(-3deg); box-shadow:0 3px 0 var(--gold-d)}
+  .lab{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:800; letter-spacing:.1em; color:var(--ink); background:var(--gold);
+       padding:2px 12px 2px 4px; border-radius:999px; transform:rotate(-3deg); box-shadow:0 3px 0 var(--gold-d)}
+  .lab img{width:24px; height:24px; margin:-6px 0 -4px}
   h1{margin:10px 0 8px; font-weight:800; font-size:clamp(38px,11vw,64px); line-height:1.05; letter-spacing:.02em;
      text-shadow:0 4px 0 var(--purple), 0 8px 0 #3b2a8f, 0 12px 24px rgba(0,0,0,.45)}
   h1 .ai{font-family:var(--disp); font-weight:400; color:var(--gold); text-shadow:0 4px 0 var(--gold-d), 0 8px 0 #7a4c00, 0 12px 24px rgba(0,0,0,.45)}
@@ -60,7 +61,7 @@
   .count{display:inline-flex; align-items:center; gap:8px; padding:6px 16px 6px 8px; border-radius:999px;
          background:rgba(0,0,0,.38); border:2px solid rgba(255,255,255,.25); font-size:14px; font-weight:800}
   .count[hidden]{display:none}
-  .count .ico{display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:var(--gold); font-size:16px}
+  .count .ico{width:38px; height:38px; margin:-8px -2px -8px -4px}
   .count b{font-family:var(--disp); font-weight:400; font-size:22px; color:var(--gold); margin:0 2px; font-variant-numeric:tabular-nums}
   /* 浮かぶブロックの飾り */
   .deco{position:absolute; width:18px; height:18px; border-radius:5px; opacity:.9; animation:float 4s ease-in-out infinite}
@@ -83,13 +84,17 @@
   .tile .body{padding:9px 12px 12px; display:flex; flex-direction:column; gap:2px}
   .tile h3{margin:0; font-size:17px; font-weight:800; line-height:1.25; text-shadow:0 2px 0 rgba(0,0,0,.25)}
   .tile .genre{font-size:12px; font-weight:800; opacity:.92}
-  .tile .plays{position:absolute; top:8px; left:8px; font-size:11px; font-weight:800; background:rgba(0,0,0,.58); padding:2px 9px; border-radius:999px}
+  .tile .plays{position:absolute; top:8px; left:8px; display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:800;
+               background:rgba(0,0,0,.58); padding:2px 9px 2px 4px; border-radius:999px}
+  .tile .plays img{width:20px; height:20px; margin:-3px 0}
   .tile .plays[hidden]{display:none}
   .tile.big{grid-column:1 / -1; flex-direction:row}
   .tile.big img{width:44%; aspect-ratio:3/4; object-position:50% 40%}
   .tile.big .body{flex:1; justify-content:center; padding:14px 14px 16px; gap:6px}
   .tile.big h3{font-size:clamp(20px,6vw,28px)}
   .tile.big p{margin:0; font-size:13px; font-weight:500; line-height:1.55}
+  .tile.big .btn::before{content:""; display:inline-block; margin-right:7px; border-style:solid; border-width:.4em 0 .4em .62em;
+                         border-color:transparent transparent transparent currentColor; vertical-align:-.02em}
   .tile.big .btn{align-self:flex-start; margin-top:4px; font-weight:800; font-size:15px; color:var(--ink); background:var(--gold);
                  padding:7px 16px; border-radius:999px; box-shadow:0 4px 0 var(--gold-d); animation:pulse 1.6s ease-in-out infinite}
   @keyframes pulse{50%{transform:scale(1.07)}}
@@ -98,29 +103,54 @@
   .t-geigeki{--c:var(--geigeki); --cd:#2a52a8} .t-million{--c:var(--million); --cd:#b35f0c} .t-power{--c:var(--power); --cd:#1b7a40}
   .t-snow{--c:var(--snow); --cd:#15739c} .t-tetris{--c:var(--tetris); --cd:#b0316b}
 
-  /* ---------- AIにこう頼んだら（チャット風） ---------- */
-  .chat{display:flex; flex-direction:column; gap:10px; background:rgba(0,0,0,.25); border-radius:20px; padding:16px 14px}
-  .msg{max-width:86%; padding:9px 14px; border-radius:18px; font-size:14px; font-weight:500; line-height:1.55}
-  .msg small{display:block; font-size:11px; font-weight:800; opacity:.75}
-  .me{align-self:flex-end; background:#fff; color:var(--ink); border-bottom-right-radius:4px}
-  .bot{align-self:flex-start; background:var(--purple); border-bottom-left-radius:4px}
-  .chat .game{align-self:center; font-size:11px; font-weight:800; color:var(--soft); background:rgba(255,255,255,.1); padding:1px 10px; border-radius:999px}
+  /* ---------- AIにこう頼んだら（AIとのチャット画面） ---------- */
+  .gpt-tabs{display:flex; gap:6px; margin:0 0 10px; overflow-x:auto}
+  .gpt-tabs button{flex:none; font:800 13px var(--round); color:#fff; background:rgba(255,255,255,.12); border:0; border-radius:999px;
+                   padding:6px 14px; cursor:pointer}
+  .gpt-tabs button[aria-selected="true"]{background:#fff; color:var(--ink)}
+  .gpt-tabs button:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .gpt{background:#fff; color:#0d0d0d; border-radius:22px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,.35)}
+  .gpt-head{display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid #ececec; font-size:14px; font-weight:800}
+  .gpt-head img{width:30px; height:30px}
+  .gpt-head small{margin-left:auto; font-size:11px; font-weight:500; color:#8a8a8a}
+  .gpt-log{padding:16px 14px 6px; display:flex; flex-direction:column; gap:14px; min-height:320px}
+  .gpt-log[hidden]{display:none}
+  .u{align-self:flex-end; max-width:82%; background:#f0f0f0; border-radius:20px; padding:9px 15px; font-size:14px; font-weight:500; line-height:1.6}
+  .a{display:flex; gap:8px; align-items:flex-start; font-size:14px; font-weight:500; line-height:1.7}
+  .a > img{flex:none; width:30px; height:30px; margin-top:-2px}
+  .a p{margin:0 0 8px}
+  .a .shot{display:block; width:100%; max-width:300px; height:auto; aspect-ratio:16/10; object-fit:cover; object-position:50% 45%; border-radius:12px; border:1px solid #e6e6e6}
+  .a .done{display:inline-block; margin-bottom:6px; font-size:11px; font-weight:800; color:#1a7f37; background:#e6f6ea; padding:1px 8px; border-radius:999px}
+  .typing{display:flex; gap:4px; padding:8px 0}
+  .typing[hidden]{display:none}
+  .typing i{width:7px; height:7px; border-radius:50%; background:#b5b5b5; animation:blink 1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s} .typing i:nth-child(3){animation-delay:.3s}
+  @keyframes blink{50%{opacity:.25}}
+  .appear{animation:appear .35s ease both}
+  @keyframes appear{from{opacity:0; transform:translateY(6px)}}
+  .gpt-input{display:flex; align-items:center; gap:8px; margin:6px 12px 12px; padding:8px 8px 8px 16px; border:1px solid #e3e3e3; border-radius:999px;
+             color:#9a9a9a; font-size:14px; box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .gpt-input i{margin-left:auto; display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:#0d0d0d}
+  .gpt-input i::before{content:""; width:9px; height:9px; margin-top:4px; border:solid #fff; border-width:2.5px 0 0 2.5px; transform:rotate(45deg)}
 
   /* ---------- 実験のルール（シール） ---------- */
   .rules{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0; padding:0; list-style:none}
   .rules li{background:#fff; color:var(--ink); border-radius:16px; padding:12px 6px 10px; text-align:center; font-size:12px; font-weight:800; line-height:1.4;
             box-shadow:0 4px 0 rgba(0,0,0,.25)}
   .rules li:nth-child(1){rotate:-2deg} .rules li:nth-child(3){rotate:2deg}
-  .rules .e{display:block; font-size:28px; line-height:1.2; margin-bottom:4px}
+  .rules .ic{display:block; width:52px; height:52px; margin:-2px auto 4px}
 
   /* ---------- くわしく ---------- */
   .roles{display:grid; grid-template-columns:1fr 1fr; gap:8px}
-  .role{background:rgba(255,255,255,.08); border-radius:16px; padding:12px 14px}
+  .role{position:relative; background:rgba(255,255,255,.08); border-radius:16px; padding:12px 14px 12px 60px; min-height:72px}
+  .role .ic{position:absolute; left:8px; top:12px; width:46px; height:46px}
   .role b{display:block; font-size:15px; color:var(--gold)}
   .role span{font-size:13px; color:var(--soft); line-height:1.55}
-  .tips{margin:12px 0 0; padding:14px 16px; background:rgba(255,255,255,.08); border-radius:16px; font-size:13px; color:var(--soft)}
+  .tips{position:relative; margin:12px 0 0; padding:14px 16px 14px 64px; background:rgba(255,255,255,.08); border-radius:16px; font-size:13px; color:var(--soft)}
+  .tips .ic{position:absolute; left:10px; top:14px; width:48px; height:48px}
   .tips p{margin:0 0 6px} .tips p:last-child{margin:0}
   .tips b{color:#fff}
+  .fb img{width:30px; height:30px; margin:-6px 4px -6px -8px; vertical-align:middle}
   .fb{display:block; width:max-content; max-width:100%; margin:18px auto 0; padding:9px 20px; border-radius:999px; background:#fff; color:var(--purple);
       font-size:14px; font-weight:800; text-decoration:none; box-shadow:0 4px 0 rgba(0,0,0,.25)}
   .fb:active{transform:translateY(2px)}
@@ -138,8 +168,9 @@
     .tile.big h3{font-size:40px} .tile.big p{font-size:16px} .tile.big .btn{font-size:18px; padding:9px 22px}
     .roles{grid-template-columns:repeat(4,1fr)}
   }
-  @media (max-width:340px){ .tile h3{font-size:15px} .tile.big p{font-size:12px} .rules li{font-size:11px} }
-  @media (prefers-reduced-motion:reduce){ .deco,.tile.big .btn{animation:none} .tile{transition:none} }
+  @media (max-width:340px){ .tile h3{font-size:15px} .tile.big p{font-size:12px} .rules li{font-size:11px} .role{padding-left:54px} .role .ic{width:40px; height:40px}
+    .gpt-tabs{gap:4px} .gpt-tabs button{font-size:12px; padding:6px 9px} }
+  @media (prefers-reduced-motion:reduce){ .deco,.tile.big .btn,.appear,.typing i{animation:none} .tile{transition:none} }
 </style>
 </head>
 <body>
@@ -149,11 +180,11 @@
 
   <section class="hero">
     <i class="deco d1"></i><i class="deco d2"></i><i class="deco d3"></i><i class="deco d4"></i>
-    <span class="lab">🧪 実験中</span>
+    <span class="lab"><img class="x" src="assets/ui/icon_flask.webp" alt="" width="96" height="96">実験中</span>
     <h1><span class="ai">AI</span>ゲーム<br>実験室</h1>
     <p class="catch">プログラムも絵も音も<br><b>ぜんぶAI</b>が作ったゲーム</p>
     <!-- プレイ回数（ranking-gas.js の ?view=plays。全5ゲームの合計。取れなければ出さない） -->
-    <span class="count" id="stats" hidden><span class="ico" aria-hidden="true">🎮</span>みんなで<b id="stAll">0</b>回あそんだ！</span>
+    <span class="count" id="stats" hidden><img class="ico" src="assets/ui/icon_controller.webp" alt="" width="96" height="96">みんなで<b id="stAll">0</b>回あそんだ！</span>
   </section>
 
   <h2 id="games">あそぶゲームをえらぶ</h2>
@@ -161,69 +192,80 @@
     <a class="tile big t-geigeki" href="geigeki_road.html">
       <img src="assets/screens/geigeki_3.jpg" width="540" height="1052" alt="迎撃ロードの画面。数十万の敵軍と白兵戦になり爆発が起きている">
       <span class="ribbon">おすすめ</span>
-      <span class="plays" data-game="geigeki" hidden>🎮 <b></b>回</span>
+      <span class="plays" data-game="geigeki" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
       <div class="body">
         <span class="genre">撃って守る防衛戦</span>
         <h3>迎撃ロード</h3>
         <p>門を撃ち開けて仲間を増やし、押し寄せる大軍と巨人を食い止めろ！</p>
-        <span class="btn">▶ あそぶ</span>
+        <span class="btn">あそぶ</span>
       </div>
     </a>
     <a class="tile t-million" href="million_march.html">
       <img src="assets/screens/million_4.jpg" width="540" height="1052" alt="Million March の画面。数十万の金色の鎧の大軍が行進する" loading="lazy">
-      <span class="plays" data-game="million" hidden>🎮 <b></b>回</span>
+      <span class="plays" data-game="million" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">めざせ100万の大軍</span><h3>Million March</h3></div>
     </a>
     <a class="tile t-power" href="../power-tower/">
       <img src="assets/screens/power_1.jpg" width="540" height="1052" alt="パワータワーの画面。砂浜に並ぶ塔の上に檻に入ったお姫様がいる" loading="lazy">
-      <span class="plays" data-game="power" hidden>🎮 <b></b>回</span>
+      <span class="plays" data-game="power" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">吸収して塔を登る</span><h3>パワータワー</h3></div>
     </a>
     <a class="tile t-snow" href="../snow-grill/">
       <img src="assets/screens/snow_3.jpg" width="540" height="1052" alt="スノーグリルの画面。バリケードの向こうに雪の巨人と白クマの群れ" loading="lazy">
-      <span class="plays" data-game="snow" hidden>🎮 <b></b>回</span>
+      <span class="plays" data-game="snow" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">狩って焼いて配る</span><h3>スノーグリル</h3></div>
     </a>
     <a class="tile t-tetris" href="../tetris-puzzle/">
       <img src="assets/screens/tetris_3.jpg" width="540" height="1052" alt="テトリスパズルの画面。列がそろって消え、コンボの文字が出ている" loading="lazy">
-      <span class="plays" data-game="tetris" hidden>🎮 <b></b>回</span>
+      <span class="plays" data-game="tetris" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">並べて消すパズル</span><h3>テトリスパズル</h3></div>
     </a>
   </div>
 
   <h2>AIにこう頼んだら…</h2>
-  <div class="chat">
-    <span class="game">迎撃ロード</span>
-    <div class="msg me"><small>人</small>武器は銃とかマシンガンとか砲丸とか、そういう感じの方がいいんじゃないかな</div>
-    <div class="msg bot"><small>AI</small>投石・弓・火縄銃…マシンガン・大砲・ロケット砲まで、12段階の武器にしました！</div>
-    <span class="game">スノーグリル</span>
-    <div class="msg me"><small>人</small>白クマがちゃんと危険な存在であってほしい</div>
-    <div class="msg bot"><small>AI</small>攻撃の前に赤い円が出る白クマと、雪の巨人との決戦を足しました！</div>
-    <span class="game">テトリスパズル</span>
-    <div class="msg me"><small>人</small>ピンクにして。3分モード作って</div>
-    <div class="msg bot"><small>AI</small>パステルカラーの画面と、3分間のタイムアタックを作りました！</div>
+  <div class="gpt-tabs" role="tablist" aria-label="どのゲームの会話を見るか">
+    <button role="tab" aria-selected="true" data-i="0">迎撃ロード</button>
+    <button role="tab" aria-selected="false" data-i="1">スノーグリル</button>
+    <button role="tab" aria-selected="false" data-i="2">テトリスパズル</button>
+  </div>
+  <div class="gpt">
+    <div class="gpt-head"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96">ゲーム作りAI<small>実際に頼んだ言葉です</small></div>
+    <div class="gpt-log" data-i="0">
+      <div class="u">武器は銃とかマシンガンとか砲丸とか、そういう感じの方がいいんじゃないかな</div>
+      <div class="a"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96"><div class="ans"><span class="done">迎撃ロードに反映しました</span><p>投石・弓・火縄銃…マシンガン・大砲・ロケット砲まで、12段階の武器にしました。ステージが進むほど強い武器で戦えます。</p><img class="shot" src="assets/screens/geigeki_2.jpg" width="540" height="1052" alt="迎撃ロードの画面。青い軍勢がショットガンで敵を撃つ" loading="lazy"></div></div>
+    </div>
+    <div class="gpt-log" data-i="1" hidden>
+      <div class="u">白クマがちゃんと危険な存在であってほしい</div>
+      <div class="a"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96"><div class="ans"><span class="done">スノーグリルに反映しました</span><p>白クマが攻撃する前に、足元へ赤い円が出るようにしました。さらに3ステージに1回、雪の巨人との決戦を足しています。</p><img class="shot" src="assets/screens/snow_1.jpg" width="540" height="1052" alt="スノーグリルの画面。白クマの足元に攻撃の前ぶれの赤い円" loading="lazy"></div></div>
+    </div>
+    <div class="gpt-log" data-i="2" hidden>
+      <div class="u">ピンクにして。3分モード作って</div>
+      <div class="a"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96"><div class="ans"><span class="done">テトリスパズルに反映しました</span><p>パステルカラーのかわいい画面にして、3分間でどこまで消せるかのタイムアタックを作りました。</p><img class="shot" src="assets/screens/tetris_1.jpg" width="540" height="1052" alt="テトリスパズルのモード選択。パステルカラーの画面にタイムアタックが並ぶ" loading="lazy"></div></div>
+    </div>
+    <div class="gpt-input" aria-hidden="true">AIに注文を入力…<i></i></div>
   </div>
 
   <h2>実験のルール</h2>
   <ul class="rules">
-    <li><span class="e" aria-hidden="true">⌨️</span>人はコードを<br>書かない</li>
-    <li><span class="e" aria-hidden="true">💬</span>注文は<br>言葉だけ</li>
-    <li><span class="e" aria-hidden="true">🔁</span>遊んで直して<br>また遊ぶ</li>
+    <li><img class="ic" src="assets/ui/icon_nocode.webp" alt="" width="96" height="96">人はコードを<br>書かない</li>
+    <li><img class="ic" src="assets/ui/icon_bubble.webp" alt="" width="96" height="96">注文は<br>言葉だけ</li>
+    <li><img class="ic" src="assets/ui/icon_loop.webp" alt="" width="96" height="96">遊んで直して<br>また遊ぶ</li>
   </ul>
 
   <h2>くわしく</h2>
   <div class="roles">
-    <div class="role"><b>プログラム</b><span>ゲームの動き・当たり判定・演出まで、全部AIが書いています。</span></div>
-    <div class="role"><b>絵</b><span>兵士・巨人・白クマ・背景は、画像生成AIで描きました。</span></div>
-    <div class="role"><b>音楽・効果音</b><span>BGMは音楽生成AI（Suno）、効果音はAIがプログラムで作っています。</span></div>
-    <div class="role"><b>難しさの調整</b><span>AIが自分で何百回も自動プレイして、手応えを合わせました。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_laptop.webp" alt="" width="96" height="96"><b>プログラム</b><span>ゲームの動き・当たり判定・演出まで、全部AIが書いています。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_palette.webp" alt="" width="96" height="96"><b>絵</b><span>兵士・巨人・白クマ・背景は、画像生成AIで描きました。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_music.webp" alt="" width="96" height="96"><b>音楽・効果音</b><span>BGMは音楽生成AI（Suno）、効果音はAIがプログラムで作っています。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_sliders.webp" alt="" width="96" height="96"><b>難しさの調整</b><span>AIが自分で何百回も自動プレイして、手応えを合わせました。</span></div>
   </div>
   <div class="tips">
+    <img class="ic" src="assets/ui/icon_phone.webp" alt="" width="96" height="96">
     <p><b>スマホで遊ぶのがおすすめです。</b>登録なし・無料で、そのまま遊べます。</p>
     <p>ホーム画面に追加すると、アプリのように全画面で遊べます（iPhone は Safari の共有ボタン →「ホーム画面に追加」）。</p>
     <p>遊んだら、感想や「ここが変だった」をぜひ教えてください。それがそのまま次の注文になります。</p>
   </div>
-  <a class="fb" href="feedback.html?game=lab">💬 感想・改善案を送る</a>
+  <a class="fb" href="feedback.html?game=lab"><img class="x" src="assets/ui/icon_letter.webp" alt="" width="96" height="96">感想・改善案を送る</a>
 
   <footer>
     <a class="footer-brand" href="https://machino-ai.jp/"><img src="assets/machino-logo.png" alt="" width="40" height="40"><span>まちのAI屋さん<small>長崎のAIシステム開発・AI相談</small></span></a>
@@ -231,6 +273,26 @@
   </footer>
 </main>
 <script>
+/* AIとのチャット画面：タブで会話を切りかえる。AIの返事は「入力中…」のあとに出す */
+(function () {
+  var tabs = document.querySelectorAll(".gpt-tabs button"), logs = document.querySelectorAll(".gpt-log"), timer = 0;
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function show(i) {
+    tabs.forEach(function (t) { t.setAttribute("aria-selected", String(t.dataset.i === String(i))); });
+    logs.forEach(function (l) { l.hidden = l.dataset.i !== String(i); });
+    var log = logs[i], u = log.querySelector(".u"), a = log.querySelector(".a"), ans = a.querySelector(".ans");
+    clearTimeout(timer);
+    if (calm) return;
+    u.classList.remove("appear"); a.classList.remove("appear"); void u.offsetWidth;
+    u.classList.add("appear");
+    ans.hidden = true;
+    var dots = a.querySelector(".typing") || a.appendChild(Object.assign(document.createElement("div"), { className: "typing", innerHTML: "<i></i><i></i><i></i>" }));
+    dots.hidden = false; a.classList.add("appear");
+    timer = setTimeout(function () { dots.hidden = true; ans.hidden = false; ans.classList.remove("appear"); void ans.offsetWidth; ans.classList.add("appear"); }, 900);
+  }
+  tabs.forEach(function (t) { t.addEventListener("click", function () { show(+t.dataset.i); }); });
+})();
+
 /* プレイ回数：ゲームと同じ Google Apps Script から、ゲームごとの回数と合計をもらう */
 (function () {
   const RANKING_API = "https://script.google.com/macros/s/AKfycbyNh85RNVYJM1_cn5vn6d4_lFm-3_9MeQZe1vMGU4xk-fHRvGbbGUIgkgI2QUXhYyySMw/exec";
