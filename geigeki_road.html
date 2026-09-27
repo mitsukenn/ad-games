@@ -1075,9 +1075,24 @@ const Snd = (() => {
       vols.bgm = bgm; vols.se = se; applyVol();
       try { localStorage.setItem("gr.vol", JSON.stringify(vols)); } catch (e) {}
     },
-    siren() {                         // 巨人接近：ウーウー
-      const t = (ensure() || {}).currentTime || 0;
-      for (let i = 0; i < 4; i++) tone(i % 2 ? 620 : 880, 0.34, "sawtooth", 0.05, i % 2 ? 880 : 620, t + i * 0.34);
+    siren() {                         // 巨人接近：ブーッ、ブーッ、ブーッ（低く太い警報ブザー）
+      if (!on) return; const a = ensure(); if (!a) return;
+      const t0 = a.currentTime, len = 0.36;
+      for (let i = 0; i < 3; i++) {
+        const t = t0 + i * 0.5;
+        // 少しずらした2本のノコギリ波でうなりを出し、1オクターブ下の矩形波で重さを足す。音量は途中で落とさず、ブツッと切る
+        const f = a.createBiquadFilter(), g = a.createGain();
+        f.type = "lowpass"; f.frequency.value = 1500;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.07, t + 0.015);
+        g.gain.setValueAtTime(0.07, t + len - 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        f.connect(g); g.connect(sfx);
+        for (const [fr, ty] of [[110, "sawtooth"], [114, "sawtooth"], [55, "square"]]) {
+          const o = a.createOscillator(); o.type = ty; o.frequency.value = fr;
+          o.connect(f); o.start(t); o.stop(t + len + 0.02);
+        }
+      }
     },
     fanfare() {                       // 難しさが変わるステージ：短調のファンファーレ
       const t = (ensure() || {}).currentTime || 0;
@@ -3214,7 +3229,7 @@ function giantWarning(g) {
   const tier = g.king ? kingTier(stage) : 0;
   document.getElementById("warnText").textContent = !g.king ? "巨人接近" : tier === 2 ? "覚醒した巨人王 接近" : tier === 1 ? "猛る巨人王 接近" : "巨人王 接近";
   elWarn.classList.remove("on"); void elWarn.offsetWidth; elWarn.classList.add("on");
-  Snd.siren(); buzz([60, 60, 60]);
+  Snd.siren(); buzz([360, 140, 360, 140, 360]);   // 警報のブーッ×3に合わせて震える
   if (!REDUCED) camKick = 1;
 }
 // 難しさが変わるステージ
