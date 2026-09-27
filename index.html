@@ -135,7 +135,7 @@
 
   /* ---------- 実験のルール（シール） ---------- */
   .rules{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0; padding:0; list-style:none}
-  .rules li{background:#fff; color:var(--ink); border-radius:16px; padding:12px 6px 10px; text-align:center; font-size:12px; font-weight:800; line-height:1.4;
+  .rules li{background:#f4f1ff; color:var(--ink); border-radius:16px; padding:12px 6px 10px; text-align:center; font-size:12px; font-weight:800; line-height:1.4;
             box-shadow:0 4px 0 rgba(0,0,0,.25)}
   .rules li:nth-child(1){rotate:-2deg} .rules li:nth-child(3){rotate:2deg}
   .rules .ic{display:block; width:52px; height:52px; margin:-2px auto 4px}
@@ -180,11 +180,11 @@
 
   <section class="hero">
     <i class="deco d1"></i><i class="deco d2"></i><i class="deco d3"></i><i class="deco d4"></i>
-    <span class="lab"><img class="x" src="assets/ui/icon_flask.webp" alt="" width="96" height="96">実験中</span>
+    <span class="lab"><img class="x" src="assets/ui/icon_flask.webp?v=2" alt="" width="96" height="96">実験中</span>
     <h1><span class="ai">AI</span>ゲーム<br>実験室</h1>
     <p class="catch">プログラムも絵も音も<br><b>ぜんぶAI</b>が作ったゲーム</p>
     <!-- プレイ回数（ranking-gas.js の ?view=plays。全5ゲームの合計。取れなければ出さない） -->
-    <span class="count" id="stats" hidden><img class="ico" src="assets/ui/icon_controller.webp" alt="" width="96" height="96">みんなで<b id="stAll">0</b>回あそんだ！</span>
+    <span class="count" id="stats" hidden><img class="ico" src="assets/ui/icon_controller.webp?v=2" alt="" width="96" height="96">みんなで<b id="stAll">0</b>回あそんだ！</span>
   </section>
 
   <h2 id="games">あそぶゲームをえらぶ</h2>
@@ -192,7 +192,7 @@
     <a class="tile big t-geigeki" href="geigeki_road.html">
       <img src="assets/screens/geigeki_3.jpg" width="540" height="1052" alt="迎撃ロードの画面。数十万の敵軍と白兵戦になり爆発が起きている">
       <span class="ribbon">おすすめ</span>
-      <span class="plays" data-game="geigeki" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
+      <span class="plays" data-game="geigeki" hidden><img class="x" src="assets/ui/icon_controller.webp?v=2" alt="" width="96" height="96"><b></b>回</span>
       <div class="body">
         <span class="genre">撃って守る防衛戦</span>
         <h3>迎撃ロード</h3>
@@ -202,22 +202,22 @@
     </a>
     <a class="tile t-million" href="million_march.html">
       <img src="assets/screens/million_4.jpg" width="540" height="1052" alt="Million March の画面。数十万の金色の鎧の大軍が行進する" loading="lazy">
-      <span class="plays" data-game="million" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
+      <span class="plays" data-game="million" hidden><img class="x" src="assets/ui/icon_controller.webp?v=2" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">めざせ100万の大軍</span><h3>Million March</h3></div>
     </a>
     <a class="tile t-power" href="../power-tower/">
       <img src="assets/screens/power_1.jpg" width="540" height="1052" alt="パワータワーの画面。砂浜に並ぶ塔の上に檻に入ったお姫様がいる" loading="lazy">
-      <span class="plays" data-game="power" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
+      <span class="plays" data-game="power" hidden><img class="x" src="assets/ui/icon_controller.webp?v=2" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">吸収して塔を登る</span><h3>パワータワー</h3></div>
     </a>
     <a class="tile t-snow" href="../snow-grill/">
       <img src="assets/screens/snow_3.jpg" width="540" height="1052" alt="スノーグリルの画面。バリケードの向こうに雪の巨人と白クマの群れ" loading="lazy">
-      <span class="plays" data-game="snow" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
+      <span class="plays" data-game="snow" hidden><img class="x" src="assets/ui/icon_controller.webp?v=2" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">狩って焼いて配る</span><h3>スノーグリル</h3></div>
     </a>
     <a class="tile t-tetris" href="../tetris-puzzle/">
       <img src="assets/screens/tetris_3.jpg" width="540" height="1052" alt="テトリスパズルの画面。列がそろって消え、コンボの文字が出ている" loading="lazy">
-      <span class="plays" data-game="tetris" hidden><img class="x" src="assets/ui/icon_controller.webp" alt="" width="96" height="96"><b></b>回</span>
+      <span class="plays" data-game="tetris" hidden><img class="x" src="assets/ui/icon_controller.webp?v=2" alt="" width="96" height="96"><b></b>回</span>
       <div class="body"><span class="genre">並べて消すパズル</span><h3>テトリスパズル</h3></div>
     </a>
   </div>
@@ -229,43 +229,43 @@
     <button role="tab" aria-selected="false" data-i="2">テトリスパズル</button>
   </div>
   <div class="gpt">
-    <div class="gpt-head"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96">ゲーム作りAI<small>実際に頼んだ言葉です</small></div>
+    <div class="gpt-head"><img class="x" src="assets/ui/icon_robot.webp?v=2" alt="" width="96" height="96">ゲーム作りAI<small>実際に頼んだ言葉です</small></div>
     <div class="gpt-log" data-i="0">
       <div class="u">武器は銃とかマシンガンとか砲丸とか、そういう感じの方がいいんじゃないかな</div>
-      <div class="a"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96"><div class="ans"><span class="done">迎撃ロードに反映しました</span><p>投石・弓・火縄銃…マシンガン・大砲・ロケット砲まで、12段階の武器にしました。ステージが進むほど強い武器で戦えます。</p><img class="shot" src="assets/screens/geigeki_2.jpg" width="540" height="1052" alt="迎撃ロードの画面。青い軍勢がショットガンで敵を撃つ" loading="lazy"></div></div>
+      <div class="a"><img class="x" src="assets/ui/icon_robot.webp?v=2" alt="" width="96" height="96"><div class="ans"><span class="done">迎撃ロードに反映しました</span><p>投石・弓・火縄銃…マシンガン・大砲・ロケット砲まで、12段階の武器にしました。ステージが進むほど強い武器で戦えます。</p><img class="shot" src="assets/screens/geigeki_2.jpg" width="540" height="1052" alt="迎撃ロードの画面。青い軍勢がショットガンで敵を撃つ" loading="lazy"></div></div>
     </div>
     <div class="gpt-log" data-i="1" hidden>
       <div class="u">白クマがちゃんと危険な存在であってほしい</div>
-      <div class="a"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96"><div class="ans"><span class="done">スノーグリルに反映しました</span><p>白クマが攻撃する前に、足元へ赤い円が出るようにしました。さらに3ステージに1回、雪の巨人との決戦を足しています。</p><img class="shot" src="assets/screens/snow_1.jpg" width="540" height="1052" alt="スノーグリルの画面。白クマの足元に攻撃の前ぶれの赤い円" loading="lazy"></div></div>
+      <div class="a"><img class="x" src="assets/ui/icon_robot.webp?v=2" alt="" width="96" height="96"><div class="ans"><span class="done">スノーグリルに反映しました</span><p>白クマが攻撃する前に、足元へ赤い円が出るようにしました。さらに3ステージに1回、雪の巨人との決戦を足しています。</p><img class="shot" src="assets/screens/snow_1.jpg" width="540" height="1052" alt="スノーグリルの画面。白クマの足元に攻撃の前ぶれの赤い円" loading="lazy"></div></div>
     </div>
     <div class="gpt-log" data-i="2" hidden>
       <div class="u">ピンクにして。3分モード作って</div>
-      <div class="a"><img class="x" src="assets/ui/icon_robot.webp" alt="" width="96" height="96"><div class="ans"><span class="done">テトリスパズルに反映しました</span><p>パステルカラーのかわいい画面にして、3分間でどこまで消せるかのタイムアタックを作りました。</p><img class="shot" src="assets/screens/tetris_1.jpg" width="540" height="1052" alt="テトリスパズルのモード選択。パステルカラーの画面にタイムアタックが並ぶ" loading="lazy"></div></div>
+      <div class="a"><img class="x" src="assets/ui/icon_robot.webp?v=2" alt="" width="96" height="96"><div class="ans"><span class="done">テトリスパズルに反映しました</span><p>パステルカラーのかわいい画面にして、3分間でどこまで消せるかのタイムアタックを作りました。</p><img class="shot" src="assets/screens/tetris_1.jpg" width="540" height="1052" alt="テトリスパズルのモード選択。パステルカラーの画面にタイムアタックが並ぶ" loading="lazy"></div></div>
     </div>
     <div class="gpt-input" aria-hidden="true">AIに注文を入力…<i></i></div>
   </div>
 
   <h2>実験のルール</h2>
   <ul class="rules">
-    <li><img class="ic" src="assets/ui/icon_nocode.webp" alt="" width="96" height="96">人はコードを<br>書かない</li>
-    <li><img class="ic" src="assets/ui/icon_bubble.webp" alt="" width="96" height="96">注文は<br>言葉だけ</li>
-    <li><img class="ic" src="assets/ui/icon_loop.webp" alt="" width="96" height="96">遊んで直して<br>また遊ぶ</li>
+    <li><img class="ic" src="assets/ui/icon_nocode.webp?v=2" alt="" width="96" height="96">人はコードを<br>書かない</li>
+    <li><img class="ic" src="assets/ui/icon_bubble.webp?v=2" alt="" width="96" height="96">注文は<br>言葉だけ</li>
+    <li><img class="ic" src="assets/ui/icon_loop.webp?v=2" alt="" width="96" height="96">遊んで直して<br>また遊ぶ</li>
   </ul>
 
   <h2>くわしく</h2>
   <div class="roles">
-    <div class="role"><img class="ic" src="assets/ui/icon_laptop.webp" alt="" width="96" height="96"><b>プログラム</b><span>ゲームの動き・当たり判定・演出まで、全部AIが書いています。</span></div>
-    <div class="role"><img class="ic" src="assets/ui/icon_palette.webp" alt="" width="96" height="96"><b>絵</b><span>兵士・巨人・白クマ・背景は、画像生成AIで描きました。</span></div>
-    <div class="role"><img class="ic" src="assets/ui/icon_music.webp" alt="" width="96" height="96"><b>音楽・効果音</b><span>BGMは音楽生成AI（Suno）、効果音はAIがプログラムで作っています。</span></div>
-    <div class="role"><img class="ic" src="assets/ui/icon_sliders.webp" alt="" width="96" height="96"><b>難しさの調整</b><span>AIが自分で何百回も自動プレイして、手応えを合わせました。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_laptop.webp?v=2" alt="" width="96" height="96"><b>プログラム</b><span>ゲームの動き・当たり判定・演出まで、全部AIが書いています。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_palette.webp?v=2" alt="" width="96" height="96"><b>絵</b><span>兵士・巨人・白クマ・背景は、画像生成AIで描きました。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_music.webp?v=2" alt="" width="96" height="96"><b>音楽・効果音</b><span>BGMは音楽生成AI（Suno）、効果音はAIがプログラムで作っています。</span></div>
+    <div class="role"><img class="ic" src="assets/ui/icon_sliders.webp?v=2" alt="" width="96" height="96"><b>難しさの調整</b><span>AIが自分で何百回も自動プレイして、手応えを合わせました。</span></div>
   </div>
   <div class="tips">
-    <img class="ic" src="assets/ui/icon_phone.webp" alt="" width="96" height="96">
+    <img class="ic" src="assets/ui/icon_phone.webp?v=2" alt="" width="96" height="96">
     <p><b>スマホで遊ぶのがおすすめです。</b>登録なし・無料で、そのまま遊べます。</p>
     <p>ホーム画面に追加すると、アプリのように全画面で遊べます（iPhone は Safari の共有ボタン →「ホーム画面に追加」）。</p>
     <p>遊んだら、感想や「ここが変だった」をぜひ教えてください。それがそのまま次の注文になります。</p>
   </div>
-  <a class="fb" href="feedback.html?game=lab"><img class="x" src="assets/ui/icon_letter.webp" alt="" width="96" height="96">感想・改善案を送る</a>
+  <a class="fb" href="feedback.html?game=lab"><img class="x" src="assets/ui/icon_letter.webp?v=2" alt="" width="96" height="96">感想・改善案を送る</a>
 
   <footer>
     <a class="footer-brand" href="https://machino-ai.jp/"><img src="assets/machino-logo.png" alt="" width="40" height="40"><span>まちのAI屋さん<small>長崎のAIシステム開発・AI相談</small></span></a>
