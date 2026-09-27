@@ -3689,6 +3689,7 @@ function resetCrowd(n, w) {
 function beginStage(st, army, weapon) {
   stage = st;
   inBonus = false;
+  countPlay();
   runBest = Math.max(runBest, Math.round(army));
   store.set("mm.save", { st, army, weapon, kills, endless, rb: runBest });
   if (st > store.get("mm.bestStage", 0)) store.set("mm.bestStage", st);
@@ -3713,6 +3714,7 @@ function beginStage(st, army, weapon) {
 /** ボーナスステージを始める。ステージ番号は進めず、終わったら次のステージへ */
 function beginBonus(army, weapon) {
   inBonus = true;
+  countPlay();
   crowd.speed = 10;
   resetCrowd(army, weapon);
   buildBonus();
@@ -4248,6 +4250,11 @@ addEventListener("keydown", (e) => {
 const RANKING_API = "https://script.google.com/macros/s/AKfycbyNh85RNVYJM1_cn5vn6d4_lFm-3_9MeQZe1vMGU4xk-fHRvGbbGUIgkgI2QUXhYyySMw/exec";
 const GAME_ID = "million";
 const SHARE_URL = "https://machino-ai.jp/ad-games/million_march.html";
+/* プレイ回数の集計（AIゲーム実験室の全ゲーム共通。1面始めるごとに1回）。失敗しても遊ぶのには関係ない */
+function countPlay() {
+  if (!RANKING_API) return;
+  try { fetch(RANKING_API, { method: "POST", mode: "no-cors", keepalive: true, headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ type: "play", game: GAME_ID }) }).catch(() => {}); } catch (e) {}
+}
 const ovRank = document.getElementById("ovRank");
 const recBox = document.getElementById("recBox");
 const recName = document.getElementById("recName"), recMsg = document.getElementById("recMsg");

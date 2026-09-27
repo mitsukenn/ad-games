@@ -362,6 +362,12 @@
   .btn.share{font-family:var(--ui); font-weight:700; font-size:15px; padding:9px 16px 8px; background:#3b6fd1; color:#fff; border-bottom-color:#27488a}
   .btn.share:hover{background:#4a7de0}
   .btn.share:disabled{opacity:.6; cursor:default}
+  .btn.share.home{background:#3f9a5c; border-bottom-color:#2a6b3f}
+  .btn.share.home:hover{background:#4aae6a}
+  /* ホーム画面に追加のおすすめ */
+  .home-how{margin:0 0 18px; padding:10px 12px; font-size:14px; line-height:1.65; text-align:left;
+            color:var(--stone-l); background:rgba(20,15,12,.45); border:1px solid rgba(224,168,60,.3)}
+  .home-how b{color:var(--gold)}
 
   .rk-tabs{display:flex; gap:0; margin:4px auto 10px; max-width:260px; border:1px solid rgba(224,168,60,.45)}
   .rk-tabs button{flex:1; font:700 15px var(--ui); color:rgba(228,219,198,.7); background:transparent; border:0; padding:8px 0; cursor:pointer}
@@ -697,6 +703,7 @@
         <button class="btn" id="btnNext">次の波へ</button>
         <button class="btn ghost" id="btnMapClear">マップへ</button>
         <button class="btn share" id="btnShareClear">📷 シェア</button>
+        <button class="btn share home" id="btnHomeClear" hidden>📲 ホーム画面に追加</button>
       </div>
     </div>
   </div>
@@ -750,6 +757,20 @@
       <div class="btns">
         <button class="btn" id="btnRetryStage">もう一度</button>
         <button class="btn ghost" id="btnRetry">マップへ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ホーム画面に追加のおすすめ。3面クリアで1回だけ出す／クリア画面のボタンからも開く -->
+  <div class="ov" id="ovHome" hidden>
+    <div class="tablet">
+      <div class="eyebrow">Add to Home</div>
+      <h2 class="win">ホーム画面に追加しよう</h2>
+      <p class="lede">アプリのようにホーム画面から1タップで遊べます。全画面で、続きもすぐ再開。</p>
+      <p class="home-how" id="homeHow" hidden></p>
+      <div class="btns">
+        <button class="btn" id="btnHomeGo">ホーム画面に追加</button>
+        <button class="btn ghost" id="btnHomeLater">あとで</button>
       </div>
     </div>
   </div>
@@ -3352,6 +3373,7 @@ const bonusAfter = (st) => (st < FINAL_STAGE ? st % 3 === 0 : st > FINAL_STAGE &
 
 function beginBonus(army, power) {
   inBonus = true;
+  countPlay();
   flowV = 5.8;
   resetCrowd(army, power);
   buildBonus();
@@ -3371,6 +3393,7 @@ function beginBonus(army, power) {
 
 function beginStage(st, army, power) {
   inBonus = false;
+  countPlay();
   stage = st;
   runBest = Math.max(runBest, Math.round(army));
   Object.assign(rec, { start: Math.max(1, army), low: army, giants: 0, kills, arms: 0 });
@@ -3384,7 +3407,7 @@ function beginStage(st, army, power) {
   state = "run";
   hStage.textContent = stageChip(st); hStage.style.fontSize = "";
   hBar.style.width = "0%";
-  ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = true;
+  ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = ovHome.hidden = true;
   Snd.song(stageLv() - 1);                      // 景色（エクストラは5つの景色を巡る）に合わせた曲
   Snd.intense(false); Snd.music(true);
   saveProgress(st, army, power);
@@ -3465,6 +3488,7 @@ function stageClear() {
     requestAnimationFrame(() => SK.paintIcon(icon, "chest_open"));
     ovClear.hidden = false;
     btnShareClear.hidden = true;                    // 宝物庫の終わりはシェアを出さない
+    btnHomeClear.hidden = true;
     fitNums(ovClear);
     return;
   }
@@ -3489,6 +3513,7 @@ function stageClear() {
   document.getElementById("cKills").textContent = fmt(kills);
   ovClear.hidden = false;
   Result.prepareClear(document.getElementById("clearRank").textContent);
+  Home.onClear(stage);
 }
 
 const OVER_TIPS = [
@@ -4104,6 +4129,59 @@ const clearShare = makeShare(btnShareClear, "📷 シェア");
 const resultShare = makeShare(btnShare, "📷 結果を画像でシェア");
 btnShareClear.addEventListener("click", () => clearShare.run());
 btnShare.addEventListener("click", () => resultShare.run());
+
+/* --- プレイ回数の集計（AIゲーム実験室の全ゲーム共通。1面始めるごとに1回）。失敗しても遊ぶのには関係ない --- */
+function countPlay() {
+  if (!RANKING_API) return;
+  try { fetch(RANKING_API, { method: "POST", mode: "no-cors", keepalive: true, headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ type: "play", game: GAME_ID }) }).catch(() => {}); } catch (e) {}
+}
+
+/* --- ホーム画面に追加：2面クリアからクリア画面にボタン、3面クリアで1回だけおすすめの窓（gr.home）。
+   Android の Chrome などは本物の追加の画面を出せる。出せないとき（iPhone・アプリ内ブラウザ）は手順を見せる --- */
+const btnHomeClear = document.getElementById("btnHomeClear");
+const ovHome = document.getElementById("ovHome"), homeHow = document.getElementById("homeHow");
+const btnHomeGo = document.getElementById("btnHomeGo"), btnHomeLater = document.getElementById("btnHomeLater");
+const Home = (() => {
+  let evt = null;                                  // 追加の画面を出すための合図（出せるブラウザだけ届く）
+  addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); evt = e; });
+  addEventListener("appinstalled", () => { evt = null; lsSet("gr.home", "added"); btnHomeClear.hidden = ovHome.hidden = true; });
+  const UA = navigator.userAgent;
+  const iOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const inApp = /Line\/|Instagram|FBAN|FBAV|Twitter|TikTok|musical_ly/i.test(UA);   // LINE などのアプリの中のブラウザ
+  const installed = () => matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches || navigator.standalone === true;
+  const steps = () => inApp
+    ? "いまはアプリの中のブラウザで開いています。メニューから<b>「ブラウザで開く」</b>を選び、" + (iOS ? "Safari" : "Chrome") + " で開いてから追加してください。"
+    : iOS ? "画面の下（iPad は上）の<b>共有ボタン［□↑］</b>をタップ →<b>「ホーム画面に追加」</b>を選んでください。"
+    : "ブラウザのメニュー<b>［⋮］</b>→<b>「ホーム画面に追加」</b>（または「アプリをインストール」）を選んでください。";
+  function open() {
+    homeHow.innerHTML = steps();
+    homeHow.hidden = !!evt;                        // 本物の追加の画面を出せるなら手順はいらない
+    btnHomeGo.textContent = evt ? "ホーム画面に追加" : "わかった";
+    btnHomeLater.hidden = !evt;
+    ovHome.hidden = false;
+  }
+  async function add() {
+    if (!evt) { open(); return; }
+    const e = evt; evt = null;
+    ovHome.hidden = true;
+    try { e.prompt(); await e.userChoice; } catch (err) {}
+  }
+  btnHomeGo.addEventListener("click", () => { Snd.good(); if (evt) add(); else ovHome.hidden = true; });
+  btnHomeLater.addEventListener("click", () => { ovHome.hidden = true; });
+  btnHomeClear.addEventListener("click", () => { Snd.good(); add(); });
+  return {
+    onClear(st) {
+      const can = !installed() && lsGet("gr.home", "") !== "added";
+      btnHomeClear.hidden = !(can && st >= 2);
+      if (can && st >= 3 && !lsGet("gr.home", "")) {
+        lsSet("gr.home", "shown");
+        // ランクの判子が押されてから出す。その前に次の面へ進んでいたら出さない
+        setTimeout(() => { if (state === "clear" && !ovClear.hidden) open(); }, 1100);
+      }
+    },
+    hide() { ovHome.hidden = true; },
+  };
+})();
 
 /* --- ランキング（GAS） --- */
 async function apiGet(view) {

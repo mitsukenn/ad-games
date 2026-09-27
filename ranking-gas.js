@@ -20,6 +20,8 @@
  * 【シート構成】
  *   records … 日時 / 日付 / ゲーム / なまえ / ステージ / 兵力 / 撃破 / 端末ID
  *   無ければ自動で作られます。1回のプレイ結果を1行ずつ足していきます。
+ *   plays  … ゲーム / 名前 / プレイ回数 / 最後に遊ばれた日時
+ *   AIゲーム実験室の全ゲーム（別リポジトリのゲームも）が、遊び始めるたびに1回ずつ数える。2026-09-27 から数え始めた。
  *
  * 【順位の決め方】
  *   到達ステージが高い順 → 同じなら最高兵力が多い順 → 同じなら撃破数が多い順。
@@ -36,6 +38,8 @@
  *   POST {game, name, stage, army, kills, uid, view} … 記録を登録。view（week/month/year・省略時は week）の順位を返す
  *   どの返事にも players（これまでにランキング登録したことのある人数＝端末IDの数・全期間）が入る。
  *   GET  ?view=players … { players: { geigeki: 人数, million: 人数, all: 全ゲームで重複なしの人数 } }（トップページ用）
+ *   POST {type: "play", game} … プレイ回数を1つ増やす（同じ人でも毎回数える）。game は PLAY_GAMES のどれか
+ *   GET  ?view=plays …… { plays: { geigeki: 回数, million: 回数, …, all: 合計 } }
  *   uid を付けると、上位に入っていなくても自分の順位が me に入って返る。
  */
 
@@ -49,6 +53,9 @@ var MAX_STAGE = 99;          // エクストラステージは終わりがない
 var MAX_ARMY = 1e15;
 var MAX_KILLS = 1e12;
 var GAMES = ['geigeki', 'million'];
+// プレイ回数を数えるゲーム（ランキングの無いゲームも含む）と、シートに出す名前
+var PLAY_GAMES = { geigeki: '迎撃ロード', million: 'Million March', power: 'パワータワー', snow: 'スノーグリル', tetris: 'テトリスパズル' };
+var PLAY_SHEET = 'plays';
 
 function getSheet_() {
   var ss = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
@@ -59,6 +66,52 @@ function getSheet_() {
     sh.setFrozenRows(1);
   }
   return sh;
+}
+
+/** プレイ回数のシート。ゲームごとに1行（無ければ作る） */
+function getPlaySheet_() {
+  var ss = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(PLAY_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(PLAY_SHEET);
+    sh.appendRow(['ゲーム', '名前', 'プレイ回数', '最後に遊ばれた日時']);
+    sh.setFrozenRows(1);
+    Object.keys(PLAY_GAMES).forEach(function (g) { sh.appendRow([g, PLAY_GAMES[g], 0, '']); });
+  }
+  return sh;
+}
+
+/** プレイ回数を1つ増やす */
+function addPlay_(game) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sh = getPlaySheet_();
+    var last = sh.getLastRow();
+    var ids = last < 2 ? [] : sh.getRange(2, 1, last - 1, 1).getValues().map(function (r) { return String(r[0]); });
+    var i = ids.indexOf(game);
+    if (i === -1) { sh.appendRow([game, PLAY_GAMES[game], 1, new Date()]); return; }
+    var cell = sh.getRange(i + 2, 3);
+    cell.setValue((Number(cell.getValue()) || 0) + 1);
+    sh.getRange(i + 2, 4).setValue(new Date());
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** ゲームごとのプレイ回数と合計 */
+function playsAll_() {
+  var sh = getPlaySheet_();
+  var last = sh.getLastRow();
+  var out = { all: 0 };
+  Object.keys(PLAY_GAMES).forEach(function (g) { out[g] = 0; });
+  if (last < 2) return out;
+  sh.getRange(2, 1, last - 1, 3).getValues().forEach(function (r) {
+    var g = String(r[0]), n = Number(r[2]) || 0;
+    if (!PLAY_GAMES.hasOwnProperty(g)) return;
+    out[g] = n; out.all += n;
+  });
+  return out;
 }
 
 function json_(obj) {
@@ -196,6 +249,7 @@ function doGet(e) {
   try {
     var p = (e && e.parameter) || {};
     if (p.view === 'players') return json_({ players: playersAll_() });
+    if (p.view === 'plays') return json_({ plays: playsAll_() });
     var game = cleanGame_(p.game);
     var uid = cleanUid_(p.uid);
     var view = ['month', 'year', 'today'].indexOf(p.view) === -1 ? 'week' : p.view;
@@ -209,6 +263,12 @@ function doGet(e) {
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
+    if (body.type === 'play') {                      // プレイ回数（記録の登録ではない）
+      var pg = String(body.game || '');
+      if (!PLAY_GAMES.hasOwnProperty(pg)) return json_({ ok: false, error: 'invalid game' });
+      addPlay_(pg);
+      return json_({ ok: true });
+    }
     var game = cleanGame_(body.game);
     var uid = cleanUid_(body.uid);
     if (!uid) return json_({ ok: false, error: 'invalid uid' });
