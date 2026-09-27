@@ -17,7 +17,8 @@
 | `select.html` | ゲームを選ぶ画面。各ゲームのタイトル・一時停止から戻ってくる |
 | `geigeki_road.html` | 迎撃ロード（3レーン防衛）。1ファイル完結 |
 | `million_march.html` | Million March（行進ランナー）。1ファイル完結 |
-| `ranking-gas.js` | ランキングのサーバー側（Google Apps Script に貼るコード） |
+| `feedback.html` | 感想・改善案を送るページ。全5ゲームから `?game=<ID>` 付きでリンク（別リポジトリのゲームは `../ad-games/feedback.html`）。届いた声は GAS の `feedback` シート |
+| `ranking-gas.js` | ランキングのサーバー側（Google Apps Script に貼るコード） |。プレイ回数（全5ゲーム・`plays` シート）と感想（`feedback` シート）の受け取りもここ |
 | `assets/` | 画像とスプライト共通部品。2つのゲームで共有（約50MB） |
 | `docs/` | 手順・工夫・改善案のメモ |
 

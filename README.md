@@ -9,6 +9,7 @@
 | 迎撃ロード | `geigeki_road.html` | その場で撃ち続け、3レーンに流れてくる門・宝・敵・巨人を迎え撃つ防衛ゲーム |
 | Million March | `million_march.html` | 軍勢を率いて進むランナー。上限なしで増える軍勢の行進・巨人戦・ボーナスステージ・エンドレス |
 | ゲームを選ぶ | `select.html` | 2つのゲームを選ぶ画面。各ゲームのタイトル・一時停止から戻ってくる |
+| 感想・改善案 | `feedback.html` | 全ゲーム共通の感想・改善案・不具合の送り口（届いた声はスプレッドシートの feedback シート） |
 | ランキング | `ranking-gas.js` | 今日・今月のオンラインランキング（Google Apps Script に貼るコード） |
 
 - どれも1ファイルで動く HTML（Canvas 描画・WebAudio の効果音）

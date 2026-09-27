@@ -22,6 +22,7 @@
  *   無ければ自動で作られます。1回のプレイ結果を1行ずつ足していきます。
  *   plays  … ゲーム / 名前 / プレイ回数 / 最後に遊ばれた日時
  *   AIゲーム実験室の全ゲーム（別リポジトリのゲームも）が、遊び始めるたびに1回ずつ数える。2026-09-27 から数え始めた。
+ *   feedback … 日時 / ゲーム / 種類 / おもしろさ / 内容 / なまえ / 端末
  *
  * 【順位の決め方】
  *   到達ステージが高い順 → 同じなら最高兵力が多い順 → 同じなら撃破数が多い順。
@@ -40,6 +41,7 @@
  *   GET  ?view=players … { players: { geigeki: 人数, million: 人数, all: 全ゲームで重複なしの人数 } }（トップページ用）
  *   POST {type: "play", game} … プレイ回数を1つ増やす（同じ人でも毎回数える）。game は PLAY_GAMES のどれか
  *   GET  ?view=plays …… { plays: { geigeki: 回数, million: 回数, …, all: 合計 } }
+ *   POST {type: "feedback", game, kind, stars, text, name, device} … 感想・改善案を feedback シートに1件足す（feedback.html から）
  *   uid を付けると、上位に入っていなくても自分の順位が me に入って返る。
  */
 
@@ -56,6 +58,10 @@ var GAMES = ['geigeki', 'million'];
 // プレイ回数を数えるゲーム（ランキングの無いゲームも含む）と、シートに出す名前
 var PLAY_GAMES = { geigeki: '迎撃ロード', million: 'Million March', power: 'パワータワー', snow: 'スノーグリル', tetris: 'テトリスパズル' };
 var PLAY_SHEET = 'plays';
+var FEEDBACK_SHEET = 'feedback';
+var FEEDBACK_GAMES = { lab: '実験室全体' };        // PLAY_GAMES に加えて選べるもの
+var FEEDBACK_KINDS = ['感想', '改善案', '不具合'];
+var FEEDBACK_MAX = 600;
 
 function getSheet_() {
   var ss = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
@@ -112,6 +118,39 @@ function playsAll_() {
     out[g] = n; out.all += n;
   });
   return out;
+}
+
+/** 感想・改善案を1件足す。シートの数式として動かないよう、= + - @ で始まる文字は頭に ' を付ける */
+function addFeedback_(body) {
+  var game = String(body.game || '');
+  var gameName = PLAY_GAMES[game] || FEEDBACK_GAMES[game];
+  if (!gameName) return 'invalid game';
+  var text = cleanText_(body.text, FEEDBACK_MAX);
+  if (text.length < 2) return 'empty';
+  var kind = FEEDBACK_KINDS.indexOf(body.kind) === -1 ? '感想' : body.kind;
+  var stars = Math.floor(Number(body.stars));
+  stars = stars >= 1 && stars <= 5 ? stars : '';
+  var name = cleanText_(body.name, 12).replace(/\n/g, ' ');
+  var device = cleanText_(body.device, 60).replace(/\n/g, ' ');
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var ss = SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName(FEEDBACK_SHEET);
+    if (!sh) {
+      sh = ss.insertSheet(FEEDBACK_SHEET);
+      sh.appendRow(['日時', 'ゲーム', '種類', 'おもしろさ', '内容', 'なまえ', '端末']);
+      sh.setFrozenRows(1);
+    }
+    sh.appendRow([new Date(), gameName, kind, stars, text, name, device]);
+  } finally {
+    lock.releaseLock();
+  }
+  return '';
+}
+function cleanText_(v, max) {
+  var t = String(v || '').replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '').trim().slice(0, max);
+  return /^[=+\-@]/.test(t) ? "'" + t : t;
 }
 
 function json_(obj) {
@@ -268,6 +307,10 @@ function doPost(e) {
       if (!PLAY_GAMES.hasOwnProperty(pg)) return json_({ ok: false, error: 'invalid game' });
       addPlay_(pg);
       return json_({ ok: true });
+    }
+    if (body.type === 'feedback') {                  // 感想・改善案
+      var err = addFeedback_(body);
+      return json_(err ? { ok: false, error: err } : { ok: true });
     }
     var game = cleanGame_(body.game);
     var uid = cleanUid_(body.uid);
