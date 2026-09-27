@@ -1648,14 +1648,20 @@ const Snd = (() => {
   const BGM_DIR = "assets/bgm/", FILE_VOL = 0.42;
   const bufs = {}, loading = {};
   let src = null, srcGain = null, srcKey = null, preloaded = false;
-  const keyOf = (s) => Object.keys(SONGS).find((k) => SONGS[k] === s);
+  // 偶数面は同じ景色の2曲目（valley2.mp3 など）。そのファイルが無いときは1曲目（valley.mp3）を流す
+  let fileKey = "valley";
+  const failed = {};
+  const baseKey = (k) => k.replace(/2$/, "");
   function loadBgm(key) {
-    if (!ac || bufs[key] || loading[key]) return;
+    if (!ac || bufs[key] || loading[key] || failed[key]) return;
     loading[key] = fetch(BGM_DIR + key + ".mp3")
       .then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
       .then((b) => new Promise((ok, ng) => ac.decodeAudioData(b, ok, ng)))
-      .then((buf) => { bufs[key] = buf; if (playing && keyOf(song) === key) startFile(); })
-      .catch(() => {});
+      .then((buf) => { bufs[key] = buf; if (playing && fileKey === key) startFile(); })
+      .catch(() => {
+        failed[key] = true;
+        if (fileKey === key && baseKey(key) !== key) { fileKey = baseKey(key); if (playing && !startFile()) loadBgm(fileKey); }
+      });
   }
   function stopFile() {
     if (!src) return;
@@ -1666,7 +1672,7 @@ const Snd = (() => {
   }
   // いまの曲のファイルが読めていれば流す（ピコピコは止める）。流せたら true
   function startFile() {
-    const key = keyOf(song), buf = bufs[key];
+    const key = fileKey, buf = bufs[key];
     if (!buf || !playing) return false;
     if (src && srcKey === key) return true;
     stopFile();
@@ -1748,24 +1754,26 @@ const Snd = (() => {
         if (playing) return;
         playing = true;
         if (startFile()) return;
-        loadBgm(keyOf(song));
+        loadBgm(fileKey);
         startSynth();
         // ほかの曲も、少したってから裏で読んでおく（面が変わったときにすぐ切りかわるように）
-        if (!preloaded) { preloaded = true; setTimeout(() => Object.keys(SONGS).forEach(loadBgm), 6000); }
+        if (!preloaded) { preloaded = true; setTimeout(() => Object.keys(SONGS).forEach((k) => { loadBgm(k); if (k !== "bonus") loadBgm(k + "2"); }), 6000); }
       } else { playing = false; clearInterval(timer); timer = null; stopFile(); }
     },
     intense(v) {                    // 戦闘中はテンポを上げて太鼓を細かく（Suno の曲は少し大きく）
       hot = !!v; bpm = song.bpm + (hot ? 18 : 0);
       if (srcGain) srcGain.gain.setTargetAtTime(hot ? FILE_VOL * 1.2 : FILE_VOL, ac.currentTime, 0.3);
     },
-    // 曲を選ぶ。数字なら景色の番号（0〜4）、文字なら曲名（"bonus" など）。変わったときは頭から
-    song(key) {
-      const s = typeof key === "number" ? SONGS[THEME_SONGS[((key % 5) + 5) % 5]] : (SONGS[key] || SONGS.valley);
-      if (s === song) return;
-      song = s; bpm = s.bpm + (hot ? 18 : 0); step = 0;
+    // 曲を選ぶ。数字なら景色の番号（0〜4）、文字なら曲名（"bonus" など）。second が true なら同じ景色の2曲目（偶数面）。変わったときは頭から
+    song(key, second) {
+      const name = typeof key === "number" ? THEME_SONGS[((key % 5) + 5) % 5] : (SONGS[key] ? key : "valley");
+      let fk = second && name !== "bonus" ? name + "2" : name;
+      if (failed[fk]) fk = name;
+      if (fk === fileKey && SONGS[name] === song) return;
+      song = SONGS[name]; fileKey = fk; bpm = song.bpm + (hot ? 18 : 0); step = 0;
       if (!ac) return;
       if (playing && !startFile()) { stopFile(); startSynth(); }
-      loadBgm(keyOf(s));
+      loadBgm(fk);
     },
     good() { const t = (ensure() || {}).currentTime || 0; [72, 76, 79].forEach((m, i) => tone(hz(m + 12), 0.10, "square", 0.06, 0, t + i * 0.05)); },
     great(){ const t = (ensure() || {}).currentTime || 0; [72, 76, 79, 84, 88].forEach((m, i) => tone(hz(m + 12), 0.12, "square", 0.06, 0, t + i * 0.045));
@@ -3750,7 +3758,7 @@ function beginStage(st, army, weapon) {
   parts.length = 0; pops.length = 0;
   battle = null;
   state = "run";
-  Snd.song(themeIndex(st)); Snd.intense(false); Snd.music(true);
+  Snd.song(themeIndex(st), st % 2 === 0); Snd.intense(false); Snd.music(true);   // 偶数面は同じ景色の2曲目
   hStage.textContent = endless && st > FINAL_STAGE ? String(st) : st + "/" + FINAL_STAGE;
   hBar.style.width = "0%";
   ovTitle.hidden = ovClear.hidden = ovOver.hidden = ovWin.hidden = ovPause.hidden = ovSettings.hidden = true;
