@@ -139,7 +139,7 @@
   .maker:hover{background:#eef3ff}
   .maker:focus-visible{outline:2px solid var(--stone); outline-offset:3px}
 
-  /* ---------- ランキング登録者数 ---------- */
+  /* ---------- プレイ回数（全ゲームの合計） ---------- */
   .stats{display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; margin:0 0 24px; padding:14px 18px;
          background:rgba(36,28,24,.82); border:1px solid rgba(224,168,60,.45); max-width:560px}
   .stats[hidden]{display:none}
@@ -148,9 +148,6 @@
   .stats-num{font-size:15px; font-weight:700; color:var(--stone)}
   .stats-num b{font-family:var(--disp); font-weight:400; font-size:34px; color:var(--gold); margin-right:3px;
                text-shadow:0 2px 0 rgba(0,0,0,.45); font-variant-numeric:tabular-nums}
-  .stats-games{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
-  .stats-games li{font-size:13px; color:var(--soft); background:rgba(0,0,0,.3); padding:3px 10px 4px}
-  .stats-games b{color:var(--stone)}
   .players{align-self:flex-start; font-size:13px; font-weight:700; color:var(--stone); background:rgba(0,0,0,.35);
            border:1px solid rgba(224,168,60,.4); padding:2px 10px 3px}
   .players[hidden]{display:none}
@@ -174,16 +171,12 @@
   <h1>AIゲーム実験室</h1>
   <p class="catch">AIだけで、<br>どこまでゲームを作れるか。</p>
   <p class="lede">スマホの広告でよく見る「あのゲーム」を、<strong>AIだけで作ってみる実験</strong>です。プログラムも、絵も、音も、難しさの調整もAI。人がやったのは、遊んでみて「もっとこうして」と言葉で頼むことだけ。どこまでちゃんと遊べるか、ぜひ試してみてください。</p>
-  <!-- ランキング登録者数（ranking-gas.js の ?view=players。取れなければ出さない） -->
-  <section class="stats" id="stats" hidden aria-label="ランキング登録者数">
+  <!-- プレイ回数（ranking-gas.js の ?view=plays。全5ゲームの合計。取れなければ出さない） -->
+  <section class="stats" id="stats" hidden aria-label="プレイ回数">
     <div class="stats-main">
-      <span class="stats-label">これまでにランキングに登録した人</span>
-      <span class="stats-num"><b id="stAll">0</b>人</span>
+      <span class="stats-label">5つのゲームが遊ばれた回数（合計）</span>
+      <span class="stats-num"><b id="stAll">0</b>回</span>
     </div>
-    <ul class="stats-games">
-      <li>迎撃ロード <b id="stGeigeki">0</b>人</li>
-      <li>Million March <b id="stMillion">0</b>人</li>
-    </ul>
   </section>
   <a class="jump" href="geigeki_road.html">迎撃ロードで遊ぶ →</a>
 
@@ -191,7 +184,7 @@
     <span class="pick">いちばんのおすすめ</span>
     <span class="tag">Lane Defense ／ 撃って守る</span>
     <h3 id="ftTitle">迎撃ロード</h3>
-    <span class="players" data-game="geigeki" hidden>🏆 ランキング登録 <b></b>人</span>
+    <span class="players" data-game="geigeki" hidden>🎮 <b></b>回プレイ</span>
     <p class="intro">動かずに撃ちまくる防衛戦。流れてくる門を撃ち開けて仲間を増やし、武器は<strong>投石からロケット砲まで12段階</strong>に進化。3本の道を見きわめて、押し寄せる大軍と巨人を食い止めろ！</p>
     <div class="shots">
       <figure><img src="assets/screens/geigeki_1.jpg" width="540" height="1052" alt="迎撃ロードの序盤。緑の谷の道に門と兵が増える青い板が流れてくる" loading="lazy"><figcaption>門を撃ち開けて、兵を増やす</figcaption></figure>
@@ -220,7 +213,7 @@
     <a class="card t3" href="million_march.html">
       <span class="tag">March Runner ／ 率いて進む</span>
       <h3>Million March</h3>
-      <span class="players" data-game="million" hidden>🏆 ランキング登録 <b></b>人</span>
+      <span class="players" data-game="million" hidden>🎮 <b></b>回プレイ</span>
       <p>ゲートをくぐるたびに兵が増える行進ゲーム。数に上限はなし、100万の大軍も夢じゃない。マップから好きな面を選んで出撃し、巨人との決戦、宝箱のボーナスステージ、移り変わる5つの景色、終わりのない遠征まで。</p>
       <div class="shots">
         <figure><img src="assets/screens/million_2.jpg" width="540" height="1052" alt="Million March の序盤。緑の谷の道で、+8 と +6 のゲートのどちらをくぐるか選ぶ" loading="lazy"><figcaption>ゲートを選んで、兵を増やす</figcaption></figure>
@@ -233,6 +226,7 @@
     <a class="card t4" href="../power-tower/">
       <span class="tag">Tower Battle ／ 吸収して登る</span>
       <h3>パワータワー</h3>
+      <span class="players" data-game="power" hidden>🎮 <b></b>回プレイ</span>
       <p>自分より弱い敵をタップして吸収し、パワーを上げていくタワーバトル。橋とはしごでつながった塔を登り、爆弾・毒・？ボックスを見きわめてボスを倒し、檻の中のお姫様を助け出せ。ワールドマップで50面以上、宝物庫や暗闇ステージも。</p>
       <div class="shots">
         <figure><img src="assets/screens/power_1.jpg" width="540" height="1052" alt="パワータワーのステージ開始。砂浜に並ぶ7本の塔の全体が見え、右端の塔の上に檻に入ったお姫様がいる" loading="lazy"><figcaption>塔を登ってお姫様を救え</figcaption></figure>
@@ -245,6 +239,7 @@
     <a class="card t5" href="../snow-grill/">
       <span class="tag">Idle Arcade ／ 狩って焼いて配る</span>
       <h3>スノーグリル</h3>
+      <span class="players" data-game="snow" hidden>🎮 <b></b>回プレイ</span>
       <p>白クマを倒して肉を集め、グリルで焼いて、凍えた村人に配る。お金で設備を建てるたびにキャンプが広がり、助けた村人が仲間になって一緒に戦う。群れで攻めてくる白クマ、雪の巨人との決戦、5つの村をめぐるストーリーも。</p>
       <div class="shots">
         <figure><img src="assets/screens/snow_1.jpg" width="540" height="1052" alt="雪原で主人公が白クマに斧を振るう。白クマの足元には攻撃の前ぶれの赤い円、まわりに肉が落ちている" loading="lazy"><figcaption>白クマを倒して肉を集める</figcaption></figure>
@@ -257,6 +252,7 @@
     <a class="card t6" href="../tetris-puzzle/">
       <span class="tag">Block Puzzle ／ 並べて消す</span>
       <h3>テトリスパズル</h3>
+      <span class="players" data-game="tetris" hidden>🎮 <b></b>回プレイ</span>
       <p>8×8の盤面にブロックをドラッグして置き、縦か横の1列がそろったら消える。同時消しや連続消しのコンボで高得点。毎日みんな同じ順番でピースが出る「今日のチャレンジ」、3分間のタイムアタック、お邪魔ブロック入りのベリーハードも。</p>
       <div class="shots">
         <figure><img src="assets/screens/tetris_1.jpg" width="540" height="1052" alt="テトリスパズルのモード選択。通常・タイムアタック・ハード・ベリーハードのカードが並び、上の3つはクリア回数で解放される" loading="lazy"><figcaption>クリアするとモードが増える</figcaption></figure>
@@ -288,7 +284,7 @@
   </footer>
 </main>
 <script>
-/* ランキング登録者数：ゲームと同じ Google Apps Script から人数だけもらう */
+/* プレイ回数：ゲームと同じ Google Apps Script から、ゲームごとの回数と合計をもらう */
 (function () {
   const RANKING_API = "https://script.google.com/macros/s/AKfycbyNh85RNVYJM1_cn5vn6d4_lFm-3_9MeQZe1vMGU4xk-fHRvGbbGUIgkgI2QUXhYyySMw/exec";
   var num = function (n) { return Math.round(n).toLocaleString("ja-JP"); };
@@ -302,15 +298,13 @@
       if (k < 1) requestAnimationFrame(step);
     })(t0);
   }
-  fetch(RANKING_API + "?view=players", { cache: "no-store" })
+  fetch(RANKING_API + "?view=plays", { cache: "no-store" })
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      var p = d && d.players;
+      var p = d && d.plays;
       if (!p || !(p.all > 0)) return;
       document.getElementById("stats").hidden = false;
       countUp(document.getElementById("stAll"), p.all);
-      countUp(document.getElementById("stGeigeki"), p.geigeki || 0);
-      countUp(document.getElementById("stMillion"), p.million || 0);
       document.querySelectorAll(".players").forEach(function (el) {
         var n = p[el.dataset.game];
         if (n > 0) { el.querySelector("b").textContent = num(n); el.hidden = false; }
