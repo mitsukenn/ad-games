@@ -1042,6 +1042,46 @@ const Snd = (() => {
   let song = SONGS.valley;
   let playing = false, bpm = 132, nextT = 0, step = 0, timer = null, hot = false;
 
+  // ---- Suno で作った曲（assets/bgm/<曲名>.mp3、切れ目なくループするよう加工ずみ）----
+  // 読み込めるまでと、読み込めなかったときは、上のピコピコ BGM（SONGS）を鳴らす
+  const BGM_DIR = "assets/bgm/", FILE_VOL = 0.42;
+  const bufs = {}, loading = {};
+  let src = null, srcGain = null, srcKey = null, preloaded = false;
+  const keyOf = (s) => Object.keys(SONGS).find((k) => SONGS[k] === s);
+  function loadBgm(key) {
+    if (!ac || bufs[key] || loading[key]) return;
+    loading[key] = fetch(BGM_DIR + key + ".mp3")
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then((b) => new Promise((ok, ng) => ac.decodeAudioData(b, ok, ng)))
+      .then((buf) => { bufs[key] = buf; if (playing && keyOf(song) === key) startFile(); })
+      .catch(() => {});
+  }
+  function stopFile() {
+    if (!src) return;
+    const s = src, g = srcGain;
+    g.gain.setTargetAtTime(0, ac.currentTime, 0.12);
+    setTimeout(() => { try { s.stop(); } catch (e) {} s.disconnect(); g.disconnect(); }, 700);
+    src = srcGain = srcKey = null;
+  }
+  // いまの曲のファイルが読めていれば流す（ピコピコは止める）。流せたら true
+  function startFile() {
+    const key = keyOf(song), buf = bufs[key];
+    if (!buf || !playing) return false;
+    if (src && srcKey === key) return true;
+    stopFile();
+    clearInterval(timer); timer = null;
+    srcGain = ac.createGain(); srcGain.gain.value = 0.0001; srcGain.connect(mus);
+    src = ac.createBufferSource(); src.buffer = buf; src.loop = true; src.connect(srcGain); src.start();
+    srcGain.gain.setTargetAtTime(hot ? FILE_VOL * 1.2 : FILE_VOL, ac.currentTime, 0.25);
+    srcKey = key;
+    return true;
+  }
+  function startSynth() {
+    if (timer) return;
+    step = 0; nextT = ac.currentTime + 0.05;
+    timer = setInterval(scheduler, 25);
+  }
+
   function playStep(i, t) {
     const S = song, bar = (i >> 4) & 3, s16 = i & 15;
     const d16 = 60 / bpm / 4;
@@ -1123,19 +1163,29 @@ const Snd = (() => {
       [0, .42, 1.12].forEach((d) => tone(120, 0.3, "sine", 0.3, 45, t + d));
     },
     kick() { ensure(); },
-    music(v) {                      // true で行進曲を流す／false で止める
+    music(v) {                      // true で曲を流す／false で止める（Suno の曲が読めていればそれを、まだならピコピコ）
       if (v && on && ensure()) {
         if (playing) return;
-        playing = true; step = 0; nextT = ac.currentTime + 0.05;
-        clearInterval(timer); timer = setInterval(scheduler, 25);
-      } else { playing = false; clearInterval(timer); }
+        playing = true;
+        if (startFile()) return;
+        loadBgm(keyOf(song));
+        startSynth();
+        // ほかの曲も、少したってから裏で読んでおく（面が変わったときにすぐ切りかわるように）
+        if (!preloaded) { preloaded = true; setTimeout(() => Object.keys(SONGS).forEach(loadBgm), 6000); }
+      } else { playing = false; clearInterval(timer); timer = null; stopFile(); }
     },
-    intense(v) { hot = !!v; bpm = song.bpm + (hot ? 18 : 0); },   // 戦闘中はテンポを上げて太鼓を細かく
+    intense(v) {                    // 戦闘中はテンポを上げて太鼓を細かく（Suno の曲は少し大きく）
+      hot = !!v; bpm = song.bpm + (hot ? 18 : 0);
+      if (srcGain) srcGain.gain.setTargetAtTime(hot ? FILE_VOL * 1.2 : FILE_VOL, ac.currentTime, 0.3);
+    },
     // 曲を選ぶ。数字なら景色の番号（0〜4）、文字なら曲名（"bonus" など）。変わったときは頭から
     song(key) {
       const s = typeof key === "number" ? SONGS[THEME_SONGS[((key % 5) + 5) % 5]] : (SONGS[key] || SONGS.valley);
       if (s === song) return;
       song = s; bpm = s.bpm + (hot ? 18 : 0); step = 0;
+      if (!ac) return;
+      if (playing && !startFile()) { stopFile(); startSynth(); }
+      loadBgm(keyOf(s));
     },
     // 武器ごとの発射音。呼ぶ側で鳴らす回数を間引く
     shot(t) {
